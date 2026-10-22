@@ -506,12 +506,16 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
     return r.json();
   }
   // 1991–2020 günlük en düşük / en yüksek (ERA5). Konum başına bir kez indirilir ve tarayıcıda saklanır.
+  // ERA5 verisi ~25 km'lik (0,25°) ızgarada; konumu bu ızgaraya yuvarlamak sonucu değiştirmez,
+  // yakın ilçelerin aynı veriyi paylaşmasını sağlar ve istek sayısını azaltır.
+  const grid = v => (Math.round(v * 4) / 4).toFixed(2);
   async function getClimate(p) {
-    const key = `hava.iklim2.${(+p.lat).toFixed(2)},${(+p.lon).toFixed(2)}`;
+    const glat = grid(+p.lat), glon = grid(+p.lon);
+    const key = `hava.iklim3.${glat},${glon}`;
     const cached = store.get(key, null);
     if (cached) return cached;
     const u = new URL('https://archive-api.open-meteo.com/v1/archive');
-    u.search = new URLSearchParams({ latitude: p.lat, longitude: p.lon, start_date: '1991-01-01', end_date: '2020-12-31', daily: 'temperature_2m_max,temperature_2m_min', timezone: 'auto' });
+    u.search = new URLSearchParams({ latitude: glat, longitude: glon, start_date: '1991-01-01', end_date: '2020-12-31', daily: 'temperature_2m_max,temperature_2m_min', timezone: 'auto' });
     const r = await fetch(u);
     if (!r.ok) throw new Error('archive ' + r.status);
     const D = (await r.json()).daily, by = {};
@@ -542,8 +546,11 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
   async function searchPlaces(q, signal) {
     const local = localPlaces(q);
     if (local.length >= 8) return local;
+    // Haritada tek bir yer adı olmayan bölge adları için en bilinen nokta
+    const ALIAS = { kapadokya: 'Göreme' };
+    const alias = fold(q).length >= 4 && Object.keys(ALIAS).find(k => k.startsWith(fold(q)));
     const u = new URL('https://geocoding-api.open-meteo.com/v1/search');
-    u.search = new URLSearchParams({ name: q, count: 10, language: 'tr', format: 'json' });
+    u.search = new URLSearchParams({ name: alias ? ALIAS[alias] : q, count: 10, language: 'tr', format: 'json' });
     let remote = [];
     try {
       const r = await fetch(u, { signal });
@@ -628,7 +635,7 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
       const i = j + 1, c = clim && clim[t.slice(5)];
       const past = c
         ? `<td class="past"><span class="c-lo">${dec1(c[0])}</span><em>${c[1]}</em></td><td class="past"><span class="c-hi">${dec1(c[2])}</span><em>${c[3]}</em></td><td class="past">${dec1(c[4])}</td><td class="past">${dec1(c[5])}</td>`
-        : `<td class="past" colspan="4">${clim === false ? 'Alınamadı' : 'Yükleniyor…'}</td>`;
+        : `<td class="past" colspan="4">${clim === false ? 'Şu an alınamadı, birazdan yeniden denenecek' : 'Yükleniyor…'}</td>`;
       const pr = D.precipitation_probability_max[i];
       return `<tr>
         <td class="l day1">${i === 1 ? 'Yarın' : esc(fmtWeek(t))}<small>${esc(fmtDay(t))}</small></td>
@@ -651,8 +658,8 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
     return `<section class="panel mgm" id="mgm" aria-labelledby="h-mgm">
       <div class="txt"><h2 id="h-mgm">MGM resmi tahmini</h2><p>${esc(p.il)} için Meteoroloji Genel Müdürlüğü'nün yayınladığı son durum ve 5 günlük tahmin.</p></div>
       <div class="imgs">
-        <img src="https://www.mgm.gov.tr/sunum/sondurum-show-2.aspx?m=${m}&rC=111&rZ=fff" width="140" height="100" alt="${esc(p.il)} son durum (MGM)" loading="lazy">
-        <img src="https://www.mgm.gov.tr/sunum/tahmin-show-2.aspx?m=${m}&basla=1&bitir=5&rC=111&rZ=fff" width="400" height="100" alt="${esc(p.il)} 5 günlük tahmin (MGM)" loading="lazy">
+        <img src="https://www.mgm.gov.tr/sunum/sondurum-show-2.aspx?m=${m}&rC=111&rZ=fff" width="140" height="100" alt="${esc(p.il)} son durum (MGM)">
+        <img src="https://www.mgm.gov.tr/sunum/tahmin-show-2.aspx?m=${m}&basla=1&bitir=5&rC=111&rZ=fff" width="400" height="100" alt="${esc(p.il)} 5 günlük tahmin (MGM)">
       </div>
     </section>`;
   }
@@ -722,8 +729,10 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
       lastLoad = Date.now();
       if (p.il) syncSelects(p);
       render(d, p, null);
-      getClimate(p).then(c => { if (seq === loadSeq) $('days').innerHTML = dailyRows(d, c); })
-        .catch(() => { if (seq === loadSeq) $('days').innerHTML = dailyRows(d, false); });
+      // Geçmiş yıllar verisi gelmezse (ör. kısa sürede çok istek) 30 ve 90 saniye sonra yeniden dene
+      const climate = (tries = 0) => getClimate(p).then(c => { if (seq === loadSeq) $('days').innerHTML = dailyRows(d, c); })
+        .catch(() => { if (seq !== loadSeq) return; $('days').innerHTML = dailyRows(d, false); if (tries < 2) setTimeout(() => { if (seq === loadSeq) climate(tries + 1); }, tries ? 90000 : 30000); });
+      climate();
     } catch (e) {
       if (seq !== loadSeq) return;
       lastData = null;
