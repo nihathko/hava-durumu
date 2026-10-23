@@ -74,7 +74,7 @@
     if (yangin) { map.removeLayer(yangin); yangin = null; }
     const oyn = $('oynat');
     if (m >= 3) {
-      const ad = ['msg_iodc:ir108', 'msg_iodc:rgb_dust', 'msg_iodc:rgb_convection'][m - 3];
+      const ad = ['msg_iodc:ir108', 'msg_iodc:rgb_dust', 'msg_iodc:rgb_convection', 'msg_iodc:wv062', 'msg_iodc:rgb_naturalenhncd', 'msg_iodc:rgb_fog', 'msg_iodc:rgb_airmass'][m - 3];
       oyn.innerHTML = ''; oyn.append(oy, kare, zmn);
       eumHazirla(ad); kare.max = String(eumKareler.length - 1); eumGoster(ei);
       oy.textContent = 'Oynat';
@@ -83,7 +83,11 @@
       notEl.textContent = [
         'Kızılötesi uydu görüntüsü (Meteosat, 10,8 µm): son 2 saat, 15 dakikada bir. Beyaz ve parlak alanlar yüksek, soğuk bulutlardır; gece de görünür.',
         'Toz görüntüsü (Meteosat RGB): pembe-macenta alanlar havadaki çöl tozudur. Bulutlar koyu kırmızı, kahverengi tonlarında görünür.',
-        'Konvektif bulut görüntüsü (Meteosat RGB): parlak sarı ve turuncu alanlar, sağanak ve gök gürültülü fırtına üreten güçlü bulutlardır.'][m - 3];
+        'Konvektif bulut görüntüsü (Meteosat RGB): parlak sarı ve turuncu alanlar, sağanak ve gök gürültülü fırtına üreten güçlü bulutlardır.',
+        'Su buharı görüntüsü (Meteosat, 6,2 µm): orta ve üst atmosferdeki nemi gösterir. Açık renkli alanlar nemli, koyu alanlar kuru havadır; cephe ve alçak basınç sistemlerinin dönüşü burada iyi görünür.',
+        'Görünür (doğal renk) görüntü (Meteosat RGB): yalnızca gündüz. Bulutlar beyaz, kar ve buz açık mavi, kara yeşil-kahverengi görünür; gece karanlıktır.',
+        'Sis ve alçak bulut görüntüsü (Meteosat RGB): gece açık yeşil-sarı tonlu alanlar sis ve alçak bulutlardır. Sabah sisini izlemek için kullanılır.',
+        'Hava kütlesi görüntüsü (Meteosat RGB): kırmızı-turuncu alanlar kuru, soğuk üst atmosfer havasını (fırtına gelişimi), yeşil sıcak tropik havayı, mavi-mor soğuk kutup havasını gösterir.'][m - 3];
       return;
     }
     // Radar ve NASA katmanlarında kendi düğme işleyicileri kullanılır
@@ -103,7 +107,7 @@
 
   (async () => {
     try { await radarYukle(); } catch (e) { kareler = []; }
-    sekmeler($('rkat'), ['Yağış radarı', 'Gerçek renkli uydu (günlük)', 'Yangın ve ısı noktaları', 'Kızılötesi uydu (15 dk)', 'Toz (uydu)', 'Fırtına bulutları (uydu)'], modDegis);
+    sekmeler($('rkat'), ['Yağış radarı', 'Gerçek renkli uydu (günlük)', 'Yangın ve ısı noktaları', 'Kızılötesi uydu (15 dk)', 'Toz (uydu)', 'Fırtına bulutları (uydu)', 'Su buharı (uydu)', 'Görünür (uydu)', 'Sis (uydu)', 'Hava kütlesi (uydu)'], modDegis);
     $('kisa').innerHTML = kareler.length ? `<div><dt>Son radar görüntüsü</dt><dd>${saatYaz(kareler.filter(k => !k.tahmin).slice(-1)[0].time)}</dd></div><div><dt>Uydu görüntüsü</dt><dd>${esc(fmtDay(dun))}</dd></div>` : '';
     // Radar 10 dakikada bir yenilenir
     setInterval(async () => { if (mod === 0 && !oynuyor && !document.hidden) { try { await radarYukle(); goster(kareler.filter(k => !k.tahmin).length - 1); } catch (e) {} } }, 10 * 60e3);

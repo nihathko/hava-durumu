@@ -311,6 +311,11 @@ const SAYFALAR = {
         </div>
         <div id="hasat-s" style="margin-top:14px"></div>
       </section>
+      <section class="sec" aria-labelledby="h-dt">
+        <h2 id="h-dt">Don takvimi</h2>
+        <p class="note">Seçili yerde 1991–2020 arasında ilkbaharın son ve sonbaharın ilk donlu günü. Fidan dikimi, ekim ve hasat planı için.</p>
+        <div id="dontak"></div>
+      </section>
       <section class="sec" aria-labelledby="h-ek">
         <h2 id="h-ek">Uygun ekim zamanı</h2>
         <p class="note">Uzun yıllar sıcaklık normallerine göre kışlık tahıllar ve yazlık ürünler için ekim dönemi, ayrıca soğuğa dayanıklılık bölgesi.</p>
@@ -333,8 +338,21 @@ const SAYFALAR = {
     baslik: 'Özel tahminler', js: 'ozel', harita: true, sonEk: '<script src="assets/normal-81.js"></script>\n',
     aciklama: 'Kayak merkezleri, toz taşınımı, havalimanı ölçümleri ve tahminleri, son depremler, uzay havası ve dünya şehirleri.',
     h1: 'Özel tahminler',
-    giris: 'Kayak merkezleri, stadyumlar, Kapadokya balon uçuşu, enverziyon, güneş ve rüzgar enerjisi, Afrika\'dan gelen toz, havalimanları ve SIGMET uyarıları, son depremler, kutup ışığı ihtimali ve dünya şehirleri.',
-    govde: `      <section class="sec" id="kayak-b" aria-labelledby="h-ky">
+    giris: 'Yol hava durumu, kayak merkezleri, stadyumlar, Kapadokya balon uçuşu, enverziyon, güneş ve rüzgar enerjisi, Afrika\'dan gelen toz, havalimanları ve SIGMET uyarıları, son depremler, kutup ışığı ihtimali ve dünya şehirleri.',
+    govde: `      <section class="sec" id="yol-b" aria-labelledby="h-yol">
+        <h2 id="h-yol">Yol hava durumu</h2>
+        <p class="note">İki il arasında yola çıkış saatine göre, yol boyunca her noktaya varacağın saatte beklenen hava. Kar, buzlanma, sis, kuvvetli yağış ve rüzgar işaretlenir. Güzergah iki il merkezi arasındaki düz hattan yaklaşık hesaplanır; gerçek yol değildir.</p>
+        <div class="dyform">
+          <div class="field"><label for="ynere">Nereden</label><select id="ynere"></select></div>
+          <div class="field"><label for="ynereye">Nereye</label><select id="ynereye"></select></div>
+          <div class="field"><label for="ytarih">Tarih</label><input id="ytarih" type="date"></div>
+          <div class="field"><label for="ysaat">Çıkış saati</label><input id="ysaat" type="time" step="3600"></div>
+          <div class="field"><label for="yhiz">Ortalama hız</label><select id="yhiz"><option value="60">60 km/sa</option><option value="80" selected>80 km/sa</option><option value="100">100 km/sa</option></select></div>
+          <button class="btn" id="ygit" type="button">Göster</button>
+        </div>
+        <div id="yols" style="margin-top:14px"></div>
+      </section>
+      <section class="sec" id="kayak-b" aria-labelledby="h-ky">
         <h2 id="h-ky">Kayak merkezleri</h2>
         <p class="note">Tahminler pistin ortalama yüksekliğine göre düzeltilir. Kar kalınlığı model değeridir; merkezlerin açıkladığı pist ölçümünden farklı olabilir.</p>
         <div class="tbl-wrap" id="kayak"></div>

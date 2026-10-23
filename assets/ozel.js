@@ -252,6 +252,54 @@
       <p class="kutu-not">Deprem sonrası çadır ve açık alanda kalanlar için: gece sıcaklığı ${deg(minOf(D.temperature_2m_min))} civarına düşüyor${maxOf(D.precipitation_sum) >= 1 ? ', yağış bekleniyor' : ''}${maxOf(D.wind_gusts_10m_max) >= 50 ? ', rüzgar kuvvetli esecek' : ''}. Resmi açıklamalar için AFAD'ı takip edin.</p>`;
   }
 
+  // ---------- Yol hava durumu ----------
+  // İki il merkezi arasındaki kuş uçuşu hat 30–40 km aralıklarla örneklenir; her noktaya, yola çıkış saati ve ortalama
+  // hıza göre varılacak saatin tahmini gösterilir. Gerçek karayolu güzergahı değildir.
+  function enYakinIlce(lat, lon) {
+    let b = null;
+    for (const I of IL) for (const x of I.ilceler) { if (x[1] == null) continue; const d = km(lat, lon, x[1], x[2]); if (!b || d < b.d) b = { d, ad: x[0] === 'Merkez' ? I.ad : `${x[0]} (${I.ad})` }; }
+    return b ? b.ad : '';
+  }
+  const iki = v => String(v).padStart(2, '0');
+  async function yol() {
+    const el = $('yols'), a = IL[+$('ynere').value], b = IL[+$('ynereye').value];
+    if (a === b) { el.innerHTML = '<p class="muted">Nereden ve nereye için farklı iller seç.</p>'; return; }
+    const top = km(a.lat, a.lon, b.lat, b.lon) * 1.25, hiz = +$('yhiz').value || 80, n = Math.max(2, Math.min(16, Math.ceil(top / 35)));
+    const cikis = new Date($('ytarih').value + 'T' + ($('ysaat').value || '08:00') + ':00');
+    const N = Array.from({ length: n + 1 }, (_, k) => ({ lat: a.lat + (b.lat - a.lat) * k / n, lon: a.lon + (b.lon - a.lon) * k / n, km: top * k / n }));
+    el.innerHTML = yukleniyor('Güzergah üzerindeki noktaların tahmini yükleniyor…');
+    let v;
+    try { v = await cokNokta(OM, N, { hourly: 'temperature_2m,weather_code,precipitation,snowfall,visibility,wind_gusts_10m,is_day', timezone: 'Europe/Istanbul', forecast_days: 3, wind_speed_unit: 'kmh' }, 30); }
+    catch (e) { el.innerHTML = hataMsg(); return; }
+    const satir = N.map((p, k) => {
+      const H = v[k].hourly, vr = new Date(cikis.getTime() + p.km / hiz * 36e5);
+      const ts = `${vr.getFullYear()}-${iki(vr.getMonth() + 1)}-${iki(vr.getDate())}T${iki(vr.getHours())}:00`, i = H.time.indexOf(ts);
+      const ad = k === 0 ? a.ad : k === n ? b.ad : enYakinIlce(p.lat, p.lon);
+      if (i < 0) return `<tr><td class="l">${esc(ad)}</td><td>${n0(p.km)} km</td><td colspan="6" class="l muted">Bu saat için tahmin yok (en fazla 3 gün sonrası)</td></tr>`;
+      const T = H.temperature_2m[i], kod = H.weather_code[i], gor = H.visibility[i], hm = H.wind_gusts_10m[i], kar = H.snowfall[i], yg = H.precipitation[i];
+      const risk = [kar > 0 ? 'Kar' : '', T != null && T <= 1 && (yg > 0 || kar > 0) ? 'Buzlanma' : T != null && T <= 0 ? 'Gizli buzlanma olabilir' : '', gor != null && gor < 1000 ? 'Sis' : '', yg >= 4 ? 'Kuvvetli yağış' : '', hm >= 60 ? 'Kuvvetli rüzgar' : '', [95, 96, 99].includes(kod) ? 'Gök gürültüsü' : ''].filter(Boolean);
+      return `<tr${risk.length ? ' class="yol-risk"' : ''}><td class="l">${esc(ad)}</td><td>${n0(p.km)} km</td>
+        <td>${vr.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}${vr.getDate() !== cikis.getDate() ? '<small>' + esc(kisaGun(ts.slice(0, 10))) + '</small>' : ''}</td>
+        <td class="l"><span class="ev-k">${icon(kod, H.is_day[i])}${esc(cond(kod)[0])}</span></td><td>${deg(T)}</td><td>${gor == null ? '–' : gor >= 10000 ? '10+ km' : gor >= 1000 ? dec(gor / 1000) + ' km' : n0(gor) + ' m'}</td><td>${rz(hm)}</td>
+        <td class="l">${risk.length ? risk.map(r => `<span class="etiket" style="background:#F08A24;color:#fff">${r}</span>`).join(' ') : '<span class="muted">Yok</span>'}</td></tr>`;
+    });
+    const sure = top / hiz;
+    el.innerHTML = `<p class="muted">Yaklaşık ${n0(top)} km, ${Math.floor(sure)} sa ${n0((sure % 1) * 60)} dk (ortalama ${hiz} km/sa). Tahmini varış: ${new Date(cikis.getTime() + sure * 36e5).toLocaleString('tr-TR', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}.</p>
+      <div class="tbl-wrap"><table class="kucuk-tablo yol"><thead><tr><th class="l">Nokta</th><th>Mesafe</th><th>Varış</th><th class="l">Hava</th><th>Sıcaklık</th><th>Görüş</th><th>Hamle<small>${RZ()}</small></th><th class="l">Dikkat</th></tr></thead><tbody>${satir.join('')}</tbody></table></div>`;
+  }
+  {
+    const sec = IL.map((I, i) => `<option value="${i}">${esc(I.ad)}</option>`).join(''), yerI = store.get('hava.yer', null), bas = (yerI && yerI.il) || 'Ankara';
+    $('ynere').innerHTML = sec; $('ynereye').innerHTML = sec;
+    $('ynere').value = String(Math.max(0, IL.findIndex(I => I.ad === bas)));
+    $('ynereye').value = String(Math.max(0, IL.findIndex(I => I.ad === (bas === 'İstanbul' ? 'Ankara' : 'İstanbul'))));
+    const su = new Date(Date.now() + 36e5);
+    $('ytarih').value = `${su.getFullYear()}-${iki(su.getMonth() + 1)}-${iki(su.getDate())}`;
+    $('ytarih').min = $('ytarih').value;
+    $('ysaat').value = iki(su.getHours()) + ':00';
+    $('ygit').addEventListener('click', yol);
+    yol();
+  }
+
   // Stadyum seçimi
   const ss = $('stsec');
   ss.innerHTML = STAD.map((x, i) => `<option value="${i}">${esc(x.ad)}</option>`).join('');

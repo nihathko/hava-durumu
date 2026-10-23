@@ -15,7 +15,7 @@ Türkiye'nin 81 ili ve 973 ilçesi için reklamsız, çerezsiz ve ücretsiz hava
 - **Hareketli rüzgâr haritası:** Türkiye haritasında rüzgârın estiği yöne akan çizgiler.
 - **Havacılık:** 54 havalimanının gerçek ölçümü (METAR), tahminleri (TAF) ve SIGMET uyarıları.
 - **Türkiye'ye özel:** Kayak merkezleri, stadyumlar, Kapadokya balon uçuşu, enverziyon, son depremler, toz taşınımı, zirai don, deniz bülteni.
-- **Herkes için:** Sesli dinleme, koyu ve açık tema, favoriler, paylaşma, "hareketi azalt" ayarına uyum. Telefon, tablet ve bilgisayarda düzgün görünür.
+- **Herkes için:** Sesli dinleme, koyu ve açık tema, birim seçimi (°C/°F; km/sa, m/sn, knot; hPa, mmHg, inHg), MGM resmi uyarı ve radyo bağlantıları, favoriler, paylaşma, "hareketi azalt" ayarına uyum. Telefon, tablet ve bilgisayarda düzgün görünür.
 
 ## Sayfalar
 
@@ -23,14 +23,14 @@ Türkiye'nin 81 ili ve 973 ilçesi için reklamsız, çerezsiz ve ücretsiz hava
 |---|---|
 | [Hava durumu](https://nihathko.github.io/hava-durumu/) | Anlık durum, tek cümlelik özet, dün bu saatte, saat saat ve 15 günlük kaydırmalı kartlar, haftanın özeti, 48 saatlik grafik, hava kalitesi, polen, güneş ve ay, sağlık ve etkinlik endeksleri, MGM resmi tahmini, yakındaki yerler, 3 saatlik tablo, 14 güne kadar tahmin ve 1991–2020 karşılaştırması, tahmin güveni ve yağış aralığı, atmosfer ve yükseklik (850, 700, 500 hPa, donma seviyesi, gök gürültüsü potansiyeli) |
 | [Türkiye haritası](https://nihathko.github.io/hava-durumu/harita.html) | 81 ilin dünü, şu anki durumu ve 5 günlük tahmini (sıcaklık, yağış, rüzgâr ve akan rüzgâr çizgileri), 54 havalimanının gerçek ölçümü, bölgelerde hava, 72 saatlik oynatılabilir harita, sıralamalar ve 81 il tablosu |
-| [Dikkat](https://nihathko.github.io/hava-durumu/uyari.html) | 3 gün için kuvvetli yağış, kar, rüzgâr, aşırı sıcak ve soğuk, fırtına beklenen iller (model verisinden otomatik; resmi uyarı değildir) |
-| [Radar ve uydu](https://nihathko.github.io/hava-durumu/radar.html) | Son 2 saatin yağış radarı, 15 dakikalık Meteosat görüntüleri (kızılötesi, toz, fırtına bulutları), NASA gerçek renkli uydu görüntüsü, yangın ve ısı noktaları |
+| [Dikkat](https://nihathko.github.io/hava-durumu/uyari.html) | 3 gün için kuvvetli yağış, kar, rüzgâr, aşırı sıcak ve soğuk, orman yangını riski, fırtına beklenen iller (model verisinden otomatik; resmi uyarı değildir) |
+| [Radar ve uydu](https://nihathko.github.io/hava-durumu/radar.html) | Son 2 saatin yağış radarı, 15 dakikalık Meteosat görüntüleri (kızılötesi, su buharı, görünür, sis, hava kütlesi, toz, fırtına bulutları), NASA gerçek renkli uydu görüntüsü, yangın ve ısı noktaları |
 | [Grafik ve modeller](https://nihathko.github.io/hava-durumu/grafik.html) | 10 günlük meteogram, 5 hava modeli ve MET Norway karşılaştırması, topluluk tahmini ile belirsizlik bandı, yüksek atmosfer, haftalık ve aylık uzun vadeli eğilim |
 | [İklim](https://nihathko.github.io/hava-durumu/iklim.html) | 1991–2020 aylık değerler ve rekorlar, son 30 günün normalden farkı, kuraklık göstergeleri, 2050'ye kadar iklim projeksiyonu, gün dereceleri, Köppen iklim tipi |
 | [Analizler](https://nihathko.github.io/hava-durumu/analiz.html) | 81 il için geçmiş ayların sıcaklık ve yağış analizi, kuraklık haritası, önümüzdeki 6 ay, iklim sınıflandırması, güneş ve rüzgâr atlası |
 | [Denizcilik](https://nihathko.github.io/hava-durumu/deniz.html) | 33 kıyı noktasında dalga ve deniz suyu sıcaklığı, 5 günlük dalga ve rüzgâr tahmini, deniz bülteni, marina ve deniz yolu tahmini, knot birimi |
-| [Ziraat](https://nihathko.github.io/hava-durumu/ziraat.html) | Zirai don uyarısı, toprak sıcaklığı ve nemi, sulama ihtiyacı, ilaçlama saatleri, büyüme derece-gün, akarsu debisi, hayvanlarda sıcak stresi, hasat ve ekim zamanı |
-| [Özel tahminler](https://nihathko.github.io/hava-durumu/ozel.html) | 17 kayak merkezi, 23 stadyum ve İstanbul Park, Kapadokya balon uçuşu, enverziyon riski, güneş ve rüzgâr enerjisi, SIGMET, toz taşınımı, havalimanları (METAR, TAF), son depremler, uzay havası, dünya şehirleri |
+| [Ziraat](https://nihathko.github.io/hava-durumu/ziraat.html) | Zirai don uyarısı, 1991–2020 don takvimi, toprak sıcaklığı ve nemi, sulama ihtiyacı, ilaçlama saatleri, büyüme derece-gün, akarsu debisi, hayvanlarda sıcak stresi, hasat ve ekim zamanı |
+| [Özel tahminler](https://nihathko.github.io/hava-durumu/ozel.html) | Yol hava durumu (iki il arası, çıkış saatine göre kar, buzlanma, sis uyarısı), 17 kayak merkezi, 23 stadyum ve İstanbul Park, Kapadokya balon uçuşu, enverziyon riski, güneş ve rüzgâr enerjisi, SIGMET, toz taşınımı, havalimanları (METAR, TAF), son depremler, uzay havası, dünya şehirleri |
 | [Bilgi](https://nihathko.github.io/hava-durumu/bilgi.html) | Tehlikeli havada ne yapmalı, hesaplayıcılar, meteoroloji sözlüğü, bulut çeşitleri, METAR ve TAF kodları, veri kaynaklarının özeti |
 | [Hakkında](https://nihathko.github.io/hava-durumu/hakkinda.html) | Bütün veri kaynakları ve lisansları, gizlilik, sık sorulan sorular |
 

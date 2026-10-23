@@ -123,6 +123,52 @@
   }
 
   let sonYer = null;
+  // ---------- Don takvimi (1991–2020) ----------
+  // Her yıl için ilkbaharın son ve sonbaharın ilk donlu günü (2 m'de en düşük sıcaklık 0°C ve altı), ERA5 yeniden analizinden.
+  // Sonuç konum ızgarası başına bir kez hesaplanıp bu cihazda saklanır.
+  const gunAd = n => new Date(Date.UTC(2021, 0, Math.round(n))).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+  async function donTakvimi(p, s) {
+    const el = $('dontak');
+    el.innerHTML = yukleniyor('1991–2020 günlük en düşük sıcaklıkları inceleniyor…');
+    const g = v => (Math.round(v * 4) / 4).toFixed(2), glat = g(+p.lat), glon = g(+p.lon), key = `hava.dontak1.${glat},${glon}`;
+    let T = store.get(key, null);
+    if (!T) {
+      let a;
+      try { a = await getJSON(omURL(OM_ARSIV, { latitude: glat, longitude: glon, start_date: '1991-01-01', end_date: '2020-12-31', daily: 'temperature_2m_min', timezone: 'auto' }), 1440); }
+      catch (e) { if (s === seq) el.innerHTML = hataMsg('Geçmiş yıllar verisi şu an alınamadı. Sayfayı biraz sonra yenile.'); return; }
+      const yil = {};
+      a.daily.time.forEach((t, i) => {
+        const v = a.daily.temperature_2m_min[i]; if (v == null || v > 0) return;
+        const y = +t.slice(0, 4), d = new Date(Date.UTC(2021, +t.slice(5, 7) - 1, +t.slice(8, 10))), n = Math.round((d - Date.UTC(2021, 0, 0)) / 864e5);
+        const o = yil[y] || (yil[y] = { ilk: null, son: null });
+        if (n <= 212) o.son = Math.max(o.son ?? 0, n); else if (o.ilk == null) o.ilk = n;
+      });
+      T = Array.from({ length: 30 }, (_, k) => { const y = 1991 + k, o = yil[y] || {}; return [y, o.son ?? null, o.ilk ?? null]; });
+      store.set(key, T);
+    }
+    if (s !== seq) return;
+    const bah = T.filter(x => x[1] != null), son = T.filter(x => x[2] != null);
+    if (!bah.length && !son.length) { el.innerHTML = '<p class="muted">1991–2020 arasında bu yerde 2 m yükseklikte 0°C ve altı sıcaklık hiç görülmemiş; don riski çok düşüktür.</p>'; return; }
+    const ort = L => L.reduce((t, x) => t + x, 0) / L.length;
+    const enGec = bah.slice().sort((a, b) => b[1] - a[1])[0], enErken = son.slice().sort((a, b) => a[2] - b[2])[0];
+    const ikisi = T.filter(x => x[1] != null && x[2] != null);
+    const ILK = [[60, '1 Mart'], [74, '15 Mart'], [91, '1 Nisan'], [105, '15 Nisan'], [121, '1 Mayıs'], [135, '15 Mayıs']];
+    const SON = [[274, '1 Ekim'], [288, '15 Ekim'], [305, '1 Kasım'], [319, '15 Kasım'], [335, '1 Aralık']];
+    const yuzde = n => Math.round(n / T.length * 100);
+    el.innerHTML = `<dl class="kv ozet3">
+        <div><dt>Ortalama son ilkbahar donu</dt><dd>${bah.length ? gunAd(ort(bah.map(x => x[1]))) : 'Yok'}</dd></div>
+        <div><dt>En geç ilkbahar donu</dt><dd>${enGec ? `${gunAd(enGec[1])} <small>${enGec[0]}</small>` : '–'}</dd></div>
+        <div><dt>Ortalama ilk sonbahar donu</dt><dd>${son.length ? gunAd(ort(son.map(x => x[2]))) : 'Yok'}</dd></div>
+        <div><dt>En erken sonbahar donu</dt><dd>${enErken ? `${gunAd(enErken[2])} <small>${enErken[0]}</small>` : '–'}</dd></div>
+        <div><dt>Ortalama donsuz dönem</dt><dd>${ikisi.length ? n0(ort(ikisi.map(x => x[2] - x[1]))) + ' gün' : '–'}</dd></div>
+        <div><dt>Don görülen yıl</dt><dd>${T.filter(x => x[1] != null || x[2] != null).length} / 30</dd></div></dl>
+      <div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">İlkbaharda bu tarihten sonra</th>${ILK.map(x => `<th>${x[1]}</th>`).join('')}</tr></thead>
+        <tbody><tr><td class="l">Don görülen yılların oranı</td>${ILK.map(([n]) => `<td>%${yuzde(T.filter(x => x[1] != null && x[1] > n).length)}</td>`).join('')}</tr></tbody></table></div>
+      <div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Sonbaharda bu tarihten önce</th>${SON.map(x => `<th>${x[1]}</th>`).join('')}</tr></thead>
+        <tbody><tr><td class="l">Don görülen yılların oranı</td>${SON.map(([n]) => `<td>%${yuzde(T.filter(x => x[2] != null && x[2] < n).length)}</td>`).join('')}</tr></tbody></table></div>
+      <p class="note">Örnek: "1 Nisan" sütunu %20 ise, 30 yılın 6'sında 1 Nisan'dan sonra da don olmuştur. Değerler yaklaşık 25 km'lik ızgaranın 2 m sıcaklığıdır; çukur alanlarda ve bitki seviyesinde don daha sık ve daha geç görülür.</p>`;
+  }
+
   async function yer(p) {
     const s = ++seq;
     ['toprak', 'su', 'ilac', 'gdd', 'akarsu'].forEach(k => { $(k).innerHTML = yukleniyor(); });
@@ -130,7 +176,7 @@
     $('kisa').insertAdjacentHTML('beforeend', `<div data-yer><dt>Seçili yer</dt><dd>${esc(p.name)}</dd></div>`);
     document.title = `${p.name} ziraat · Hava Durumu`;
     sonYer = p;
-    sinep(p, s); soguklama(p, s); ekimZamani(p); hasat(p, s);
+    sinep(p, s); soguklama(p, s); ekimZamani(p); hasat(p, s); donTakvimi(p, s);
     let d;
     try {
       d = await getJSON(omURL(OM, { latitude: p.lat, longitude: p.lon, timezone: 'auto', past_days: 31, forecast_days: 7, wind_speed_unit: 'kmh',

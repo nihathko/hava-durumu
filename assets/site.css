@@ -872,3 +872,5 @@ dialog.ayar .muted { margin: 0; color: var(--muted); font-size: 13px; }
 .ck-mgm + .ck-tema { margin-top: 12px; }
 .ck-ayar { margin-top: 12px; width: 100%; }
 @media (max-width: 420px) { .ust-ar #theme { display: none; } }
+table.yol tr.yol-risk td { background: color-mix(in srgb, #F08A24 9%, transparent); }
+table.yol td small { display: block; color: var(--muted); font-size: 11.5px; }
