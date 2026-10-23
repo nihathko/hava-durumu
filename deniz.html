@@ -34,7 +34,7 @@
     </div>
     <section class="sayfa" aria-labelledby="h-sayfa">
       <h1 id="h-sayfa">Denizcilik</h1>
-      <p class="giris" id="giris">Kıyılarımızda dalga yüksekliği, deniz suyu sıcaklığı ve rüzgar. Bir noktaya dokununca o noktanın 5 günlük dalga ve rüzgar tahmini açılır.</p>
+      <p class="giris" id="giris">Kıyılarımızda dalga yüksekliği, deniz suyu sıcaklığı ve rüzgar; deniz bülteni, saat saat dalga haritası, marinalar ve deniz yolu tahmini. Rüzgarı knot ya da km/sa olarak görebilirsin.</p>
       <dl class="kisa" id="kisa"></dl>
     </section>
   </div></div>
@@ -43,9 +43,41 @@
       <section class="sec" aria-labelledby="h-dh">
         <h2 id="h-dh">Kıyılar</h2>
         <p class="note" id="dnot"></p>
-        <div class="tabs" id="dkat" aria-label="Harita katmanı"></div>
+        <div class="ara"><div class="tabs" id="dkat" aria-label="Harita katmanı"></div><div class="tabs" id="dbirim" aria-label="Rüzgar birimi"></div></div>
         <div class="trh-wrap" id="dharita"></div>
         <div id="dlj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-bt">
+        <h2 id="h-bt">Deniz bülteni</h2>
+        <p class="note">Her deniz bölgesi için fırtına, hava, rüzgar kuvveti (Beaufort), dalga ve görüş. Model verisinden otomatik hazırlanır; resmi bülten değildir.</p>
+        <div class="tabs" id="bgun2" aria-label="Gün"></div>
+        <div id="bulten"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-dz">
+        <h2 id="h-dz">Saat saat dalga ve rüzgar haritası</h2>
+        <p class="note">Türkiye çevresindeki denizlerde 0,5°'lik (yaklaşık 50 km) ızgarada önümüzdeki 72 saat. Oklar dalganın ya da rüzgarın gittiği yönü gösterir.</p>
+        <div class="tabs" id="dzk" aria-label="Katman"></div>
+        <div class="trh-wrap" id="dzh"></div>
+        <div id="dzlj"></div>
+        <div class="oynat"><button class="btn" id="dzo" type="button">Oynat</button><input type="range" id="dzs" min="0" max="0" value="0" aria-label="Saat"><span class="zaman" id="dzz"></span></div>
+      </section>
+      <section class="sec" aria-labelledby="h-mr">
+        <h2 id="h-mr">Marinalar</h2>
+        <p class="note">33 marina ve liman için 5 günlük, 3 saatlik tahmin.</p>
+        <div class="field" style="max-width:420px;margin-bottom:14px"><label for="msec">Marina</label><select id="msec"></select></div>
+        <div id="mtab"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-dy">
+        <h2 id="h-dy">Deniz yolu tahmini</h2>
+        <p class="note">Kalkış ve varış noktasını, teknenin hızını ve çıkış saatini seç; güzergah boyunca geçeceğin saatte beklenen rüzgar ve dalga hesaplanır. Güzergah kuş uçuşudur.</p>
+        <div class="dyform">
+          <div class="field"><label for="ynk">Kalkış</label><select id="ynk"></select></div>
+          <div class="field"><label for="yvr">Varış</label><select id="yvr"></select></div>
+          <div class="field"><label for="yhz">Hız (knot)</label><input id="yhz" type="number" min="1" max="40" value="7"></div>
+          <div class="field"><label for="ycs">Çıkış</label><select id="ycs"></select></div>
+          <button class="btn" id="ygit" type="button">Hesapla</button>
+        </div>
+        <div id="ysonuc" style="margin-top:14px"></div>
       </section>
       <section class="sec" aria-labelledby="h-dn">
         <h2 id="h-dn">Seçili nokta</h2>

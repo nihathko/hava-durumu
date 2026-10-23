@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Analizler · Hava Durumu</title>
+<meta name="description" content="81 il için geçmiş ayların sıcaklık ve yağış analizi, kuraklık, önümüzdeki aylar, iklim sınıflandırması, güneş ve rüzgar atlası.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Analizler</h1>
+      <p class="giris" id="giris">81 ilde geçen ayların normalden ne kadar sıcak ya da yağışlı geçtiği, kuraklık durumu, önümüzdeki 6 ayın eğilimi, iklim tipleri, güneş ve rüzgar enerjisi atlası ve bitkiler için soğuğa dayanıklılık bölgeleri.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-as">
+        <h2 id="h-as">Aylık sıcaklık analizi</h2>
+        <p class="note" id="anot"></p>
+        <div class="tabs" id="aay" aria-label="Ay"></div>
+        <div id="sozet"></div>
+        <div class="trh-wrap" id="sh"></div>
+        <div id="slj"></div>
+        <details class="acil" style="margin-top:14px"><summary>81 il tablosu</summary><div class="tbl-wrap" id="stablo"></div></details>
+      </section>
+      <section class="sec" aria-labelledby="h-ay2">
+        <h2 id="h-ay2">Aylık yağış raporu</h2>
+        <p class="note">Yukarıda seçilen ay için yağışın normale oranı.</p>
+        <div id="yozet"></div>
+        <div class="trh-wrap" id="yh"></div>
+        <div id="ylj"></div>
+        <details class="acil" style="margin-top:14px"><summary>81 il tablosu</summary><div class="tbl-wrap" id="ytablo"></div></details>
+      </section>
+      <section class="sec" aria-labelledby="h-kr">
+        <h2 id="h-kr">Kuraklık</h2>
+        <p class="note">Son 1, 3, 6 ve 12 ayın toplam yağışının normale oranı.</p>
+        <div class="tabs" id="kpen" aria-label="Dönem"></div>
+        <div id="kozet"></div>
+        <div class="trh-wrap" id="kh"></div>
+        <div id="klj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-mv">
+        <h2 id="h-mv">Önümüzdeki aylar</h2>
+        <p class="note">ECMWF mevsimsel tahminine göre önümüzdeki 6 ayda sıcaklık ve yağışın normalden beklenen farkı. Eğilim gösterir, kesin tahmin değildir.</p>
+        <div class="ara"><div class="tabs" id="mtur" aria-label="Değişken"></div><div class="tabs" id="may" aria-label="Ay"></div></div>
+        <div class="trh-wrap" id="mh"></div>
+        <div id="mlj"></div>
+        <div id="mozet"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ik">
+        <h2 id="h-ik">İklim sınıflandırması</h2>
+        <p class="note">1991–2020 normallerine göre Köppen-Geiger iklim tipleri; tabloda De Martonne ve Erinç indisleri de var.</p>
+        <div class="trh-wrap" id="ih"></div>
+        <div id="ilj"></div>
+        <details class="acil" style="margin-top:14px"><summary>81 il tablosu</summary><div class="tbl-wrap" id="itablo"></div></details>
+      </section>
+      <section class="sec" aria-labelledby="h-at">
+        <h2 id="h-at">Güneş, rüzgar ve soğuğa dayanıklılık atlası</h2>
+        <p class="note" id="atnot"></p>
+        <div class="tabs" id="atur" aria-label="Atlas"></div>
+        <div class="trh-wrap" id="ath"></div>
+        <div id="atlj"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Geçmiş aylar, normaller, güneş ve rüzgar: NASA POWER (MERRA-2 yeniden analiz, yaklaşık 50 km çözünürlük), il merkezleri için. MGM istasyon ölçümlerinden farklı olabilir.</li>
+        <li>Önümüzdeki aylar: ECMWF SEAS5 mevsimsel tahmini (Open-Meteo Seasonal API).</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/turkiye.js"></script>
+<script src="assets/normal-81.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/analiz.js"></script>
+</body>
+</html>

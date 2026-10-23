@@ -33,8 +33,8 @@
     zmn.textContent = `${saatYaz(k.time)}${k.tahmin ? ' (tahmin)' : ''}`;
   }
   const dur = () => { clearInterval(oynuyor); oynuyor = null; oy.textContent = 'Oynat'; };
-  oy.addEventListener('click', () => { if (oynuyor) return dur(); oy.textContent = 'Durdur'; oynuyor = setInterval(() => goster(i + 1), 700); });
-  kare.addEventListener('input', () => { dur(); goster(+kare.value); });
+  oy.addEventListener('click', () => { if (mod >= 3) return; if (oynuyor) return dur(); oy.textContent = 'Durdur'; oynuyor = setInterval(() => goster(i + 1), 700); });
+  kare.addEventListener('input', () => { if (mod >= 3) return; dur(); goster(+kare.value); });
 
   // ---------- Uydu ve yangın ----------
   const dun = gunEkle(bugunTR(), -1);
@@ -44,13 +44,50 @@
   const yanginKatman = t => L.tileLayer.wms('https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', { layers: 'VIIRS_SNPP_Thermal_Anomalies_375m_All', format: 'image/png', transparent: true, version: '1.3.0', time: t, zIndex: 6, attribution: 'Yangın noktaları: NASA FIRMS / GIBS' });
   const tarihSec = () => `<label class="zaman" for="ut">Görüntü tarihi</label> <select id="ut" class="kucuk">${gunler.map(g => `<option value="${g}"${g === uyduTarih ? ' selected' : ''}>${esc(fmtDay(g))}</option>`).join('')}</select>`;
 
+  // ---------- EUMETSAT Meteosat (15 dakikada bir) ----------
+  // Türkiye, 45,5° doğudaki Meteosat (IODC) uydusunun görüş alanında; görüntüler yaklaşık 45 dakika gecikmeli gelir
+  const EUM = 'https://view.eumetsat.int/geoserver/wms';
+  const eumKatman = (ad, t) => L.tileLayer.wms(EUM, { layers: ad, format: 'image/png', transparent: true, version: '1.3.0', time: t, opacity: ad.includes('ir108') ? .75 : .85, zIndex: 6, attribution: 'Uydu: © EUMETSAT (Meteosat)' });
+  let eumKareler = [], eumKatmanlar = [], ei = 0, eumOyn = null;
+  function eumHazirla(ad) {
+    eumKatmanlar.forEach(k => map.removeLayer(k));
+    const son = Math.floor((Date.now() - 45 * 60e3) / 9e5) * 9e5;
+    eumKareler = Array.from({ length: 9 }, (_, j) => new Date(son - (8 - j) * 9e5).toISOString().slice(0, 19) + 'Z');
+    eumKatmanlar = eumKareler.map(t => eumKatman(ad, t));
+    ei = eumKareler.length - 1;
+  }
+  function eumGoster(n) {
+    ei = (n + eumKareler.length) % eumKareler.length;
+    eumKatmanlar.forEach((k, j) => { if (j === ei) { if (!map.hasLayer(k)) k.addTo(map); k.setOpacity(.8); } else if (map.hasLayer(k)) k.setOpacity(0); });
+    const s = eumKatmanlar[(ei + 1) % eumKatmanlar.length]; if (!map.hasLayer(s)) s.setOpacity(0).addTo(map);
+    kare.value = String(ei);
+    zmn.textContent = new Date(eumKareler[ei]).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  }
+
   let mod = 0;
   function modDegis(m) {
     mod = m; dur();
+    clearInterval(eumOyn); eumOyn = null;
     katmanlar.forEach(k => map.removeLayer(k));
+    eumKatmanlar.forEach(k => map.removeLayer(k));
     if (uydu) { map.removeLayer(uydu); uydu = null; }
     if (yangin) { map.removeLayer(yangin); yangin = null; }
     const oyn = $('oynat');
+    if (m >= 3) {
+      const ad = ['msg_iodc:ir108', 'msg_iodc:rgb_dust', 'msg_iodc:rgb_convection'][m - 3];
+      oyn.innerHTML = ''; oyn.append(oy, kare, zmn);
+      eumHazirla(ad); kare.max = String(eumKareler.length - 1); eumGoster(ei);
+      oy.textContent = 'Oynat';
+      oy.onclick = () => { if (eumOyn) { clearInterval(eumOyn); eumOyn = null; oy.textContent = 'Oynat'; return; } oy.textContent = 'Durdur'; eumOyn = setInterval(() => eumGoster(ei + 1), 800); };
+      kare.oninput = () => { clearInterval(eumOyn); eumOyn = null; oy.textContent = 'Oynat'; eumGoster(+kare.value); };
+      notEl.textContent = [
+        'Kızılötesi uydu görüntüsü (Meteosat, 10,8 µm): son 2 saat, 15 dakikada bir. Beyaz ve parlak alanlar yüksek, soğuk bulutlardır; gece de görünür.',
+        'Toz görüntüsü (Meteosat RGB): pembe-macenta alanlar havadaki çöl tozudur. Bulutlar koyu kırmızı, kahverengi tonlarında görünür.',
+        'Konvektif bulut görüntüsü (Meteosat RGB): parlak sarı ve turuncu alanlar, sağanak ve gök gürültülü fırtına üreten güçlü bulutlardır.'][m - 3];
+      return;
+    }
+    // Radar ve NASA katmanlarında kendi düğme işleyicileri kullanılır
+    oy.onclick = null; kare.oninput = null;
     if (m === 0) {
       oyn.innerHTML = ''; oyn.append(oy, kare, zmn);
       if (!kareler.length) { notEl.textContent = 'Radar verisi şu an alınamadı. Biraz sonra sayfayı yenile.'; return; }
@@ -66,7 +103,7 @@
 
   (async () => {
     try { await radarYukle(); } catch (e) { kareler = []; }
-    sekmeler($('rkat'), ['Yağış radarı', 'Uydu görüntüsü', 'Yangın ve ısı noktaları'], modDegis);
+    sekmeler($('rkat'), ['Yağış radarı', 'Gerçek renkli uydu (günlük)', 'Yangın ve ısı noktaları', 'Kızılötesi uydu (15 dk)', 'Toz (uydu)', 'Fırtına bulutları (uydu)'], modDegis);
     $('kisa').innerHTML = kareler.length ? `<div><dt>Son radar görüntüsü</dt><dd>${saatYaz(kareler.filter(k => !k.tahmin).slice(-1)[0].time)}</dd></div><div><dt>Uydu görüntüsü</dt><dd>${esc(fmtDay(dun))}</dd></div>` : '';
     // Radar 10 dakikada bir yenilenir
     setInterval(async () => { if (mod === 0 && !oynuyor && !document.hidden) { try { await radarYukle(); goster(kareler.filter(k => !k.tahmin).length - 1); } catch (e) {} } }, 10 * 60e3);

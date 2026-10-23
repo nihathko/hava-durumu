@@ -66,6 +66,10 @@
       { b: 'Uçuş koşulu', l: 1, v: s => s.kat || '', h: s => s.kat && KAT[s.kat] ? `<span class="etiket ${KAT[s.kat][1]}">${KAT[s.kat][0]}</span>` : '–' },
       { b: 'Ham veri', l: 1, v: s => s.id, h: s => `<details class="acil"><summary>METAR${s.taf ? ', TAF' : ''}</summary><p class="ham">${esc(s.ham || '')}${s.taf ? '\n\n' + esc(s.taf) : ''}</p></details>` }
     ], M.s, 0);
+    const sg = $('sigmet');
+    if (sg) sg.innerHTML = M.sigmet && M.sigmet.length
+      ? `<div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Uçuş bölgesi</th><th class="l">Tehlike</th><th>Geçerlilik</th><th>Yükseklik<small>feet</small></th><th class="l">Ham mesaj</th></tr></thead><tbody>${M.sigmet.map(x => `<tr><td class="l">${esc(x.fir)}</td><td class="l"><b>${esc(x.tehlike)}</b> <small class="muted">${esc(x.nitelik)}</small></td><td>${x.bas ? new Date(x.bas).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }) : ''}–${x.bit ? new Date(x.bit).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }) : ''}</td><td>${x.alt ?? '–'}–${x.ust ?? '–'}</td><td class="l"><details class="acil"><summary>Göster</summary><p class="ham">${esc(x.ham)}</p></details></td></tr>`).join('')}</tbody></table></div>`
+      : '<p class="muted">Şu an Ankara ve İstanbul uçuş bölgeleri için geçerli SIGMET uyarısı yok.</p>';
   }
 
   // ---------- Son depremler ----------
@@ -95,6 +99,7 @@
     ], L, 0, true);
     const en = L.reduce((b, x) => x.m > b.m ? x : b, L[0]);
     $('kisa').insertAdjacentHTML('beforeend', `<div><dt>Son 7 günün en büyük depremi</dt><dd>${dec(en.m)}, ${esc(en.y.il)}</dd></div>`);
+    depremBolgesi(L);
     el.insertAdjacentHTML('afterend', `<p class="muted" style="font-size:13px;margin:8px 0 0">Kaynak: ${kaynak}. Yer adı, depremin merkez üssüne en yakın ilçedir. ${L.length} deprem.</p>`);
   }
 
@@ -125,14 +130,138 @@
     ['Tahran', 35.69, 51.39], ['Bağdat', 33.31, 44.36], ['Kudüs', 31.78, 35.22], ['Kahire', 30.04, 31.24], ['Mekke', 21.39, 39.86], ['Medine', 24.47, 39.61], ['Riyad', 24.71, 46.68], ['Dubai', 25.20, 55.27], ['Doha', 25.29, 51.53],
     ['New York', 40.71, -74.01], ['Los Angeles', 34.05, -118.24], ['Toronto', 43.65, -79.38], ['Tokyo', 35.68, 139.69], ['Pekin', 39.90, 116.41], ['Seul', 37.57, 126.98], ['Sidney', -33.87, 151.21]
   ].map(([ad, lat, lon]) => ({ ad, lat, lon }));
+  const ICAO = {"Londra":"EGLL","Paris":"LFPG","Berlin":"EDDB","Amsterdam":"EHAM","Viyana":"LOWW","Roma":"LIRF","Madrid":"LEMD","Atina":"LGAV","Sofya":"LBSF","Bükreş":"LROP","Saraybosna":"LQSA","Üsküp":"LWSK","Priştine":"BKPR","Lefkoşa":"LCEN","Moskova":"UUEE","Bakü":"UBBB","Tiflis":"UGTB","Taşkent":"UTTT","Astana":"UACC","Bişkek":"UCFM","Aşkabat":"UTAA","Tahran":"OIII","Bağdat":"ORBI","Kudüs":"LLBG","Kahire":"HECA","Mekke":"OEJN","Medine":"OEMA","Riyad":"OERK","Dubai":"OMDB","Doha":"OTHH","New York":"KJFK","Los Angeles":"KLAX","Toronto":"CYYZ","Tokyo":"RJTT","Pekin":"ZBAA","Seul":"RKSI","Sidney":"YSSY"};
   async function dunya() {
     const el = $('dunya'); el.innerHTML = yukleniyor();
+    let olc = {}; try { olc = (await havalimanlari()).dunya || {}; } catch (e) {}
     let v;
     try { v = await cokNokta(OM, DUNYA, { current: 'temperature_2m,weather_code,is_day', daily: 'temperature_2m_max,temperature_2m_min', timezone: 'auto', forecast_days: 1 }, 30); }
     catch (e) { el.innerHTML = hataMsg(); return; }
     el.innerHTML = DUNYA.map((c, i) => { const d = v[i], C = d.current, saat = new Date(Date.now() + d.utc_offset_seconds * 1000).toISOString().slice(11, 16);
-      return `<a class="kart" href="${anaSayfaLink({ name: c.ad, lat: c.lat, lon: c.lon, il: null })}">${icon(C.weather_code, C.is_day)}<b>${esc(c.ad)}</b><span class="t">${deg(C.temperature_2m)}</span><small>${saat}, ${esc(cond(C.weather_code)[0].toLocaleLowerCase('tr'))}, ${deg(d.daily.temperature_2m_min[0])} / ${deg(d.daily.temperature_2m_max[0])}</small></a>`; }).join('');
+      return `<a class="kart" href="${anaSayfaLink({ name: c.ad, lat: c.lat, lon: c.lon, il: null })}">${icon(C.weather_code, C.is_day)}<b>${esc(c.ad)}</b><span class="t">${deg(C.temperature_2m)}</span><small>${saat}, ${esc(cond(C.weather_code)[0].toLocaleLowerCase('tr'))}, ${deg(d.daily.temperature_2m_min[0])} / ${deg(d.daily.temperature_2m_max[0])}${olc[ICAO[c.ad]] && olc[ICAO[c.ad]].t != null ? `, havalimanı ölçümü ${deg(olc[ICAO[c.ad]].t)}` : ''}</small></a>`; }).join('');
   }
 
-  kayak(); toz(); metar(); deprem(); uzay(); dunya();
+  // ---------- Stadyumlar ve İstanbul Park ----------
+  const STAD = [
+    ['İstanbul, Seyrantepe stadı', 41.1034, 28.9907], ['İstanbul, Kadıköy stadı', 40.9877, 29.0369], ['İstanbul, Dolmabahçe stadı', 41.0393, 28.9945], ['İstanbul, Başakşehir stadı', 41.0767, 28.7772],
+    ['İstanbul, Kasımpaşa stadı', 41.0400, 28.9722], ['İstanbul, Olimpiyat stadı', 41.0744, 28.7656], ['Trabzon, Akyazı stadı', 40.9947, 39.6611], ['Ankara, Eryaman stadı', 39.9750, 32.6233],
+    ['İzmir, Alsancak stadı', 38.4372, 27.1536], ['İzmir, Göztepe stadı', 38.3992, 27.0761], ['Konya stadı', 37.9450, 32.4842], ['Kayseri stadı', 38.7250, 35.4214], ['Antalya stadı', 36.8908, 30.6433],
+    ['Gaziantep stadı', 37.0414, 37.3297], ['Samsun stadı', 41.2669, 36.2847], ['Sivas stadı', 39.7353, 37.0453], ['Kocaeli stadı', 40.7581, 29.9592], ['Bursa stadı', 40.2250, 29.0072],
+    ['Rize stadı', 41.0283, 40.5317], ['Alanya stadı', 36.5536, 32.0136], ['Eyüp stadı', 41.0475, 28.9339], ['Hatay stadı', 36.2367, 36.1572], ['İstanbul Park pisti', 40.9517, 29.4050]
+  ].map(([ad, lat, lon]) => ({ ad, lat, lon }));
+  async function stadyum(st) {
+    const el = $('stad');
+    el.innerHTML = yukleniyor();
+    let d;
+    try { d = await getJSON(omURL(OM, { latitude: st.lat, longitude: st.lon, timezone: 'Europe/Istanbul', forecast_days: 3, wind_speed_unit: 'kmh', hourly: 'temperature_2m,relative_humidity_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,precipitation_probability' })); }
+    catch (e) { el.innerHTML = hataMsg(); return; }
+    const H = d.hourly, now = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 13);
+    const gunler = [...new Set(H.time.map(t => t.slice(0, 10)))];
+    el.innerHTML = gunler.map(g => {
+      const ii = H.time.map((_, i) => i).filter(i => H.time[i].startsWith(g) && +H.time[i].slice(11, 13) >= 8 && H.time[i].slice(0, 13) >= now);
+      if (!ii.length) return '';
+      const sat = (b, f, k = '') => `<tr><th class="l">${b}</th>${ii.map(i => `<td${k ? ` class="${k}"` : ''}>${f(i)}</td>`).join('')}</tr>`;
+      return `<div class="gb"><h3>${esc(fmtWeek(g))}, ${esc(fmtDay(g))}</h3></div><div class="tbl-wrap"><table class="marina"><thead><tr><th class="l">Saat</th>${ii.map(i => `<th>${H.time[i].slice(11, 13)}</th>`).join('')}</tr></thead><tbody>
+        ${sat('Hava', i => icon(H.weather_code[i], H.is_day[i]), 'ev ikon')}${sat('Sıcaklık', i => deg(H.temperature_2m[i]))}${sat('Nem', i => '%' + n0(H.relative_humidity_2m[i]))}
+        ${sat('Rüzgar', i => H.wind_direction_10m[i] == null ? '–' : `<span class="wd">${arrow(H.wind_direction_10m[i])}${n0(H.wind_speed_10m[i])}</span>`)}${sat('Yağış ihtimali', i => H.precipitation_probability[i] >= 10 ? '%' + H.precipitation_probability[i] : '–')}</tbody></table></div>`;
+    }).join('');
+  }
+
+  // ---------- Kapadokya balon uçuşu (gün doğumu saatleri) ----------
+  async function balon() {
+    const el = $('balon');
+    el.innerHTML = yukleniyor();
+    let d;
+    try { d = await getJSON(omURL(OM, { latitude: 38.643, longitude: 34.830, elevation: 1100, timezone: 'Europe/Istanbul', forecast_days: 4, wind_speed_unit: 'kmh', hourly: 'wind_speed_10m,wind_gusts_10m,wind_direction_10m,wind_speed_120m,wind_speed_925hPa,precipitation,precipitation_probability,visibility,weather_code,cape', daily: 'sunrise' }), 30); }
+    catch (e) { el.innerHTML = hataMsg(); return; }
+    const H = d.hourly, bugun = bugunTR();
+    const gunler = d.daily.time.map((g, j) => ({ g, sr: d.daily.sunrise[j] })).filter(x => x.g >= bugun).slice(0, 4);
+    const satir = gunler.map(({ g, sr }) => {
+      const s0 = +sr.slice(11, 13), ii = H.time.map((t, i) => [t, i]).filter(([t]) => t.startsWith(g) && +t.slice(11, 13) >= s0 - 1 && +t.slice(11, 13) <= s0 + 2).map(x => x[1]);
+      if (!ii.length) return '';
+      const r = maxOf(ii.map(i => H.wind_speed_10m[i])), h = maxOf(ii.map(i => H.wind_gusts_10m[i])), u = maxOf(ii.map(i => Math.max(H.wind_speed_120m[i] ?? 0, H.wind_speed_925hPa[i] ?? 0)));
+      const y = maxOf(ii.map(i => H.precipitation[i])), yi = maxOf(ii.map(i => H.precipitation_probability[i])), g2 = minOf(ii.map(i => H.visibility[i])), cp = maxOf(ii.map(i => H.cape[i]));
+      const neden = []; let sev = 2;
+      if (r > 18 || h > 25 || u > 35) { neden.push('rüzgar kuvvetli'); sev = 0; } else if (r > 10 || h > 18 || u > 25) { neden.push('rüzgar sınırda'); sev = Math.min(sev, 1); }
+      if (y > 0.1 || yi >= 50) { neden.push('yağış'); sev = 0; } else if (yi >= 25) { neden.push('yağış ihtimali'); sev = Math.min(sev, 1); }
+      if (g2 != null && g2 < 3000) { neden.push('sis, görüş düşük'); sev = Math.min(sev, g2 < 1000 ? 0 : 1); }
+      if (cp > 500) { neden.push('kararsız hava'); sev = Math.min(sev, 1); }
+      const et = [['Uygun değil', 'e-cok'], ['Sınırda', 'e-orta'], ['Uygun', 'e-az']][sev];
+      return `<tr><td class="l day1">${esc(fmtWeek(g))}<small>gün doğumu ${hhmm(sr)}</small></td><td class="l"><span class="etiket ${et[1]}">${et[0]}</span></td><td>${n0(r)}</td><td>${n0(h)}</td><td>${n0(u)}</td><td>%${n0(yi)}</td><td>${g2 == null ? '–' : g2 >= 10000 ? '10 km+' : dec(g2 / 1000) + ' km'}</td><td class="l">${esc(neden.join(', ') || 'koşullar elverişli')}</td></tr>`;
+    }).join('');
+    el.innerHTML = `<div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Sabah</th><th class="l">Uçuş</th><th>Yer rüzgarı<small>km/sa</small></th><th>Hamle</th><th>Yüksek rüzgar<small>120 m – 750 m</small></th><th>Yağış<small>ihtimali</small></th><th>Görüş</th><th class="l">Neden</th></tr></thead><tbody>${satir}</tbody></table></div>
+      <p class="kutu-not">Göreme için gün doğumundan 1 saat önce ile 2 saat sonrası arasındaki model tahmini. Balon uçuşlarına Sivil Havacılık Genel Müdürlüğü ve MGM'nin Kapadokya meydan uyarılarına göre her sabah ayrıca karar verilir; burada yazan yalnızca bir ön bilgidir.</p>`;
+  }
+
+  // ---------- Enverziyon riski (sabah saatlerinde hava kirliliğinin sıkışması) ----------
+  async function enverziyon() {
+    const el = $('envh');
+    el.innerHTML = yukleniyor('81 ilin sabah sıcaklık profili yükleniyor…');
+    let v;
+    try { v = await cokNokta(OM, IL, { hourly: 'temperature_2m,temperature_925hPa,temperature_850hPa,temperature_700hPa,wind_speed_10m', timezone: 'Europe/Istanbul', forecast_days: 3, wind_speed_unit: 'kmh' }, 60); }
+    catch (e) { el.innerHTML = hataMsg(); return; }
+    const gunler = v[0].hourly.time.filter(t => t.endsWith('T07:00')).map(t => t.slice(0, 10));
+    // Şehrin yüksekliğinin en az 300 m üstündeki ilk basınç seviyesi kullanılır (925 hPa ≈ 750 m, 850 hPa ≈ 1.500 m, 700 hPa ≈ 3.000 m);
+    // yüksek şehirlerde alttaki seviyeler yerin altında kaldığı için anlamsızdır.
+    const puan = (d, g) => {
+      const H = d.hourly, i = H.time.indexOf(g + 'T07:00'); if (i < 0) return null;
+      const yuk = d.elevation ?? 0, sev = yuk < 450 ? '925' : yuk < 1200 ? '850' : '700';
+      const T = H.temperature_2m[i], ust = H[`temperature_${sev}hPa`][i], r = H.wind_speed_10m[i] ?? 10;
+      if (T == null || ust == null) return null;
+      const fark = ust - T; // pozitifse yukarısı yerden sıcak: gerçek enverziyon
+      return { p: Math.max(0, Math.min(100, Math.round((fark + 1) * 14 + Math.max(0, 10 - r) * 2))), fark, r, sev };
+    };
+    const ENV = [[0, '#EEF4EE'], [25, '#F2E27A'], [50, '#F2A65A'], [75, '#D9573B'], [100, '#8E2A2A']], envRenk = rampa(ENV);
+    const ad = p => p == null ? '–' : p < 25 ? 'Yok' : p < 50 ? 'Zayıf' : p < 75 ? 'Orta' : 'Kuvvetli';
+    sekmeler($('envg'), gunler.map((g, i) => i === 0 ? 'Bugün sabah' : i === 1 ? 'Yarın sabah' : fmtWeek(g) + ' sabah'), j => {
+      const R = Object.fromEntries(IL.map((I, k) => [I.ad, puan(v[k], gunler[j])]));
+      el.innerHTML = haritaSvg({ fill: a => R[a] ? envRenk(R[a].p) : null, etiket: a => R[a] && R[a].p >= 50 ? { ust: ad(R[a].p) } : null, aria: 'Enverziyon riski haritası' });
+      $('envlj').innerHTML = lejant(ENV, '/100', 'Enverziyon şiddeti');
+      haritaBagla(el, a => { const r = R[a]; return r ? `<b>${esc(a)}</b>Enverziyon: <span>${ad(r.p)}</span> (${r.p}/100)<br>Yerden yukarı sıcaklık farkı <span>${r.fark > 0 ? '+' : ''}${dec(r.fark)}°</span><br>Rüzgar <span>${n0(r.r)} km/sa</span>` : esc(a); });
+    });
+  }
+
+  // ---------- Güneş ve rüzgar enerjisi (7 günlük üretim tahmini) ----------
+  async function enerji(I) {
+    const el = $('enerji');
+    el.innerHTML = yukleniyor();
+    let d;
+    try { d = await getJSON(omURL(OM, { latitude: I.lat, longitude: I.lon, timezone: 'Europe/Istanbul', forecast_days: 7, daily: 'shortwave_radiation_sum,sunshine_duration', hourly: 'wind_speed_100m', wind_speed_unit: 'ms' }), 60); }
+    catch (e) { el.innerHTML = hataMsg(); return; }
+    const D = d.daily, N = NORMAL81[I.ad], ay = +bugunTR().slice(5, 7) - 1;
+    const gunler = D.time.map((g, j) => {
+      const kwh = D.shortwave_radiation_sum[j] / 3.6, ii = d.hourly.time.map((t, i) => [t, i]).filter(([t]) => t.startsWith(g)).map(x => x[1]);
+      const r = avgOf(ii.map(i => d.hourly.wind_speed_100m[i])), yog = avgOf(ii.map(i => 0.5 * 1.2 * (d.hourly.wind_speed_100m[i] ?? 0) ** 3));
+      return { g, kwh, pv: kwh * 0.8, gunes: D.sunshine_duration[j] / 3600, r, yog };
+    });
+    el.innerHTML = `<div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Gün</th><th>Güneş enerjisi<small>kWh/m²</small></th><th>1 kW panel üretimi<small>kWh, yaklaşık</small></th><th>Güneşlenme<small>saat</small></th><th>100 m rüzgar<small>m/sn</small></th><th>Rüzgar güç yoğunluğu<small>W/m²</small></th></tr></thead><tbody>
+      ${gunler.map(x => `<tr><td class="l">${esc(fmtWeek(x.g))}</td><td>${dec(x.kwh)}</td><td><b>${dec(x.pv)}</b></td><td>${dec(x.gunes)}</td><td>${dec(x.r)}</td><td>${n0(x.yog)}</td></tr>`).join('')}</tbody></table></div>
+      <p class="kutu-not">${esc(I.ad)} için ${AYLAR[ay]} ayının uzun yıllar ortalaması ${dec(N.gunes[ay])} kWh/m²/gün güneş enerjisi ve 50 m'de ${dec(N.r50[ay])} m/sn rüzgardır (NASA POWER, 1991–2020). Panel üretimi yatay yüzey ve %80 sistem verimiyle kabaca hesaplanır; panelin eğimi ve yönü sonucu değiştirir.</p>`;
+  }
+
+  // ---------- Deprem bölgesinin hava tahmini (son 7 günün 4,5 ve üstü depremi için) ----------
+  async function depremBolgesi(L) {
+    const el = $('dphava');
+    const b = L.filter(x => x.m >= 4.5).sort((a, c) => c.m - a.m)[0];
+    if (!b) { el.innerHTML = '<p class="muted">Son 7 günde Türkiye ve çevresinde 4,5 ve üstü deprem olmadı.</p>'; return; }
+    let d;
+    try { d = await getJSON(omURL(OM, { latitude: b.lat, longitude: b.lon, timezone: 'Europe/Istanbul', forecast_days: 4, daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max' }), 30); }
+    catch (e) { el.innerHTML = ''; return; }
+    const D = d.daily;
+    el.innerHTML = `<div class="gb"><h3>Deprem bölgesinde hava: ${esc(b.y.ilce === 'Merkez' ? b.y.il : b.y.ilce + ', ' + b.y.il)} (${dec(b.m)})</h3></div><div class="kartlar">${D.time.map((g, j) => `<div class="kart">${icon(D.weather_code[j], 1)}<b>${j === 0 ? 'Bugün' : esc(fmtWeek(g))}</b><span class="t">${deg(D.temperature_2m_max[j])}</span><small>gece ${deg(D.temperature_2m_min[j])}, ${esc(cond(D.weather_code[j])[0].toLocaleLowerCase('tr'))}${D.precipitation_sum[j] >= 1 ? `, ${mm(D.precipitation_sum[j])} mm yağış` : ''}</small></div>`).join('')}</div>
+      <p class="kutu-not">Deprem sonrası çadır ve açık alanda kalanlar için: gece sıcaklığı ${deg(minOf(D.temperature_2m_min))} civarına düşüyor${maxOf(D.precipitation_sum) >= 1 ? ', yağış bekleniyor' : ''}${maxOf(D.wind_gusts_10m_max) >= 50 ? ', rüzgar kuvvetli esecek' : ''}. Resmi açıklamalar için AFAD'ı takip edin.</p>`;
+  }
+
+  // Stadyum seçimi
+  const ss = $('stsec');
+  ss.innerHTML = STAD.map((x, i) => `<option value="${i}">${esc(x.ad)}</option>`).join('');
+  ss.addEventListener('change', () => stadyum(STAD[+ss.value]));
+  stadyum(STAD[0]);
+  // Enerji için il seçimi (son bakılan yerin ili, yoksa Konya)
+  const es = $('ensec'), yer = store.get('hava.yer', null), ilk = [yer && yer.il, 'Konya'].map(a => IL.findIndex(I => I.ad === a)).find(i => i >= 0) ?? 0;
+  es.innerHTML = IL.map((I, i) => `<option value="${i}">${esc(I.ad)}</option>`).join('');
+  es.value = String(ilk);
+  es.addEventListener('change', () => enerji(IL[+es.value]));
+  enerji(IL[ilk]);
+  kayak(); toz(); metar(); deprem(); uzay(); dunya(); balon(); enverziyon();
 })();

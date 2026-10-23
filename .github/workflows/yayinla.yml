@@ -32,8 +32,26 @@ jobs:
           mkdir -p data
           curl -sf --max-time 60 "https://aviationweather.gov/api/data/metar?bbox=35.8,25.6,42.2,45&format=json" -o data/metar-ham.json || echo '[]' > data/metar-ham.json
           curl -sf --max-time 60 "https://aviationweather.gov/api/data/taf?bbox=35.8,25.6,42.2,45&format=json" -o data/taf-ham.json || echo '[]' > data/taf-ham.json
+          curl -sf --max-time 60 "https://aviationweather.gov/api/data/isigmet?format=json" -o data/sigmet-ham.json || echo '[]' > data/sigmet-ham.json
+          curl -sf --max-time 60 "https://aviationweather.gov/api/data/metar?ids=EGLL,LFPG,EDDB,EHAM,LOWW,LIRF,LEMD,LGAV,LBSF,LROP,LQSA,LWSK,BKPR,LCEN,UUEE,UBBB,UGTB,UTTT,UACC,UCFM,UTAA,OIII,ORBI,LLBG,HECA,OEJN,OEMA,OERK,OMDB,OTHH,KJFK,KLAX,CYYZ,RJTT,ZBAA,RKSI,YSSY&format=json" -o data/dunya-ham.json || echo '[]' > data/dunya-ham.json
           node .github/metar.js
-          rm -f data/metar-ham.json data/taf-ham.json
+          rm -f data/metar-ham.json data/taf-ham.json data/sigmet-ham.json data/dunya-ham.json
+
+      - name: Tarih
+        id: tarih
+        run: echo "gun=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      # 81 ilin aylık analiz verisi günde bir kez hesaplanır; aynı gün içindeki yayınlarda önbellekten gelir
+      - name: Analiz verisi önbelleği
+        id: analiz
+        uses: actions/cache@v4
+        with:
+          path: data/analiz.json
+          key: analiz-${{ steps.tarih.outputs.gun }}
+
+      - name: Analiz verisini hesapla (NASA POWER)
+        if: steps.analiz.outputs.cache-hit != 'true'
+        run: node .github/analiz.js
 
       - uses: actions/configure-pages@v5
 

@@ -34,7 +34,7 @@
     </div>
     <section class="sayfa" aria-labelledby="h-sayfa">
       <h1 id="h-sayfa">Türkiye haritası</h1>
-      <p class="giris" id="giris">81 ilin şu anki hava durumu ve önümüzdeki 5 gün. Haritada sıcaklık, yağış ya da rüzgarı seç; "Şimdi" görünümünde 54 havalimanının gerçek ölçümlerini de açabilirsin.</p>
+      <p class="giris" id="giris">81 ilin dünü, şu anki hava durumu ve önümüzdeki 5 gün. Haritada sıcaklık, yağış ya da rüzgarı seç; "Şimdi" görünümünde 54 havalimanının gerçek ölçümlerini de açabilirsin. Aşağıda bölge bölge tahmin ve saat saat harita var.</p>
       <dl class="kisa" id="kisa"></dl>
     </section>
   </div></div>
@@ -47,6 +47,20 @@
         <div class="tabs" id="katman" aria-label="Harita katmanı"></div>
         <div class="trh-wrap" id="harita"></div>
         <div id="lj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-b">
+        <h2 id="h-b">Bölgelerde hava</h2>
+        <p class="note">Yedi coğrafi bölge için model verisinden otomatik hazırlanan kısa tahmin ve bölgedeki illerin en düşük, en yüksek sıcaklığı.</p>
+        <div class="tabs" id="bgun" aria-label="Gün"></div>
+        <div class="bolgeler" id="bolge"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ss">
+        <h2 id="h-ss">Saat saat harita</h2>
+        <p class="note">Önümüzdeki 72 saat için model çıktısı. Kaydırıcıyla saati seç ya da Oynat'a bas.</p>
+        <div class="tabs" id="skat" aria-label="Katman"></div>
+        <div class="trh-wrap" id="sharita"></div>
+        <div id="slj2"></div>
+        <div class="oynat"><button class="btn" id="soy" type="button">Oynat</button><input type="range" id="ssaat" min="0" max="0" value="0" aria-label="Saat"><span class="zaman" id="szmn"></span></div>
       </section>
       <section class="sec" aria-labelledby="h-s">
         <h2 id="h-s">Sıralamalar</h2>

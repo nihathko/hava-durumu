@@ -2,16 +2,21 @@
 (() => {
   'use strict';
   const zamanEl = $('zaman'), katEl = $('katman'), hEl = $('harita'), ljEl = $('lj'), sEl = $('siralar'), tEl = $('tablo');
-  let V = null, M = null, gun = 0, kat = 0;
+  let V = null, Y = null, M = null, gun = 0, kat = 0;
   const link = ad => `<a href="${anaSayfaLink(yerIl(ad))}">${esc(ad)}</a>`;
 
-  // Zaman 0: şimdi, 1: bugün, 2: yarın ... 6
-  const zamanAd = i => i === 0 ? 'Şimdi' : i === 1 ? 'Bugün' : i === 2 ? 'Yarın' : kisaGun(V[IL[0].ad].daily.time[i - 1]);
+  // Zaman −1: dün (model analizi), 0: şimdi, 1: bugün, 2: yarın ... 6
+  const zamanAd = i => i === -1 ? 'Dün' : i === 0 ? 'Şimdi' : i === 1 ? 'Bugün' : i === 2 ? 'Yarın' : kisaGun(V[IL[0].ad].daily.time[i - 1]);
   const KATLAR = ['Sıcaklık', 'Yağış', 'Rüzgar', 'Havalimanı ölçümleri'];
 
   // Seçili zamana göre il değerleri
   function deger(ad) {
     const v = V[ad]; if (!v) return null;
+    if (gun === -1) {
+      if (!Y || !Y[ad]) return null;
+      const D = Y[ad].daily;
+      return { kod: D.weather_code[0], gunduz: 1, t: D.temperature_2m_max[0], min: D.temperature_2m_min[0], max: D.temperature_2m_max[0], y: D.precipitation_sum[0], yi: null, r: D.wind_speed_10m_max[0], h: D.wind_gusts_10m_max[0], ry: D.wind_direction_10m_dominant[0] };
+    }
     if (gun === 0) {
       const C = v.current;
       return { kod: C.weather_code, gunduz: C.is_day, t: C.temperature_2m, his: C.apparent_temperature, nem: C.relative_humidity_2m, r: C.wind_speed_10m, ry: C.wind_direction_10m, h: C.wind_gusts_10m, y: v.daily.precipitation_sum[0], yi: v.daily.precipitation_probability_max[0], yson: C.precipitation, min: v.daily.temperature_2m_min[0], max: v.daily.temperature_2m_max[0] };
@@ -76,7 +81,7 @@
     } else {
       sEl.innerHTML = liste('En yüksek sıcaklık', ilk(x => x.max, true), x => deg(x.max), '') + liste('En düşük sıcaklık (gece)', ilk(x => x.min, false), x => deg(x.min), '')
         + liste('En çok yağış', ilk(x => x.y, true).filter(x => x.y > 0), x => mm(x.y), ' mm') + liste('En kuvvetli hamle', ilk(x => x.h, true), x => n0(x.h), ' km/sa');
-      $('snot').textContent = `${zamanAd(gun)} için tahmin.`;
+      $('snot').textContent = gun === -1 ? 'Dün için model analizi: ölçüm değildir ama ölçüme çok yakındır. İstasyon ölçümleri yalnızca MGM\'de yayımlanır.' : `${zamanAd(gun)} için tahmin.`;
     }
   }
 
@@ -118,16 +123,96 @@
       V = Object.fromEntries(IL.map((I, i) => [I.ad, v[i]]));
     } catch (e) { hEl.innerHTML = hataMsg(); return; }
     try { M = await havalimanlari(); } catch (e) { M = null; }
+    try {
+      const y = await cokNokta(OM, IL, { daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant', timezone: 'Europe/Istanbul', past_days: 1, forecast_days: 1, wind_speed_unit: 'kmh' }, 120);
+      Y = Object.fromEntries(IL.map((I, i) => [I.ad, y[i]]));
+    } catch (e) { Y = null; }
     ozet();
     sekmeler(katEl, KATLAR, i => { kat = i; ciz(); });
     // Havalimanı ölçümleri yalnızca "Şimdi" için anlamlı
-    sekmeler(zamanEl, [0, 1, 2, 3, 4, 5, 6].map(zamanAd), i => {
-      gun = i;
+    const ZL = [...(Y ? [-1] : []), 0, 1, 2, 3, 4, 5, 6];
+    sekmeler(zamanEl, ZL.map(zamanAd), i => {
+      gun = ZL[i];
       const gb = katEl.querySelector('[data-i="3"]');
       if (gb) gb.hidden = gun !== 0 || !M;
       if (gun && kat === 3) { kat = 0; katEl.querySelectorAll('button').forEach((b, j) => b.setAttribute('aria-selected', String(j === 0))); }
       ciz();
+    }, ZL.indexOf(0));
+    bolgeler();
+    saatlik();
+  }
+
+  // ---------- Bölgelerde hava (MGM'nin günlük tahmini gibi, model verisinden otomatik metin) ----------
+  const BOLGE = {
+    'Marmara': ['Edirne', 'Kırklareli', 'Tekirdağ', 'İstanbul', 'Kocaeli', 'Yalova', 'Sakarya', 'Bilecik', 'Bursa', 'Balıkesir', 'Çanakkale'],
+    'Ege': ['İzmir', 'Manisa', 'Aydın', 'Denizli', 'Muğla', 'Afyonkarahisar', 'Kütahya', 'Uşak'],
+    'Akdeniz': ['Antalya', 'Isparta', 'Burdur', 'Mersin', 'Adana', 'Hatay', 'Osmaniye', 'Kahramanmaraş'],
+    'İç Anadolu': ['Ankara', 'Konya', 'Kayseri', 'Eskişehir', 'Sivas', 'Kırıkkale', 'Aksaray', 'Karaman', 'Kırşehir', 'Niğde', 'Nevşehir', 'Yozgat', 'Çankırı'],
+    'Karadeniz': ['Zonguldak', 'Bartın', 'Karabük', 'Düzce', 'Bolu', 'Kastamonu', 'Sinop', 'Samsun', 'Çorum', 'Amasya', 'Tokat', 'Ordu', 'Giresun', 'Trabzon', 'Gümüşhane', 'Bayburt', 'Rize', 'Artvin'],
+    'Doğu Anadolu': ['Erzurum', 'Erzincan', 'Kars', 'Ardahan', 'Iğdır', 'Ağrı', 'Malatya', 'Elazığ', 'Tunceli', 'Bingöl', 'Muş', 'Bitlis', 'Van', 'Hakkari'],
+    'Güneydoğu Anadolu': ['Gaziantep', 'Kilis', 'Adıyaman', 'Şanlıurfa', 'Diyarbakır', 'Mardin', 'Batman', 'Siirt', 'Şırnak']
+  };
+  const yagis = k => ['drizzle', 'rain', 'snow', 'thunder'].includes(cond(k)[1]);
+  const birlestir = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' ve ' + a[a.length - 1];
+  function bolgeMetni(iller, j) {
+    const D = ad => V[ad].daily, turler = {};
+    iller.forEach(ad => { const k = cond(D(ad).weather_code[j])[1]; turler[k] = (turler[k] || 0) + 1; });
+    const hakim = Object.keys(turler).sort((a, b) => turler[b] - turler[a])[0];
+    const HAKIM = { clear: 'Az bulutlu ve açık', partly: 'Parçalı bulutlu', cloud: 'Parçalı ve çok bulutlu', fog: 'Sisli ve bulutlu', drizzle: 'Bulutlu, yer yer çisenti', rain: 'Bulutlu ve yağışlı', snow: 'Kar yağışlı', thunder: 'Sağanak ve gök gürültülü sağanak yağışlı' };
+    let s = HAKIM[hakim] + '.';
+    const yagan = iller.filter(ad => yagis(D(ad).weather_code[j]) && (D(ad).precipitation_sum[j] ?? 0) >= 1);
+    if (yagan.length && !['rain', 'thunder', 'snow', 'drizzle'].includes(hakim)) {
+      const kar = yagan.filter(ad => cond(D(ad).weather_code[j])[1] === 'snow'), gg = yagan.filter(ad => cond(D(ad).weather_code[j])[1] === 'thunder');
+      s += ` ${birlestir(yagan.slice(0, 4))}${yagan.length > 4 ? ' ve çevresinde' : ' çevresinde'} ${kar.length ? 'kar' : gg.length ? 'gök gürültülü sağanak' : 'yağış'} bekleniyor.`;
+    }
+    const mx = iller.map(ad => D(ad).temperature_2m_max[j]), mn = iller.map(ad => D(ad).temperature_2m_min[j]);
+    s += ` Sıcaklık ${deg(Math.min(...mn))} ile ${deg(Math.max(...mx))} arasında.`;
+    const ruz = iller.filter(ad => (D(ad).wind_gusts_10m_max[j] ?? 0) >= 50);
+    if (ruz.length) s += ` ${birlestir(ruz.slice(0, 3))} çevresinde rüzgar kuvvetli esecek.`;
+    if (Math.min(...mn) <= 0) s += ' Gece ve sabah saatlerinde yüksek kesimlerde don bekleniyor.';
+    return s;
+  }
+  function bolgeler() {
+    const el = $('bolge');
+    if (!el) return;
+    sekmeler($('bgun'), [1, 2, 3].map(zamanAd), j => {
+      el.innerHTML = Object.entries(BOLGE).map(([b, iller]) => `<div class="bolge"><h3>${b}</h3><p>${esc(bolgeMetni(iller, j))}</p>
+        <ul class="bil">${iller.map(ad => { const D = V[ad].daily; return `<li><a href="${anaSayfaLink(yerIl(ad))}">${icon(D.weather_code[j], 1)}<span>${esc(ad)}</span><b><span class="c-lo">${deg(D.temperature_2m_min[j])}</span> <span class="c-hi">${deg(D.temperature_2m_max[j])}</span></b></a></li>`; }).join('')}</ul></div>`).join('');
     });
+  }
+
+  // ---------- Saat saat harita (önümüzdeki 72 saat, model çıktısı) ----------
+  async function saatlik() {
+    const el = $('sharita'), kEl = $('skat'), ar = $('ssaat'), zEl = $('szmn'), oy = $('soy');
+    if (!el) return;
+    el.innerHTML = yukleniyor('Saatlik model verisi yükleniyor…');
+    let S;
+    try {
+      const v = await cokNokta(OM, IL, { hourly: 'temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,cloud_cover,snow_depth,weather_code,is_day', timezone: 'Europe/Istanbul', forecast_hours: 72, wind_speed_unit: 'kmh' }, 30);
+      S = Object.fromEntries(IL.map((I, i) => [I.ad, v[i].hourly]));
+    } catch (e) { el.innerHTML = hataMsg(); return; }
+    const zaman = S[IL[0].ad].time;
+    let k = 0, i = 0, tmr = null;
+    ar.max = String(zaman.length - 1);
+    const KAT = [
+      ['Sıcaklık', h => sicakRenk(h.temperature_2m[i]), h => ({ ikon: icon(h.weather_code[i], h.is_day[i]), ust: deg(h.temperature_2m[i]) }), () => lejant(SICAK, '°C', 'Sıcaklık')],
+      ['Yağış', h => yagisRenk((h.precipitation[i] ?? 0) * 6), h => h.precipitation[i] > 0 ? { ust: dec(h.precipitation[i]) } : null, () => lejant(YAGIS.map(([v, c]) => [v / 6, c]), 'mm/saat', 'Saatlik yağış')],
+      ['Rüzgar', h => ruzgarRenk(h.wind_speed_10m[i]), h => ({ ust: n0(h.wind_speed_10m[i]), alt: h.wind_direction_10m[i] != null ? dir(h.wind_direction_10m[i]) : null }), () => lejant(RUZGAR, 'km/sa', 'Rüzgar hızı')],
+      ['Bulut', h => bulutRenk(h.cloud_cover[i]), h => ({ ust: '%' + n0(h.cloud_cover[i]) }), () => lejant(BULUT, '%', 'Bulutluluk')],
+      ['Kar kalınlığı', h => karRenk((h.snow_depth[i] ?? 0) * 100), h => (h.snow_depth[i] ?? 0) > 0.005 ? { ust: n0(h.snow_depth[i] * 100) + ' cm' } : null, () => lejant(KAR, 'cm', 'Kar kalınlığı')]
+    ];
+    const ciz = () => {
+      const [, f, e, l] = KAT[k];
+      el.innerHTML = haritaSvg({ fill: ad => f(S[ad]), etiket: ad => e(S[ad]), aria: `${KAT[k][0]} haritası, ${zaman[i]}` });
+      $('slj2').innerHTML = l();
+      zEl.textContent = `${fmtWeek(ymd(zaman[i]))} ${hhmm(zaman[i])}`;
+      ar.value = String(i);
+      haritaBagla(el, ad => { const h = S[ad]; return `<b>${esc(ad)}</b>${esc(fmtWeek(ymd(zaman[i])))} ${hhmm(zaman[i])}<br>${esc(cond(h.weather_code[i])[0])}<br>Sıcaklık <span>${deg(h.temperature_2m[i])}</span><br>Yağış <span>${dec(h.precipitation[i])} mm</span>, bulut <span>%${n0(h.cloud_cover[i])}</span><br>Rüzgar <span>${h.wind_direction_10m[i] != null ? dir(h.wind_direction_10m[i]) : ''} ${n0(h.wind_speed_10m[i])} km/sa</span>${h.snow_depth[i] > 0 ? `<br>Kar <span>${n0(h.snow_depth[i] * 100)} cm</span>` : ''}`; });
+    };
+    const dur = () => { clearInterval(tmr); tmr = null; oy.textContent = 'Oynat'; };
+    oy.addEventListener('click', () => { if (tmr) return dur(); oy.textContent = 'Durdur'; tmr = setInterval(() => { i = (i + 3) % zaman.length; ciz(); }, 900); });
+    ar.addEventListener('input', () => { dur(); i = +ar.value; ciz(); });
+    sekmeler(kEl, KAT.map(x => x[0]), j => { k = j; ciz(); });
   }
   basla();
 })();

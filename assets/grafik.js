@@ -109,11 +109,64 @@
     grafikIpucu($('ensg'), g, j => `<b>${esc(fmtWeek(ymd(x[j])))} ${hhmm(x[j])}</b>Orta değer <span>${dec(p50[j])}°</span><br>%25–75 <span>${dec(p25[j])}° – ${dec(p75[j])}°</span><br>%10–90 <span>${dec(p10[j])}° – ${dec(p90[j])}°</span>`);
   }
 
+  // ---------- Yüksek atmosfer (AIRGRAM): basınç seviyelerinde sıcaklık, rüzgar ve nem ----------
+  const SEV = [[300, '≈ 9.000 m'], [500, '≈ 5.500 m'], [700, '≈ 3.000 m'], [850, '≈ 1.500 m'], [925, '≈ 750 m'], [1000, '≈ 100 m']];
+  async function airgram(p, s) {
+    const el = $('air');
+    el.innerHTML = yukleniyor();
+    let d;
+    try {
+      d = await getJSON(omURL(OM, { latitude: p.lat, longitude: p.lon, timezone: 'auto', forecast_days: 3, wind_speed_unit: 'kmh',
+        hourly: SEV.flatMap(([h]) => [`temperature_${h}hPa`, `wind_speed_${h}hPa`, `wind_direction_${h}hPa`, `relative_humidity_${h}hPa`]).join(',') + ',freezing_level_height' }));
+    } catch (e) { if (s === seq) el.innerHTML = hataMsg(); return; }
+    if (s !== seq) return;
+    const H = d.hourly, now = new Date(Date.now() + d.utc_offset_seconds * 1000).toISOString().slice(0, 13);
+    let i0 = H.time.findIndex(t => t.slice(0, 13) >= now); if (i0 < 0) i0 = 0;
+    const idx = H.time.map((_, i) => i).slice(i0).filter((_, j) => j % 3 === 0).slice(0, 24);
+    const cw = 46, rh = 40, L = 92, W = L + cw * idx.length + 8, Hh = 30 + rh * SEV.length + 26;
+    let g = '';
+    idx.forEach((i, c) => {
+      const x = L + c * cw;
+      g += `<text x="${x + cw / 2}" y="16" text-anchor="middle" class="dl2">${H.time[i].slice(11, 13) === '00' ? esc(kisaGun(H.time[i].slice(0, 10))) : H.time[i].slice(11, 13)}</text>`;
+      SEV.forEach(([h], r) => {
+        const y = 26 + r * rh, T = H[`temperature_${h}hPa`][i], V = H[`wind_speed_${h}hPa`][i], Y = H[`wind_direction_${h}hPa`][i], RH = H[`relative_humidity_${h}hPa`][i];
+        g += `<rect x="${x + 1}" y="${y}" width="${cw - 2}" height="${rh - 2}" rx="3" style="fill:${sicakRenk(T)}"${RH >= 90 ? ' class="nemli"' : ''}/>`
+          + `<text x="${x + cw / 2}" y="${y + 15}" text-anchor="middle" class="tv2">${T == null ? '–' : n0(T) + '°'}</text>`
+          + (Y != null ? `<g transform="translate(${x + cw / 2 - 8} ${y + 26}) rotate(${(Y + 180) % 360})"><path d="M0 -6 L3 1 L0 -1 L-3 1 Z" fill="#13212C"/></g><text x="${x + cw / 2 + 4}" y="${y + 30}" class="rz2">${n0(V)}</text>` : '');
+      });
+    });
+    SEV.forEach(([h, m], r) => { g += `<text x="${L - 8}" y="${26 + r * rh + 16}" text-anchor="end" class="sv">${h} hPa</text><text x="${L - 8}" y="${26 + r * rh + 29}" text-anchor="end" class="sv2">${m}</text>`; });
+    g += `<text x="${L}" y="${Hh - 6}" class="sv2">Kutu rengi ve rakam: sıcaklık. Ok: rüzgarın gittiği yön, yanındaki sayı hız (km/sa). Çerçeveli kutu: nem %90 üstü (bulut).</text>`;
+    const don = maxOf(idx.map(i => H.freezing_level_height[i])), donA = minOf(idx.map(i => H.freezing_level_height[i]));
+    el.innerHTML = `<div class="grafik-kutu"><svg class="chart air" width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Yüksek atmosfer sıcaklık ve rüzgar tablosu">${g}</svg></div>
+      <p class="kutu-not">Donma seviyesi (0°C yüksekliği) önümüzdeki 3 günde ${n0(donA)} ile ${n0(don)} m arasında. Bu seviyenin altındaki yağış yağmur, üstündeki kar olarak düşer. Pilotlar, yamaç paraşütçüleri ve dağcılar için yüksekteki rüzgar ve sıcaklık önemlidir.</p>`;
+  }
+
+  // ---------- Uzun vadeli eğilim (ECMWF mevsimsel tahmin) ----------
+  async function uzun(p, s) {
+    const el = $('uzun');
+    el.innerHTML = yukleniyor();
+    let d;
+    try { d = await getJSON(omURL('https://seasonal-api.open-meteo.com/v1/seasonal', { latitude: p.lat, longitude: p.lon, weekly: 'temperature_2m_anomaly,precipitation_anomaly', monthly: 'temperature_2m_anomaly,precipitation_anomaly,temperature_2m_mean' }), 360); }
+    catch (e) { if (s === seq) el.innerHTML = hataMsg('Uzun vadeli tahmin şu an alınamadı.'); return; }
+    if (s !== seq) return;
+    const W = d.weekly, M = d.monthly, wi = W.time.map((_, i) => i).filter(i => W.temperature_2m_anomaly[i] != null);
+    const ok = v => v == null ? '–' : (v > 0 ? '+' : '') + dec(v) + '°';
+    const yk = v => v == null ? '–' : (v > 0 ? '+' : '') + n0(v) + ' mm';
+    const yorum = v => v == null ? null : v >= 1.5 ? ['Normalden çok sıcak', 'e-cok'] : v >= 0.5 ? ['Normalden sıcak', 'e-yuksek'] : v > -0.5 ? ['Normale yakın', 'e-yok'] : v > -1.5 ? ['Normalden soğuk', 'e-az'] : ['Normalden çok soğuk', 'e-az'];
+    const et = v => { const y = yorum(v); return y ? `<span class="etiket ${y[1]}">${y[0]}</span>` : ''; };
+    el.innerHTML = `<div class="gb"><h3>Haftalar</h3></div><div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Hafta</th><th>Sıcaklık<small>normalden fark</small></th><th class="l"></th><th>Yağış<small>normalden fark</small></th></tr></thead><tbody>
+      ${wi.map(i => `<tr><td class="l">${esc(noon(W.time[i]).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', timeZone: 'UTC' }))} haftası</td><td>${ok(W.temperature_2m_anomaly[i])}</td><td class="l">${et(W.temperature_2m_anomaly[i])}</td><td>${yk(W.precipitation_anomaly[i])}</td></tr>`).join('')}</tbody></table></div>
+      <div class="gb"><h3>Aylar</h3></div><div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Ay</th><th>Ortalama sıcaklık<small>beklenen</small></th><th>Sıcaklık<small>normalden fark</small></th><th class="l"></th><th>Yağış<small>normalden fark</small></th></tr></thead><tbody>
+      ${M.time.map((t, i) => `<tr><td class="l">${AYLAR[+t.slice(5, 7) - 1]} ${t.slice(0, 4)}</td><td>${dec(M.temperature_2m_mean[i])}°</td><td>${ok(M.temperature_2m_anomaly[i])}</td><td class="l">${et(M.temperature_2m_anomaly[i])}</td><td>${yk(M.precipitation_anomaly[i])}</td></tr>`).join('')}</tbody></table></div>
+      <p class="kutu-not">Avrupa Orta Vadeli Hava Tahminleri Merkezi'nin (ECMWF) mevsimsel tahmini. Tek tek günleri değil, haftaların ve ayların normalden sıcak ya da soğuk, yağışlı ya da kurak geçme eğilimini gösterir. "Normal", modelin kendi uzun yıllar ortalamasıdır.</p>`;
+  }
+
   function yukle(p) {
     const s = ++seq;
     $('kisa').innerHTML = `<div><dt>Seçili yer</dt><dd>${esc(p.name)}</dd></div><div><dt>Konum</dt><dd>${coord(+p.lat, 'K', 'G')}, ${coord(+p.lon, 'D', 'B')}</dd></div>`;
     document.title = `${p.name} grafik ve modeller · Hava Durumu`;
-    meteogram(p, s); modeller(p, s); topluluk(p, s);
+    meteogram(p, s); modeller(p, s); topluluk(p, s); airgram(p, s); uzun(p, s);
   }
   yerSecici($('yer'), yukle);
 })();

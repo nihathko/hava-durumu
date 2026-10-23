@@ -9,5 +9,5 @@
     try { if (window.caches) for (const k of await caches.keys()) if (k.startsWith('hava-')) await caches.delete(k); } catch (e) {}
     s.textContent = 'Silindi.';
   });
-  $('kisa').innerHTML = '<div><dt>Veri kaynağı</dt><dd>17</dd></div><div><dt>Çerez</dt><dd>Yok</dd></div><div><dt>Reklam</dt><dd>Yok</dd></div>';
+  $('kisa').innerHTML = '<div><dt>Veri kaynağı</dt><dd>20</dd></div><div><dt>Çerez</dt><dd>Yok</dd></div><div><dt>Reklam</dt><dd>Yok</dd></div>';
 })();

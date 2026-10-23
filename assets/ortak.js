@@ -200,13 +200,26 @@ const YAGIS = [[0, '#EEF2F5'], [0.5, '#D3E6F4'], [2, '#A6CDEB'], [5, '#6AAADF'],
 const yagisRenk = rampa(YAGIS);
 const RUZGAR = [[0, '#EEF4EE'], [10, '#CDE8CF'], [20, '#9BD3A2'], [35, '#5DB46F'], [50, '#F2C14E'], [65, '#E8833A'], [85, '#C7372F']];
 const ruzgarRenk = rampa(RUZGAR);
+// Normalden fark: mavi (soğuk) – gri (normal) – kırmızı (sıcak)
+const FARK = [[-5, '#2166AC'], [-3, '#67A9CF'], [-1, '#D1E5F0'], [0, '#F2F2F2'], [1, '#FDDBC7'], [3, '#EF8A62'], [5, '#B2182B']];
+const farkRenk = rampa(FARK);
+// Yağışın normale oranı (%): kurak kahverengi – normal gri – yağışlı yeşil-mavi
+const ORAN = [[0, '#8C510A'], [40, '#D8B365'], [80, '#F6E8C3'], [100, '#F2F2F2'], [120, '#C7EAE5'], [160, '#5AB4AC'], [250, '#01665E']];
+const oranRenk = rampa(ORAN);
+const BULUT = [[0, '#EAF3FB'], [30, '#C9D6E2'], [60, '#9AA9B8'], [100, '#5E6B78']];
+const bulutRenk = rampa(BULUT);
+const KAR = [[0, '#EEF2F5'], [1, '#DCE9F5'], [10, '#B9D3EE'], [30, '#8DB3E2'], [60, '#6A8FD1'], [120, '#7B5BB5']];
+const karRenk = rampa(KAR);
+// km/sa → deniz mili/saat (knot)
+const knot = v => v == null ? null : v / 1.852;
 // Lejant: ölçeği ve değerleri gösteren küçük şerit
 const lejant = (stops, birim, baslik) => `<div class="lejant" aria-label="${esc(baslik)} ölçeği"><span class="lj-b">${esc(baslik)}</span><span class="lj-s" style="background:linear-gradient(90deg,${stops.map((s, i) => `${s[1]} ${(i / (stops.length - 1) * 100).toFixed(0)}%`).join(',')})"></span><span class="lj-v">${stops.map(s => `<i>${dec(s[0], 0)}</i>`).join('')}</span><span class="lj-u">${esc(birim)}</span></div>`;
 
 // ---------- Siteye ait sayfalar ve üst menü ----------
 const SAYFALAR = [
-  ['index.html', 'Hava durumu'], ['harita.html', 'Türkiye haritası'], ['radar.html', 'Radar ve uydu'], ['grafik.html', 'Grafik ve modeller'],
-  ['iklim.html', 'İklim'], ['deniz.html', 'Denizcilik'], ['ziraat.html', 'Ziraat'], ['ozel.html', 'Özel tahminler'], ['hakkinda.html', 'Hakkında']
+  ['index.html', 'Hava durumu'], ['harita.html', 'Türkiye haritası'], ['uyari.html', 'Dikkat'], ['radar.html', 'Radar ve uydu'], ['grafik.html', 'Grafik ve modeller'],
+  ['iklim.html', 'İklim'], ['analiz.html', 'Analizler'], ['deniz.html', 'Denizcilik'], ['ziraat.html', 'Ziraat'], ['ozel.html', 'Özel tahminler'],
+  ['bilgi.html', 'Bilgi'], ['hakkinda.html', 'Hakkında']
 ];
 const SITE_IC = `<svg class="site-ic" viewBox="0 0 64 64" aria-hidden="true"><circle cx="24" cy="24" r="12" fill="#F2B227"/><g fill="#F2B227"><rect x="22.5" y="2" width="3" height="7" rx="1.5"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-90 24 24)"/></g><path d="M22 52h28a10 10 0 0 0 0-20 14 14 0 0 0-27-3A11 11 0 0 0 22 52z" fill="#fff" stroke="#8FA2B6" stroke-width="1.5"/></svg>`;
 const ustHtml = () => `<header class="bar">
@@ -337,8 +350,8 @@ const OM_ARSIV = 'https://archive-api.open-meteo.com/v1/archive';
 // ---------- Türkiye haritası (SVG) ----------
 // TR_HARITA assets/turkiye.js dosyasından gelir (yalnızca harita kullanan sayfalarda yüklenir)
 const izdusum = (lat, lon) => [(lon - TR_HARITA.lon0) * TR_HARITA.c * TR_HARITA.k, (TR_HARITA.lat0 - lat) * TR_HARITA.k];
-// fill(il adı) → renk; etiket(il) → { ust, alt, ikon } (il merkezinin üstüne yazılır); ek: SVG içine eklenecek ek katman
-function haritaSvg({ fill, etiket, ek = '', aria = 'Türkiye haritası' }) {
+// fill(il adı) → renk; etiket(il) → { ust, alt, ikon } (il merkezinin üstüne yazılır); ek: illerin üstüne, alt: illerin altına çizilecek katman
+function haritaSvg({ fill, etiket, ek = '', alt = '', aria = 'Türkiye haritası' }) {
   const paths = Object.entries(TR_HARITA.il).map(([ad, d]) => `<path data-il="${esc(ad)}" d="${d}" style="fill:${fill ? fill(ad) : '#E6ECF1'}"/>`).join('');
   let lbl = '';
   if (etiket) for (const I of IL) {
@@ -346,7 +359,7 @@ function haritaSvg({ fill, etiket, ek = '', aria = 'Türkiye haritası' }) {
     const [x, y] = izdusum(I.lat, I.lon);
     lbl += `<g class="hl-et" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">${e.ikon ? `<g class="wi" transform="translate(-9 -21) scale(.28)">${e.ikon.replace('<svg class="wi" viewBox="0 0 64 64" aria-hidden="true">', '').replace('</svg>', '')}</g>` : ''}${e.ust != null ? `<text class="hl-u" y="${e.ikon ? 9 : 3}">${esc(e.ust)}</text>` : ''}${e.alt != null ? `<text class="hl-a" y="${e.ikon ? 17 : 11}">${esc(e.alt)}</text>` : ''}</g>`;
   }
-  return `<svg class="trh" viewBox="0 0 ${TR_HARITA.w} ${TR_HARITA.h}" role="img" aria-label="${esc(aria)}"><g class="hl-il">${paths}</g>${ek}<g class="wi-g">${lbl}</g></svg>`;
+  return `<svg class="trh" viewBox="0 0 ${TR_HARITA.w} ${TR_HARITA.h}" role="img" aria-label="${esc(aria)}">${alt}<g class="hl-il">${paths}</g>${ek}<g class="wi-g">${lbl}</g></svg>`;
 }
 // Haritanın üzerinde gezinince/dokununca il bilgisi (bilgi kutusundaki bağlantıya tıklanabilir).
 // Harita yeniden çizildiğinde tekrar çağrılabilir; dinleyiciler bir kez eklenir.
@@ -384,6 +397,37 @@ async function havalimanlari() {
   for (const s of m.s) { let b = null; for (const I of IL) { const d = km(s.lat, s.lon, I.lat, I.lon); if (!b || d < b.d) b = { ad: I.ad, d }; } s.il = b && b.d < 90 ? b.ad : null; }
   return m;
 }
+
+// ---------- İklim sınıflandırmaları (İklim ve Analizler sayfaları) ----------
+// Köppen-Geiger: aylık ortalama sıcaklık (t) ve yağıştan (y)
+function koppen(t, y) {
+  const Ty = avgOf(t), Py = sumOf(y), sicak = Math.max(...t), soguk = Math.min(...t);
+  const yaz = [3, 4, 5, 6, 7, 8], kis = [9, 10, 11, 0, 1, 2], Ps = sumOf(yaz.map(i => y[i])), Pk = sumOf(kis.map(i => y[i]));
+  const esik = Ps >= 0.7 * Py ? 20 * Ty + 280 : Pk >= 0.7 * Py ? 20 * Ty : 20 * Ty + 140;
+  if (Py < esik) return (Py < esik / 2 ? 'BW' : 'BS') + (Ty >= 18 ? 'h' : 'k');
+  if (soguk >= 18) return 'A';
+  if (sicak < 10) return 'ET';
+  const ana = soguk > 0 ? 'C' : 'D';
+  const yazMin = Math.min(...yaz.map(i => y[i])), yazMax = Math.max(...yaz.map(i => y[i])), kisMin = Math.min(...kis.map(i => y[i])), kisMax = Math.max(...kis.map(i => y[i]));
+  const ikinci = yazMin < 40 && yazMin < kisMax / 3 ? 's' : kisMin < yazMax / 10 ? 'w' : 'f';
+  const ust10 = t.filter(x => x >= 10).length;
+  const ucuncu = sicak >= 22 ? 'a' : ust10 >= 4 ? 'b' : soguk < -38 ? 'd' : 'c';
+  return ana + ikinci + ucuncu;
+}
+const KOPPEN = {
+  Csa: ['Akdeniz iklimi, sıcak ve kurak yaz', '#F2D21B'], Csb: ['Akdeniz iklimi, ılık ve kurak yaz', '#C6C700'], Cfa: ['Nemli ılıman, sıcak yaz', '#B7E35B'], Cfb: ['Okyanusal, her mevsim yağışlı', '#5DBB3F'],
+  Cwa: ['Ilıman, kurak kış', '#96FF96'], Dsa: ['Karasal, sıcak ve kurak yaz', '#E05FD4'], Dsb: ['Karasal, ılık ve kurak yaz', '#B04AB5'], Dsc: ['Karasal, serin ve kurak yaz', '#7E3A8E'],
+  Dfa: ['Nemli karasal, sıcak yaz', '#3FC9D9'], Dfb: ['Nemli karasal, ılık yaz', '#3A9BDC'], Dfc: ['Soğuk karasal (subarktik)', '#1F6E9A'], BSk: ['Soğuk yarı kurak (bozkır)', '#F2B864'],
+  BSh: ['Sıcak yarı kurak', '#E08A2E'], BWk: ['Soğuk çöl', '#F28B82'], BWh: ['Sıcak çöl', '#D9453A'], ET: ['Tundra', '#B5B5B5']
+};
+const kAd = k => (KOPPEN[k] || [k])[0], kRenk = k => (KOPPEN[k] || [0, '#CCCCCC'])[1];
+const deMartonne = (t, y) => sumOf(y) / (avgOf(t) + 10);
+const dmAd = i => i < 10 ? 'Kurak' : i < 20 ? 'Yarı kurak' : i < 24 ? 'Akdeniz tipi' : i < 28 ? 'Yarı nemli' : i < 35 ? 'Nemli' : i < 55 ? 'Çok nemli' : 'Islak';
+const erinc = (mx, y) => sumOf(y) / avgOf(mx);
+const erAd = i => i < 8 ? 'Tam kurak' : i < 23 ? 'Kurak' : i < 40 ? 'Yarı kurak' : i < 55 ? 'Yarı nemli' : i < 70 ? 'Nemli' : 'Çok nemli';
+// ABD Tarım Bakanlığı soğuğa dayanıklılık bölgesi (ortalama yıllık en düşük sıcaklıktan)
+const usda = c => { const f = c * 1.8 + 32, z = Math.floor((f + 60) / 10) + 1, a = ((f + 60) % 10 + 10) % 10 < 5 ? 'a' : 'b'; return z + a; };
+const USDA = [[-25, '#3A4BA8'], [-20, '#4F7FD6'], [-15, '#6FB3E8'], [-10, '#9BD8C9'], [-5, '#C9E8A0'], [0, '#F2E27A'], [5, '#F2B45A']], usdaRenk = rampa(USDA);
 
 // ---------- Sıralanabilir tablo ----------
 // kolonlar: [{ b: başlık, v: satır → sıralama değeri, h: satır → hücre HTML, l: sola yaslı }]

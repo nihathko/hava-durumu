@@ -24,12 +24,124 @@
 
   // ---------- Seçili yer ----------
   const nemYorum = v => v == null ? '–' : v < 0.1 ? ['Kuru', 'e-yuksek'] : v < 0.2 ? ['Az nemli', 'e-orta'] : v < 0.35 ? ['Nemli', 'e-az'] : ['Islak', 'e-orta'];
+  // ---------- Yardımcılar: en yakın il ve aylık normallerin güne yayılması (NASA POWER, 1991–2020) ----------
+  const enYakinIl = p => IL.reduce((b, I) => Math.hypot(I.lat - p.lat, (I.lon - p.lon) * 0.77) < Math.hypot(b.lat - p.lat, (b.lon - p.lon) * 0.77) ? I : b, IL[0]);
+  const ORTA = [15, 45, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349]; // ayların ortasının yılın kaçıncı günü olduğu
+  const yilGunu = d => Math.floor((Date.parse(d + 'T12:00:00Z') - Date.parse(d.slice(0, 4) + '-01-01T12:00:00Z')) / 864e5);
+  function gunlukNormal(dizi, d) {
+    const g = yilGunu(d);
+    let i = ORTA.findIndex(x => x > g); if (i < 0) i = 12;
+    const a = (i + 11) % 12, b = i % 12, ga = i === 0 ? ORTA[11] - 365 : ORTA[a], gb = i === 12 ? ORTA[0] + 365 : ORTA[b];
+    return dizi[a] + (dizi[b] - dizi[a]) * (g - ga) / (gb - ga);
+  }
+
+  // ---------- Sıcaklık-nem indeksi (hayvancılık, sığırda sıcak stresi) ----------
+  async function sinep(p, s) {
+    const el = $('thi');
+    el.innerHTML = yukleniyor();
+    let d;
+    try { d = await getJSON(omURL(OM, { latitude: p.lat, longitude: p.lon, timezone: 'auto', forecast_days: 7, hourly: 'temperature_2m,relative_humidity_2m' }), 30); }
+    catch (e) { if (s === seq) el.innerHTML = hataMsg(); return; }
+    if (s !== seq) return;
+    const H = d.hourly, thi = H.time.map((_, i) => { const T = H.temperature_2m[i], RH = H.relative_humidity_2m[i]; return T == null || RH == null ? null : (1.8 * T + 32) - (0.55 - 0.0055 * RH) * (1.8 * T - 26); });
+    const SEV = v => v == null ? ['–', 'e-yok'] : v < 68 ? ['Stres yok', 'e-az'] : v < 72 ? ['Hafif stres', 'e-orta'] : v < 80 ? ['Orta stres', 'e-yuksek'] : v < 90 ? ['Ciddi stres', 'e-cok'] : ['Tehlikeli', 'e-asiri'];
+    const gunler = [...new Set(H.time.map(t => t.slice(0, 10)))];
+    const gun = gunler.map(g => { const ii = H.time.map((t, i) => [t, i]).filter(([t]) => t.startsWith(g)).map(x => x[1]); const v = ii.map(i => thi[i]); const m = maxOf(v); return { g, m, saat: ii.filter(i => thi[i] >= 72).length }; });
+    el.innerHTML = `<div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Gün</th><th>En yüksek indeks</th><th class="l">Durum</th><th>Stresli saat<small>indeks 72 ve üstü</small></th></tr></thead><tbody>
+      ${gun.map(x => { const e = SEV(x.m); return `<tr><td class="l">${esc(fmtWeek(x.g))}<small class="muted"> ${esc(fmtDay(x.g))}</small></td><td>${dec(x.m, 0)}</td><td class="l"><span class="etiket ${e[1]}">${e[0]}</span></td><td>${x.saat}</td></tr>`; }).join('')}</tbody></table></div>
+      <p class="kutu-not">Sıcaklık-nem indeksi (THI) 72'nin üstüne çıktığında süt ineklerinde süt verimi düşmeye başlar; 80 üstünde ciddi stres, 90 üstünde ölüm riski vardır. Ahırı havalandırın, gölgelik ve bol temiz su sağlayın, sağım ve yemlemeyi serin saatlere alın.</p>`;
+  }
+
+  // ---------- Bitki soğuklama ihtiyacı (meyve ağaçlarında kış dinlenmesi) ----------
+  const SOGUK = [['Elma', 800, 1200], ['Armut', 600, 1200], ['Kiraz', 800, 1200], ['Vişne', 800, 1200], ['Erik', 500, 1000], ['Şeftali ve nektarin', 400, 900], ['Kayısı', 300, 900], ['Badem', 200, 500], ['Ceviz', 400, 1500], ['Fındık', 800, 1200]];
+  async function soguklama(p, s) {
+    const el = $('bisip');
+    el.innerHTML = yukleniyor();
+    const bugun = bugunTR(), y = +bugun.slice(0, 4), ay = +bugun.slice(5, 7);
+    const bas = `${ay >= 10 ? y : y - 1}-10-01`, fark = Math.round((Date.parse(bugun) - Date.parse(bas)) / 864e5);
+    let saatler = [];
+    try {
+      if (fark > 85) {
+        const a = await getJSON(omURL(OM_ARSIV, { latitude: p.lat, longitude: p.lon, start_date: bas, end_date: gunEkle(bugun, -6), hourly: 'temperature_2m', timezone: 'auto' }), 720);
+        saatler = a.hourly.time.map((t, i) => [t, a.hourly.temperature_2m[i]]);
+      }
+      const f = await getJSON(omURL(OM, { latitude: p.lat, longitude: p.lon, timezone: 'auto', past_days: Math.min(92, fark > 85 ? 6 : fark), forecast_days: 7, hourly: 'temperature_2m' }), 60);
+      const son = saatler.length ? saatler[saatler.length - 1][0] : '';
+      f.hourly.time.forEach((t, i) => { if (t > son && t >= bas) saatler.push([t, f.hourly.temperature_2m[i]]); });
+    } catch (e) { if (s === seq) el.innerHTML = hataMsg('Soğuklama hesabı için veri şu an alınamadı.'); return; }
+    if (s !== seq) return;
+    const simdi = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 13);
+    const ut = T => T == null ? 0 : T <= 1.4 ? 0 : T <= 2.4 ? .5 : T <= 9.1 ? 1 : T <= 12.4 ? .5 : T <= 15.9 ? 0 : T <= 18 ? -.5 : -1;
+    let cs = 0, ct = 0, cs7 = 0, utah = 0, utahGecmis = 0;
+    for (const [t, T] of saatler) { const c = T != null && T >= 0 && T <= 7.2 ? 1 : 0; if (t.slice(0, 13) <= simdi) { cs += c; utahGecmis = Math.max(0, utahGecmis + ut(T)); } else cs7 += c; utah = Math.max(0, utah + ut(T)); ct += c; }
+    el.innerHTML = `<dl class="kv ozet3"><div><dt>1 Ekim'den bu yana soğuklama</dt><dd>${n0(cs)} saat <small>0–7,2°C arası</small></dd></div><div><dt>Önümüzdeki 7 günde eklenecek</dt><dd>${n0(cs7)} saat</dd></div><div><dt>Utah modeli</dt><dd>${n0(utahGecmis)} birim</dd></div></dl>
+      <div class="tbl-wrap" style="margin-top:12px"><table class="kucuk-tablo"><thead><tr><th class="l">Meyve</th><th>Gereken<small>yaklaşık, saat</small></th><th class="l">Durum</th></tr></thead><tbody>
+      ${SOGUK.map(([ad, a, b]) => { const o = cs / a; return `<tr><td class="l">${ad}</td><td>${a}–${b}</td><td class="l">${o >= 1 ? '<span class="etiket e-az">Karşılandı</span>' : `<span class="etiket ${o >= .6 ? 'e-orta' : 'e-yok'}">%${Math.round(o * 100)}</span>`}</td></tr>`; }).join('')}</tbody></table></div>
+      <p class="kutu-not">Meyve ağaçları kışın belli bir süre soğuk görmezse ilkbaharda düzensiz ve geç çiçek açar, verim düşer. Gereken süre çeşide göre çok değişir; tablodaki aralıklar yaygın çeşitler için yaklaşıktır, kendi çeşidinizin değerini fidancınıza sorun. Sezon 1 Ekim'den başlatılır.</p>`;
+  }
+
+  // ---------- Hasat zamanı tahmini (büyüme derece-gün ile) ----------
+  const URUN = [['Mısır (danelik, orta erkenci)', 10, 1500], ['Mısır (silajlık)', 10, 1200], ['Pamuk', 15.6, 1220], ['Ayçiçeği', 6, 1600], ['Soya', 10, 1300], ['Domates (tarla)', 10, 1200], ['Kışlık buğday', 0, 2200], ['Kışlık arpa', 0, 1900]];
+  async function hasat(p, s) {
+    const el = $('hasat-s'), ui = +$('hurun').value, ekim = $('hekim').value;
+    if (!ekim) { el.innerHTML = '<p class="muted">Ekim tarihini seç.</p>'; return; }
+    const [ad, taban, gerek] = URUN[ui], bugun = bugunTR(), I = enYakinIl(p), Nn = NORMAL81[I.ad];
+    el.innerHTML = yukleniyor();
+    const gunluk = {};
+    let arsivYok = false;
+    try {
+      // Arşiv alınamazsa (servis yoğunsa) geçmiş günler için normaller kullanılır
+      if (ekim < gunEkle(bugun, -7)) {
+        try {
+          const a = await getJSON(omURL(OM_ARSIV, { latitude: p.lat, longitude: p.lon, start_date: ekim, end_date: gunEkle(bugun, -6), daily: 'temperature_2m_max,temperature_2m_min', timezone: 'auto' }), 720);
+          a.daily.time.forEach((t, i) => { gunluk[t] = [a.daily.temperature_2m_max[i], a.daily.temperature_2m_min[i]]; });
+        } catch (e) { arsivYok = true; }
+      }
+      const f = await getJSON(omURL(OM, { latitude: p.lat, longitude: p.lon, timezone: 'auto', past_days: 7, forecast_days: 16, daily: 'temperature_2m_max,temperature_2m_min' }), 60);
+      f.daily.time.forEach((t, i) => { if (!gunluk[t] || gunluk[t][0] == null) gunluk[t] = [f.daily.temperature_2m_max[i], f.daily.temperature_2m_min[i], 1]; });
+    } catch (e) { if (s === seq) el.innerHTML = hataMsg(); return; }
+    if (s !== seq) return;
+    let top = 0, gun = ekim, simdiye = 0, tahmin = false, n = 0;
+    while (top < gerek && n < 400) {
+      let v = gunluk[gun];
+      if (!v || v[0] == null) { v = [gunlukNormal(Nn.mx, gun), gunlukNormal(Nn.mn, gun)]; tahmin = true; }
+      top += Math.max(0, (v[0] + v[1]) / 2 - taban);
+      if (gun <= bugun) simdiye = top;
+      if (top >= gerek) break;
+      gun = gunEkle(gun, 1); n++;
+    }
+    const bitti = top >= gerek;
+    el.innerHTML = `<dl class="kv ozet3"><div><dt>Tahmini hasat (olgunlaşma)</dt><dd>${bitti ? `${esc(fmtDay(gun))} ${gun.slice(0, 4)}` : 'Bir yıl içinde olgunlaşmıyor'}</dd></div>
+      <div><dt>Bugüne kadar biriken</dt><dd>${n0(simdiye)} / ${gerek} °C·gün <small>%${Math.min(100, Math.round(100 * simdiye / gerek))}</small></dd></div>
+      <div><dt>Ekimden hasada</dt><dd>${bitti ? n + 1 : '–'} gün</dd></div></dl>
+      <p class="kutu-not">${esc(ad)} için taban sıcaklık ${dec(taban)}°C ve gereken toplam yaklaşık ${gerek} °C·gün alındı. Ekimden bugüne gerçekleşen hava, sonraki 16 gün için tahmin${tahmin ? `, daha sonrası için ${esc(I.ad)} ilinin 1991–2020 normalleri` : ''} kullanıldı.${arsivYok ? ' Geçmiş günlerin gerçekleşen verisi şu an alınamadığı için o günlerde de normaller kullanıldı; sonuç yaklaşıktır.' : ''} Çeşit, sulama ve toprak durumuna göre gerçek tarih birkaç hafta farklı olabilir.</p>`;
+  }
+
+  // ---------- Uygun ekim zamanı ve soğuğa dayanıklılık bölgesi (NASA POWER normalleri) ----------
+  function ekimZamani(p) {
+    const I = enYakinIl(p), Nn = NORMAL81[I.ad], y = bugunTR().slice(0, 4);
+    const gunler = Array.from({ length: 365 }, (_, i) => gunEkle(`${y}-01-01`, i));
+    const T = gunler.map(g => gunlukNormal(Nn.t, g));
+    const sonbahar = (esik, bas) => { for (let i = bas; i < 365; i++) if (T[i] <= esik) return gunler[i]; return null; };
+    const ilkbahar = esik => { for (let i = 30; i < 200; i++) if (T[i] >= esik) return gunler[i]; return null; };
+    const kBas = sonbahar(15, 200), kBit = sonbahar(8, 200), yaz = ilkbahar(12), z = usda(Nn.yilMin);
+    const t = d => d ? fmtDay(d) : '–';
+    $('ekim').innerHTML = `<dl class="kv ozet3">
+      <div><dt>Kışlık buğday ve arpa ekimi</dt><dd>${esc(t(kBas))} – ${esc(t(kBit))}</dd></div>
+      <div><dt>Mısır, ayçiçeği, pamuk ekimi</dt><dd>${esc(t(yaz))} sonrası</dd></div>
+      <div><dt>Soğuğa dayanıklılık bölgesi</dt><dd>${z} <small>ortalama yıllık en düşük ${dec(Nn.yilMin)}°C</small></dd></div></dl>
+      <p class="kutu-not">${esc(I.ad)} ilinin 1991–2020 normallerine göre. Kışlık tahıllar, günlük ortalama sıcaklık 15°C'nin altına indikten sonra ve 8°C'ye düşmeden önce ekilirse kışa güçlü kardeşlenmiş girer. Yazlık ürünler için toprak 10°C'yi geçmelidir; bu da normalde günlük ortalama 12°C'ye karşılık gelir. Bu yılın gerçek toprak sıcaklığını yukarıdaki "Toprak" bölümünden kontrol edin.</p>`;
+  }
+
+  let sonYer = null;
   async function yer(p) {
     const s = ++seq;
     ['toprak', 'su', 'ilac', 'gdd', 'akarsu'].forEach(k => { $(k).innerHTML = yukleniyor(); });
     $('kisa').querySelectorAll('[data-yer]').forEach(x => x.remove());
     $('kisa').insertAdjacentHTML('beforeend', `<div data-yer><dt>Seçili yer</dt><dd>${esc(p.name)}</dd></div>`);
     document.title = `${p.name} ziraat · Hava Durumu`;
+    sonYer = p;
+    sinep(p, s); soguklama(p, s); ekimZamani(p); hasat(p, s);
     let d;
     try {
       d = await getJSON(omURL(OM, { latitude: p.lat, longitude: p.lon, timezone: 'auto', past_days: 31, forecast_days: 7, wind_speed_unit: 'kmh',
@@ -113,6 +225,12 @@
     } catch (e) { if (s === seq) $('akarsu').innerHTML = hataMsg('Akarsu verisi şu an alınamadı.'); }
   }
 
+  // Hasat aracı: ürün listesi ve varsayılan ekim tarihi (bu yılın 15 Nisan'ı; kışlık tahıllar için geçen yılın 15 Ekim'i)
+  $('hurun').innerHTML = URUN.map(([a], i) => `<option value="${i}">${esc(a)}</option>`).join('');
+  const varsayilan = () => { const y = +bugunTR().slice(0, 4); return URUN[+$('hurun').value][1] === 0 ? `${bugunTR().slice(5) >= '10-15' ? y : y - 1}-10-15` : `${y}-04-15`; };
+  $('hekim').value = varsayilan();
+  $('hurun').addEventListener('change', () => { $('hekim').value = varsayilan(); if (sonYer) hasat(sonYer, seq); });
+  $('hgit').addEventListener('click', () => { if (sonYer) hasat(sonYer, seq); });
   don();
   yerSecici($('yer'), yer);
 })();

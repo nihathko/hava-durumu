@@ -62,6 +62,31 @@
         <p class="note">Önümüzdeki 48 saat. Uygun saat: rüzgar 3–15 km/sa, yağış yok ve sonraki 2 saatte yağış ihtimali düşük, sıcaklık 8–28°C, nem %40'ın üstünde.</p>
         <div id="ilac"></div>
       </section>
+      <section class="sec" aria-labelledby="h-thi">
+        <h2 id="h-thi">Hayvancılık: sıcak stresi (sıcaklık-nem indeksi)</h2>
+        <p class="note">Sıcaklık ve nem birlikte hayvanları strese sokar. Önümüzdeki 7 gün için günlük en yüksek indeks ve stresli saat sayısı.</p>
+        <div id="thi"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-bs">
+        <h2 id="h-bs">Meyve ağaçlarında soğuklama</h2>
+        <p class="note">Bu kış şimdiye kadar biriken soğuklama süresi ve yaygın meyve türlerinin ihtiyacı.</p>
+        <div id="bisip"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-hs">
+        <h2 id="h-hs">Hasat zamanı tahmini</h2>
+        <p class="note">Ürünü ve ekim tarihini seç; büyüme derece-gün birikimine göre olgunlaşma tarihi kestirilir.</p>
+        <div class="dyform">
+          <div class="field"><label for="hurun">Ürün</label><select id="hurun"></select></div>
+          <div class="field"><label for="hekim">Ekim tarihi</label><input id="hekim" type="date"></div>
+          <button class="btn" id="hgit" type="button">Hesapla</button>
+        </div>
+        <div id="hasat-s" style="margin-top:14px"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ek">
+        <h2 id="h-ek">Uygun ekim zamanı</h2>
+        <p class="note">Uzun yıllar sıcaklık normallerine göre kışlık tahıllar ve yazlık ürünler için ekim dönemi, ayrıca soğuğa dayanıklılık bölgesi.</p>
+        <div id="ekim"></div>
+      </section>
       <section class="sec" aria-labelledby="h-gdd">
         <h2 id="h-gdd">Büyüme derece-gün</h2>
         <p class="note">Bitkilerin gelişimi için biriken sıcaklık. Her gün için (en yüksek + en düşük) / 2 − 10°C hesaplanır, eksi değerler sıfır sayılır. Mısır, pamuk ve sebzelerde ekim ve hasat zamanını kestirmek için kullanılır.</p>
@@ -85,6 +110,7 @@
 
 <script src="assets/ililce.js"></script>
 <script src="assets/turkiye.js"></script>
+<script src="assets/normal-81.js"></script>
 <script src="assets/ortak.js"></script>
 <script src="assets/ziraat.js"></script>
 </body>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dikkat · Hava Durumu</title>
+<meta name="description" content="Önümüzdeki 3 günde kuvvetli yağış, kar, fırtına, aşırı sıcak ya da soğuk beklenen iller. Model verisinden otomatik değerlendirme.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Dikkat gerektiren hava</h1>
+      <p class="giris" id="giris">Önümüzdeki 3 günde kuvvetli yağış, yoğun kar, kuvvetli rüzgar, aşırı sıcak ya da soğuk ve gök gürültülü fırtına beklenen iller. Bu değerlendirme model verisinden otomatik yapılır; <b>resmi uyarı değildir</b>. Resmi uyarılar için <a href="https://www.mgm.gov.tr/meteouyari/turkiye.aspx" target="_blank" rel="noopener">MGM MeteoUyarı</a>.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-u">
+        <h2 id="h-u">Harita</h2>
+        <p class="note" id="usay"></p>
+        <div class="tabs" id="ugun" aria-label="Gün"></div>
+        <div class="trh-wrap" id="uharita"></div>
+        <div id="ulj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ul">
+        <h2 id="h-ul">Hadiselere göre iller</h2>
+        <div class="siralar" id="uliste"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ut">
+        <h2 id="h-ut">81 il</h2>
+        <p class="note">Sütun başlığına dokunarak sırala.</p>
+        <div class="tbl-wrap" id="utablo"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ue">
+        <h2 id="h-ue">Eşikler</h2>
+        <div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Hadise</th><th>Sarı</th><th>Turuncu</th><th>Kırmızı</th></tr></thead><tbody>
+          <tr><td class="l">Günlük yağış</td><td>30 mm</td><td>60 mm</td><td>100 mm</td></tr>
+          <tr><td class="l">Günlük kar</td><td>5 cm</td><td>15 cm</td><td>30 cm</td></tr>
+          <tr><td class="l">Rüzgar hamlesi</td><td>60 km/sa</td><td>80 km/sa</td><td>100 km/sa</td></tr>
+          <tr><td class="l">En yüksek sıcaklık</td><td>38°C</td><td>41°C</td><td>44°C</td></tr>
+          <tr><td class="l">En düşük sıcaklık</td><td>−10°C</td><td>−18°C</td><td>−25°C</td></tr>
+          <tr><td class="l">Fırtına (CAPE ve gök gürültüsü)</td><td>1000 J/kg</td><td>2000 J/kg</td><td>3000 J/kg</td></tr>
+        </tbody></table></div>
+        <p class="kutu-not">Eşikler Türkiye geneli için tek tiptir. MGM ise her bölgenin iklimine göre farklı eşikler ve uzman değerlendirmesi kullanır; bu yüzden buradaki renkler MeteoUyarı'dan farklı olabilir.</p>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Değerlendirme Open-Meteo tahmin verisinden yapılır. Can ve mal güvenliği için yalnızca MGM'nin resmi uyarılarını esas alın.</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/turkiye.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/uyari.js"></script>
+</body>
+</html>

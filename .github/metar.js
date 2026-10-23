@@ -3,7 +3,7 @@
 // veri sitenin kendi adresinden (data/metar.json) sunulur. Kaynak veri ABD kamu malıdır.
 const fs = require('fs');
 const oku = f => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return []; } };
-const metar = oku('data/metar-ham.json'), taf = oku('data/taf-ham.json');
+const metar = oku('data/metar-ham.json'), taf = oku('data/taf-ham.json'), sigmet = oku('data/sigmet-ham.json'), dunya = oku('data/dunya-ham.json');
 
 const ADLAR = {
   LTFM: 'İstanbul Havalimanı', LTFJ: 'İstanbul Sabiha Gökçen', LTBA: 'İstanbul Atatürk', LTAC: 'Ankara Esenboğa', LTBJ: 'İzmir Adnan Menderes',
@@ -43,5 +43,15 @@ const s = metar.filter(x => /^LT/.test(x.icaoId) && x.lat && x.lon).map(x => ({
   ham: x.rawOb, taf: tafBy[x.icaoId] || null
 })).sort((a, b) => a.ad.localeCompare(b.ad, 'tr'));
 
-fs.writeFileSync('data/metar.json', JSON.stringify({ t: new Date().toISOString(), kaynak: 'NOAA Aviation Weather Center (aviationweather.gov)', s }));
-console.log(`${s.length} havalimanı yazıldı`);
+// Türkiye uçuş bölgeleri (Ankara LTAA, İstanbul LTBB) için geçerli SIGMET uyarıları
+const TEHLIKE = { TS: 'Gök gürültülü fırtına', TURB: 'Türbülans', ICE: 'Buzlanma', MTW: 'Dağ dalgası', VA: 'Volkanik kül', TC: 'Tropik siklon', DS: 'Toz fırtınası', SS: 'Kum fırtınası', RDOACT: 'Radyoaktif bulut', CONVECTIVE: 'Konvektif hava' };
+const sig = sigmet.filter(x => /^(LTAA|LTBB)/.test(x.firId || '')).map(x => ({
+  fir: x.firId === 'LTBB' ? 'İstanbul' : 'Ankara', tehlike: TEHLIKE[x.hazard] || x.hazard, nitelik: x.qualifier || '', alt: x.base ?? null, ust: x.top ?? null,
+  bas: x.validTimeFrom ? new Date(x.validTimeFrom * 1000).toISOString() : null, bit: x.validTimeTo ? new Date(x.validTimeTo * 1000).toISOString() : null,
+  ham: x.rawSigmet || '', alan: (x.coords || []).map(c => [c.lat, c.lon])
+}));
+// Dünya şehirlerinin havalimanı ölçümleri
+const dun = Object.fromEntries(dunya.filter(x => x.icaoId).map(x => [x.icaoId, { t: x.temp ?? null, nem: nem(x.temp, x.dewp), r: kt(x.wspd), saat: x.obsTime ? new Date(x.obsTime * 1000).toISOString() : null, hadise: hadise(x.wxString) }]));
+
+fs.writeFileSync('data/metar.json', JSON.stringify({ t: new Date().toISOString(), kaynak: 'NOAA Aviation Weather Center (aviationweather.gov)', s, sigmet: sig, dunya: dun }));
+console.log(`${s.length} havalimanı, ${sig.length} SIGMET, ${Object.keys(dun).length} dünya ölçümü yazıldı`);

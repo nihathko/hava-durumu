@@ -2,11 +2,11 @@
 // böylece site uygulama olarak yüklenebilir ve internet yokken de açılır.
 // Önce ağdan alınır (her zaman en yeni sürüm), ağ yoksa önbellekten verilir.
 // Hava verisi (Open-Meteo) ve MGM görselleri başka sitelerden geldiği için hiç önbelleğe alınmaz.
-const CACHE = 'hava-v3';
+const CACHE = 'hava-v4';
 const FILES = [
-  './', 'harita.html', 'radar.html', 'grafik.html', 'iklim.html', 'deniz.html', 'ziraat.html', 'ozel.html', 'hakkinda.html',
-  'assets/site.css', 'assets/ortak.js', 'assets/ililce.js', 'assets/turkiye.js',
-  'assets/harita.js', 'assets/radar.js', 'assets/grafik.js', 'assets/iklim.js', 'assets/deniz.js', 'assets/ziraat.js', 'assets/ozel.js', 'assets/hakkinda.js',
+  './', 'harita.html', 'uyari.html', 'radar.html', 'grafik.html', 'iklim.html', 'analiz.html', 'deniz.html', 'ziraat.html', 'ozel.html', 'bilgi.html', 'hakkinda.html',
+  'assets/site.css', 'assets/ortak.js', 'assets/ililce.js', 'assets/turkiye.js', 'assets/normal-81.js',
+  'assets/harita.js', 'assets/radar.js', 'assets/grafik.js', 'assets/iklim.js', 'assets/deniz.js', 'assets/ziraat.js', 'assets/ozel.js', 'assets/hakkinda.js', 'assets/uyari.js', 'assets/analiz.js', 'assets/bilgi.js',
   'assets/leaflet/leaflet.js', 'assets/leaflet/leaflet.css',
   'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
   'fonts/figtree-400-700-latin.woff2', 'fonts/figtree-400-700-latin-ext.woff2',

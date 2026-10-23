@@ -34,7 +34,7 @@
     </div>
     <section class="sayfa" aria-labelledby="h-sayfa">
       <h1 id="h-sayfa">Özel tahminler</h1>
-      <p class="giris" id="giris">Kayak merkezlerinde kar, Afrika'dan gelen toz, havalimanlarının gerçek ölçümleri, son depremler, kutup ışığı ihtimali ve dünya şehirleri.</p>
+      <p class="giris" id="giris">Kayak merkezleri, stadyumlar, Kapadokya balon uçuşu, enverziyon, güneş ve rüzgar enerjisi, Afrika'dan gelen toz, havalimanları ve SIGMET uyarıları, son depremler, kutup ışığı ihtimali ve dünya şehirleri.</p>
       <dl class="kisa" id="kisa"></dl>
     </section>
   </div></div>
@@ -44,6 +44,30 @@
         <h2 id="h-ky">Kayak merkezleri</h2>
         <p class="note">Tahminler pistin ortalama yüksekliğine göre düzeltilir. Kar kalınlığı model değeridir; merkezlerin açıkladığı pist ölçümünden farklı olabilir.</p>
         <div class="tbl-wrap" id="kayak"></div>
+      </section>
+      <section class="sec" id="stad-b" aria-labelledby="h-st">
+        <h2 id="h-st">Stadyumlar ve İstanbul Park</h2>
+        <p class="note">Maç ve yarış günleri için saatlik tahmin, sabah 8'den gece yarısına kadar.</p>
+        <div class="field" style="max-width:420px;margin-bottom:14px"><label for="stsec">Stadyum</label><select id="stsec"></select></div>
+        <div id="stad"></div>
+      </section>
+      <section class="sec" id="balon-b" aria-labelledby="h-bl">
+        <h2 id="h-bl">Kapadokya balon uçuşu</h2>
+        <p class="note">Göreme'de gün doğumu saatlerinde rüzgar, yağış ve görüşe göre uçuş için hava uygunluğu.</p>
+        <div id="balon"></div>
+      </section>
+      <section class="sec" id="env-b" aria-labelledby="h-env">
+        <h2 id="h-env">Enverziyon riski</h2>
+        <p class="note">Sabah saat 7'de yerden yukarı doğru sıcaklığın artması (sıcaklık terselmesi) ve rüzgarın zayıflığına göre. Enverziyonda baca ve egzoz dumanı yere yakın sıkışır; özellikle kış sabahları şehirlerde hava kirliliği artar.</p>
+        <div class="tabs" id="envg" aria-label="Gün"></div>
+        <div class="trh-wrap" id="envh"></div>
+        <div id="envlj"></div>
+      </section>
+      <section class="sec" id="enerji-b" aria-labelledby="h-en">
+        <h2 id="h-en">Güneş ve rüzgar enerjisi</h2>
+        <p class="note">Seçilen il için önümüzdeki 7 günün güneş paneli üretim tahmini ve rüzgar enerjisi potansiyeli.</p>
+        <div class="field" style="max-width:300px;margin-bottom:14px"><label for="ensec">İl</label><select id="ensec"></select></div>
+        <div id="enerji"></div>
       </section>
       <section class="sec" id="toz-b" aria-labelledby="h-tz">
         <h2 id="h-tz">Toz taşınımı</h2>
@@ -55,11 +79,14 @@
         <h2 id="h-hv">Havalimanları</h2>
         <p class="note" id="hvnot">Gerçek ölçümler (METAR) ve havalimanı tahminleri (TAF). Yarım saatte bir güncellenir.</p>
         <div class="tbl-wrap" id="metar"></div>
+        <div class="gb"><h3>SIGMET uyarıları</h3></div>
+        <div id="sigmet"></div>
       </section>
       <section class="sec" id="deprem-b" aria-labelledby="h-dp">
         <h2 id="h-dp">Son depremler</h2>
         <p class="note">Türkiye ve çevresinde son 7 günde olan 2,5 ve üstü depremler. Resmi bilgi için AFAD ve Kandilli Rasathanesi'ni takip edin.</p>
         <div class="tbl-wrap" id="deprem"></div>
+        <div id="dphava" style="margin-top:18px"></div>
       </section>
       <section class="sec" id="uzay-b" aria-labelledby="h-uz">
         <h2 id="h-uz">Uzay havası</h2>
@@ -83,6 +110,7 @@
 
 <script src="assets/ililce.js"></script>
 <script src="assets/turkiye.js"></script>
+<script src="assets/normal-81.js"></script>
 <script src="assets/ortak.js"></script>
 <script src="assets/ozel.js"></script>
 </body>

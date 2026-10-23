@@ -8,19 +8,19 @@
 
   // 30 yıllık günlük veriden aylık özet ve günlük normaller (cihazda saklanır)
   async function normaller(p) {
-    const glat = grid(+p.lat), glon = grid(+p.lon), key = `hava.iklimay2.${glat},${glon}`;
+    const glat = grid(+p.lat), glon = grid(+p.lon), key = `hava.iklimay3.${glat},${glon}`;
     const c = store.get(key, null); if (c) return c;
     const r = await fetch(omURL(OM_ARSIV, { latitude: glat, longitude: glon, start_date: '1991-01-01', end_date: '2020-12-31', timezone: 'auto',
       daily: 'temperature_2m_max,temperature_2m_min,temperature_2m_mean,precipitation_sum,sunshine_duration' }));
     if (!r.ok) throw new Error('arsiv ' + r.status);
     const D = (await r.json()).daily;
     const ay = Array.from({ length: 12 }, () => ({ mx: [], mi: [], me: [], gunes: [], rmx: -99, rmxT: '', rmi: 99, rmiT: '', ryg: 0, rygT: '' }));
-    const aylikYagis = {}, aylikGun = {}, gun = {};
+    const aylikYagis = {}, aylikGun = {}, gun = {}, yilMin = {};
     D.time.forEach((t, i) => {
       const m = +t.slice(5, 7) - 1, a = ay[m], ym = t.slice(0, 7), md = t.slice(5);
       const mx = D.temperature_2m_max[i], mi = D.temperature_2m_min[i], me = D.temperature_2m_mean[i], y = D.precipitation_sum[i] ?? 0, g = D.sunshine_duration[i];
       if (mx != null) { a.mx.push(mx); if (mx > a.rmx) { a.rmx = mx; a.rmxT = t; } }
-      if (mi != null) { a.mi.push(mi); if (mi < a.rmi) { a.rmi = mi; a.rmiT = t; } }
+      if (mi != null) { a.mi.push(mi); if (mi < a.rmi) { a.rmi = mi; a.rmiT = t; } yilMin[t.slice(0, 4)] = Math.min(yilMin[t.slice(0, 4)] ?? 99, mi); }
       if (me != null) a.me.push(me);
       if (g != null) a.gunes.push(g / 3600);
       if (y > a.ryg) { a.ryg = y; a.rygT = t; }
@@ -38,6 +38,7 @@
     out.gun = {};
     md.forEach((k, i) => { let t = 0, y = 0; for (let j = -7; j <= 7; j++) { const h = ham[(i + j + ham.length) % ham.length]; t += h[0]; y += h[1]; } out.gun[k] = [r1(t / 15), Math.round(y / 15 * 100) / 100]; });
     out.gun['02-29'] = out.gun['02-28'];
+    out.yilMin = Math.round(avgOf(Object.values(yilMin)) * 10) / 10;
     store.set(key, out);
     return out;
   }
@@ -134,6 +135,52 @@
     grafikIpucu($('gg'), g, i => `<b>${G[i][0]}</b>Fark <span>${fark[i] > 0 ? '+' : ''}${dec(fark[i])}°</span>${ko[i] != null ? `<br>9 yıllık ortalama <span>${ko[i] > 0 ? '+' : ''}${dec(ko[i])}°</span>` : ''}`);
   }
 
+  // ---------- İklim sınıflandırması ve soğuğa dayanıklılık bölgesi ----------
+  function sinif(N) {
+    const t = N.ay.map(a => a.me), y = N.ay.map(a => a.y), mx = N.ay.map(a => a.mx);
+    const k = koppen(t, y), dm = deMartonne(t, y), er = erinc(mx, y);
+    $('sinif').innerHTML = `<dl class="kv ozet3">
+      <div><dt>Köppen-Geiger</dt><dd><span class="etiket" style="background:${kRenk(k)};color:#13212C">${k}</span> ${esc(kAd(k))}</dd></div>
+      <div><dt>De Martonne kuraklık indisi</dt><dd>${dec(dm)} <small>${dmAd(dm)}</small></dd></div>
+      <div><dt>Erinç yağış etkinlik indisi</dt><dd>${dec(er)} <small>${erAd(er)}</small></dd></div>
+      ${N.yilMin != null ? `<div><dt>Soğuğa dayanıklılık bölgesi (USDA)</dt><dd>${usda(N.yilMin)} <small>ortalama yıllık en düşük ${dec(N.yilMin)}°C</small></dd></div>` : ''}</dl>
+      <p class="kutu-not">Köppen sınıfı, aylık sıcaklık ve yağışa göre dünyada en çok kullanılan iklim sınıflandırmasıdır. De Martonne ve Erinç indisleri iklimin ne kadar kurak ya da nemli olduğunu gösterir; Türkiye'de tarım ve ormancılıkta sık kullanılır. Soğuğa dayanıklılık bölgesi, fidan ve süs bitkisi etiketlerindeki "zone" değeriyle karşılaştırılır: bitkinin bölge numarası buradakinden küçük ya da eşitse kışı dışarıda atlatabilir.</p>`;
+  }
+
+  // ---------- Kuraklık (1–24 ay), bu yıl ve gün dereceleri: son 2 yılın ERA5 verisinden ----------
+  async function uzunDonem(p, N, s) {
+    const el = $('uzun'), gd = $('gd');
+    el.innerHTML = yukleniyor(); gd.innerHTML = yukleniyor();
+    const bit = gunEkle(bugunTR(), -6), bas = gunEkle(bit, -735);
+    let D;
+    try { D = (await getJSON(omURL(OM_ARSIV, { latitude: grid(+p.lat), longitude: grid(+p.lon), start_date: bas, end_date: bit, daily: 'temperature_2m_mean,precipitation_sum', timezone: 'auto' }), 720)).daily; }
+    catch (e) { if (s === seq) { el.innerHTML = hataMsg('Uzun dönem verisi şu an alınamadı; arşiv servisi yoğun olabilir. Biraz sonra sayfayı yenile.'); gd.innerHTML = ''; } return; }
+    if (s !== seq) return;
+    const n = D.time.length, nr = t => N.gun[t.slice(5)] || [null, 0];
+    const pencere = g => { const i0 = Math.max(0, n - g); let y = 0, yn = 0; for (let i = i0; i < n; i++) { y += D.precipitation_sum[i] ?? 0; yn += nr(D.time[i])[1]; } return { y, yn, o: yn ? Math.round(100 * y / yn) : null, bas: D.time[i0] }; };
+    const durum = o => o == null ? ['–', 'e-yok'] : o < 50 ? ['Çok kurak', 'e-cok'] : o < 80 ? ['Kurak', 'e-yuksek'] : o <= 120 ? ['Normal', 'e-az'] : o <= 150 ? ['Nemli', 'e-orta'] : ['Çok nemli', 'e-orta'];
+    const P = [[30, '1 ay'], [91, '3 ay'], [182, '6 ay'], [365, '12 ay'], [730, '24 ay']].map(([g, a]) => ({ a, ...pencere(g) }));
+    // Bu yıl (1 Ocak'tan bugüne)
+    const yil = bit.slice(0, 4), iy = D.time.findIndex(t => t.startsWith(yil));
+    let tt = 0, tn = 0, y = 0, yn = 0, c = 0;
+    for (let i = iy; i < n; i++) { if (D.temperature_2m_mean[i] == null) continue; tt += D.temperature_2m_mean[i]; tn += nr(D.time[i])[0]; y += D.precipitation_sum[i] ?? 0; yn += nr(D.time[i])[1]; c++; }
+    const tf = c ? (tt - tn) / c : null;
+    el.innerHTML = `<dl class="kv ozet3"><div><dt>${yil} şimdiye kadar sıcaklık</dt><dd>${tf == null ? '–' : (tf > 0 ? '+' : '') + dec(tf) + '°'} <small>normalden ${tf >= 0 ? 'sıcak' : 'soğuk'}</small></dd></div>
+      <div><dt>${yil} şimdiye kadar yağış</dt><dd>${mm(y)} mm <small>normali ${mm(yn)} mm, %${yn ? Math.round(100 * y / yn) : '–'}</small></dd></div></dl>
+      <div class="tbl-wrap" style="margin-top:14px"><table class="kucuk-tablo"><thead><tr><th class="l">Dönem</th><th>Yağış</th><th>Normal</th><th>Normale göre</th><th class="l">Durum</th></tr></thead><tbody>
+      ${P.map(x => { const d = durum(x.o); return `<tr><td class="l day1">Son ${x.a}<small>${esc(fmtDay(x.bas))} ${x.bas.slice(0, 4)}'ten bu yana</small></td><td>${mm(x.y)} mm</td><td>${mm(x.yn)} mm</td><td>%${x.o ?? '–'}</td><td class="l"><span class="etiket ${d[1]}">${d[0]}</span></td></tr>`; }).join('')}</tbody></table></div>
+      <p class="kutu-not">Kısa dönemli kuraklık (1–3 ay) tarımı ve toprak nemini, uzun dönemli kuraklık (12–24 ay) baraj, göl ve yeraltı sularını etkiler. Veri ERA5'ten gelir ve yaklaşık 6 gün gecikmelidir. Resmi kuraklık izlemesi için MGM'nin kuraklık analizlerine bakın.</p>`;
+    // Isıtma (T ≤ 15°C için 18 − T) ve soğutma (T > 22°C için T − 22) gün dereceleri, MGM'nin tanımıyla
+    const hdd = T => T == null ? 0 : T <= 15 ? 18 - T : 0, cdd = T => T == null ? 0 : T > 22 ? T - 22 : 0;
+    const ozet = (i0, i1) => { let h = 0, hn = 0, cc = 0, cn = 0; for (let i = i0; i <= i1; i++) { h += hdd(D.temperature_2m_mean[i]); cc += cdd(D.temperature_2m_mean[i]); hn += hdd(nr(D.time[i])[0]); cn += cdd(nr(D.time[i])[0]); } return { h, hn, cc, cn }; };
+    const sonAy = D.time[n - 1].slice(0, 7), oncekiAy = (() => { const d = new Date(Date.parse(sonAy + '-01T00:00:00Z') - 864e5); return d.toISOString().slice(0, 7); })();
+    const ia = D.time.findIndex(t => t.startsWith(oncekiAy)), ib = D.time.findIndex(t => t.startsWith(sonAy)) - 1;
+    const satir = (bas, o) => `<tr><td class="l">${bas}</td><td>${n0(o.h)}</td><td>${n0(o.hn)}</td><td>${n0(o.cc)}</td><td>${n0(o.cn)}</td></tr>`;
+    gd.innerHTML = `<div class="tbl-wrap"><table class="kucuk-tablo"><thead><tr><th class="l">Dönem</th><th>Isıtma<small>gün derece</small></th><th>Normali</th><th>Soğutma<small>gün derece</small></th><th>Normali</th></tr></thead><tbody>
+      ${ia >= 0 && ib > ia ? satir(`${AYLAR[+oncekiAy.slice(5) - 1]} ${oncekiAy.slice(0, 4)}`, ozet(ia, ib)) : ''}${satir(`${yil} şimdiye kadar`, ozet(iy, n - 1))}</tbody></table></div>
+      <p class="kutu-not">Isıtma gün derecesi yüksekse doğalgaz ve yakıt ihtiyacı, soğutma gün derecesi yüksekse klima ihtiyacı artar. Normalden yüksek ısıtma değeri, o dönemin normalden soğuk geçtiğini gösterir.</p>`;
+  }
+
   async function yukle(p) {
     const s = ++seq;
     document.title = `${p.name} iklimi · Hava Durumu`;
@@ -153,7 +200,9 @@
     const o = aylikTablo(N);
     $('kisa').innerHTML = `<div><dt>Seçili yer</dt><dd>${esc(p.name)}</dd></div><div><dt>Yıllık ortalama</dt><dd>${sicakYaz(o.yil.me)}</dd></div><div><dt>Yıllık yağış</dt><dd>${mm(o.yil.y)} mm</dd></div>
       <div><dt>En sıcak ay</dt><dd>${AYLAR[o.sicakAy]}</dd></div><div><dt>En soğuk ay</dt><dd>${AYLAR[o.soguk]}</dd></div><div><dt>En yağışlı ay</dt><dd>${AYLAR[o.yagisli]}</dd></div>`;
+    sinif(N);
     await son30(p, N, s);
+    uzunDonem(p, N, s);
     gelecek(p, s);
   }
   yerSecici($('yer'), yukle);
