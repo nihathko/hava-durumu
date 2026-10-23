@@ -18,19 +18,19 @@
     const H = d.hourly, now = new Date(Date.now() + d.utc_offset_seconds * 1000).toISOString().slice(0, 13);
     let i0 = H.time.findIndex(t => t.slice(0, 13) >= now); if (i0 < 0) i0 = 0;
     const idx = H.time.map((_, i) => i).slice(i0, i0 + 228);
-    const x = idx.map(i => H.time[i]), sel = k => idx.map(i => H[k][i]);
+    const x = idx.map(i => H.time[i]), sel = (k, c = v => v) => idx.map(i => c(H[k][i]));
     const ortak = { x, adim: 6, ayrac: i => x[i].endsWith('T00:00'), etiketSec: t => /T(00|12):00/.test(t), xEtiket: t => t.endsWith('T00:00') ? kisaGun(t.slice(0, 10)) : t.slice(11, 13) };
     // Simge şeridi: 3 saatte bir hava durumu simgesi
     const L = 40, W = 6 * x.length + 50;
     let ik = '';
     for (let j = 0; j < x.length; j += 3) ik += `<g class="wi" transform="translate(${(L + j * 6 + 1).toFixed(1)} 0) scale(.28)">${icon(H.weather_code[idx[j]], H.is_day[idx[j]]).replace('<svg class="wi" viewBox="0 0 64 64" aria-hidden="true">', '').replace('</svg>', '')}</g>`;
     const seritler = [
-      ['Sıcaklık', '°C', [['Sıcaklık', RENK.sicak], ['Hissedilen', RENK.his], ['Çiy noktası', RENK.ciy]], seritGrafik({ ...ortak, yukseklik: 150, birim: '°C', seriler: [{ ad: 'Çiy noktası', renk: RENK.ciy, v: sel('dew_point_2m'), kalin: 1.5, kesik: 1 }, { ad: 'Hissedilen', renk: RENK.his, v: sel('apparent_temperature'), kalin: 1.5 }, { ad: 'Sıcaklık', renk: RENK.sicak, v: sel('temperature_2m'), kalin: 2.5 }] })],
+      ['Sıcaklık', BIRIM_AD[BIRIM.sic], [['Sıcaklık', RENK.sicak], ['Hissedilen', RENK.his], ['Çiy noktası', RENK.ciy]], seritGrafik({ ...ortak, yukseklik: 150, birim: BIRIM_AD[BIRIM.sic], seriler: [{ ad: 'Çiy noktası', renk: RENK.ciy, v: sel('dew_point_2m', sicV), kalin: 1.5, kesik: 1 }, { ad: 'Hissedilen', renk: RENK.his, v: sel('apparent_temperature', sicV), kalin: 1.5 }, { ad: 'Sıcaklık', renk: RENK.sicak, v: sel('temperature_2m', sicV), kalin: 2.5 }] })],
       ['Yağış miktarı', 'mm', [['Saatlik yağış', RENK.yagis]], seritGrafik({ ...ortak, yukseklik: 100, birim: 'mm', sifir: true, seriler: [{ ad: 'Yağış', renk: RENK.yagis, v: sel('precipitation'), tur: 'cubuk' }] })],
       ['Yağış ihtimali', '%', [['Yağış ihtimali', RENK.ihtimal]], seritGrafik({ ...ortak, yukseklik: 90, birim: '%', sifir: true, seriler: [{ ad: 'Yağış ihtimali', renk: RENK.ihtimal, v: sel('precipitation_probability'), tur: 'alan' }] })],
-      ['Rüzgar', 'km/sa', [['Ortalama', RENK.ruzgar], ['Hamle', RENK.hamle]], seritGrafik({ ...ortak, yukseklik: 110, birim: 'km/sa', sifir: true, seriler: [{ ad: 'Hamle', renk: RENK.hamle, v: sel('wind_gusts_10m'), kalin: 1.5 }, { ad: 'Ortalama', renk: RENK.ruzgar, v: sel('wind_speed_10m') }] })],
+      ['Rüzgar', RZ(), [['Ortalama', RENK.ruzgar], ['Hamle', RENK.hamle]], seritGrafik({ ...ortak, yukseklik: 110, birim: RZ(), sifir: true, seriler: [{ ad: 'Hamle', renk: RENK.hamle, v: sel('wind_gusts_10m', rzV), kalin: 1.5 }, { ad: 'Ortalama', renk: RENK.ruzgar, v: sel('wind_speed_10m', rzV) }] })],
       ['Bulutluluk', '%', [['Toplam', RENK.bulut], ['Alçak', RENK.alcak], ['Orta', RENK.orta], ['Yüksek', RENK.yuksek]], seritGrafik({ ...ortak, yukseklik: 100, birim: '%', sifir: true, seriler: [{ ad: 'Toplam', renk: RENK.bulut, v: sel('cloud_cover'), tur: 'alan', kalin: 1 }, { ad: 'Yüksek', renk: RENK.yuksek, v: sel('cloud_cover_high'), kalin: 1.2 }, { ad: 'Orta', renk: RENK.orta, v: sel('cloud_cover_mid'), kalin: 1.2 }, { ad: 'Alçak', renk: RENK.alcak, v: sel('cloud_cover_low'), kalin: 1.5 }] })],
-      ['Deniz seviyesi basıncı', 'hPa', [['Basınç', RENK.basinc]], seritGrafik({ ...ortak, yukseklik: 100, birim: 'hPa', seriler: [{ ad: 'Basınç', renk: RENK.basinc, v: sel('pressure_msl') }] })],
+      ['Deniz seviyesi basıncı', BS(), [['Basınç', RENK.basinc]], seritGrafik({ ...ortak, yukseklik: 100, birim: BS(), seriler: [{ ad: 'Basınç', renk: RENK.basinc, v: sel('pressure_msl', bsV) }] })],
       ['Bağıl nem', '%', [['Nem', RENK.nem]], seritGrafik({ ...ortak, yukseklik: 90, birim: '%', seriler: [{ ad: 'Nem', renk: RENK.nem, v: sel('relative_humidity_2m') }] })],
       ['Gök gürültülü fırtına potansiyeli (CAPE)', 'J/kg', [['CAPE', RENK.cape]], seritGrafik({ ...ortak, yukseklik: 90, birim: 'J/kg', sifir: true, seriler: [{ ad: 'CAPE', renk: RENK.cape, v: sel('cape'), tur: 'alan' }] })],
       ['UV endeksi', '', [['UV', RENK.uv]], seritGrafik({ ...ortak, yukseklik: 80, birim: 'UV', sifir: true, seriler: [{ ad: 'UV', renk: RENK.uv, v: sel('uv_index'), tur: 'alan' }] })]
@@ -38,7 +38,7 @@
     mgEl.innerHTML = `<div class="grafik-kutu"><svg width="${W}" height="24" viewBox="0 0 ${W} 24" aria-hidden="true" class="chart">${ik}</svg></div>`
       + seritler.map(([b, , l, g], k) => `<div class="gb"><h3>${b}</h3>${l.length > 1 ? lj(l) : ''}</div><div class="grafik-kutu" data-k="${k}">${g.svg}</div>`).join('')
       + '<p class="kutu-not">CAPE, havadaki kararsızlığı gösterir: 1000 J/kg üstü sağanak ve gök gürültülü fırtına, 2500 üstü kuvvetli fırtına ve dolu için uygun ortam demektir. Kesin fırtına olacağı anlamına gelmez.</p>';
-    const ip = j => { const i = idx[j]; return `<b>${esc(fmtWeek(ymd(H.time[i])))} ${hhmm(H.time[i])}</b>${esc(cond(H.weather_code[i])[0])}<br>Sıcaklık <span>${deg(H.temperature_2m[i])}</span>, hissedilen <span>${deg(H.apparent_temperature[i])}</span><br>Yağış <span>${mm(H.precipitation[i])} mm</span> (%${n0(H.precipitation_probability[i] ?? 0)})${H.snowfall[i] > 0 ? `, kar <span>${dec(H.snowfall[i])} cm</span>` : ''}<br>Rüzgar <span>${dir(H.wind_direction_10m[i])} ${n0(H.wind_speed_10m[i])}</span>, hamle <span>${n0(H.wind_gusts_10m[i])} km/sa</span><br>Bulut <span>%${n0(H.cloud_cover[i])}</span>, nem <span>%${n0(H.relative_humidity_2m[i])}</span><br>Basınç <span>${n0(H.pressure_msl[i])} hPa</span>, donma seviyesi <span>${n0(H.freezing_level_height[i])} m</span>`; };
+    const ip = j => { const i = idx[j]; return `<b>${esc(fmtWeek(ymd(H.time[i])))} ${hhmm(H.time[i])}</b>${esc(cond(H.weather_code[i])[0])}<br>Sıcaklık <span>${deg(H.temperature_2m[i])}</span>, hissedilen <span>${deg(H.apparent_temperature[i])}</span><br>Yağış <span>${mm(H.precipitation[i])} mm</span> (%${n0(H.precipitation_probability[i] ?? 0)})${H.snowfall[i] > 0 ? `, kar <span>${dec(H.snowfall[i])} cm</span>` : ''}<br>Rüzgar <span>${dir(H.wind_direction_10m[i])} ${rz(H.wind_speed_10m[i])}</span>, hamle <span>${rz(H.wind_gusts_10m[i])} ${RZ()}</span><br>Bulut <span>%${n0(H.cloud_cover[i])}</span>, nem <span>%${n0(H.relative_humidity_2m[i])}</span><br>Basınç <span>${bs(H.pressure_msl[i])} ${BS()}</span>, donma seviyesi <span>${n0(H.freezing_level_height[i])} m</span>`; };
     mgEl.querySelectorAll('.grafik-kutu[data-k]').forEach(k => grafikIpucu(k, seritler[+k.dataset.k][3], ip));
     // Kutular birlikte kaysın
     const kutular = [...mgEl.querySelectorAll('.grafik-kutu')];
@@ -72,7 +72,7 @@
     const uyum = f => f == null ? '' : f < 2 ? '<span class="etiket e-az">Uyumlu</span>' : f < 4 ? '<span class="etiket e-orta">Kısmen</span>' : '<span class="etiket e-cok">Belirsiz</span>';
     const satir = (bas, f, b) => gunler.map((g, j) => {
       const v = kol.map(c => f(c)[j]).filter(x => x != null), fark = v.length > 1 ? Math.max(...v) - Math.min(...v) : null;
-      return `<tr><td class="l day1">${j === 0 ? 'Bugün' : j === 1 ? 'Yarın' : esc(fmtWeek(g))}<small>${esc(fmtDay(g))}</small></td>${kol.map(c => `<td>${f(c)[j] == null ? '–' : b(f(c)[j])}</td>`).join('')}<td>${fark == null ? '–' : b === mm ? mm(fark) : dec(fark, 0) + '°'}</td><td>${b === mm ? '' : uyum(fark)}</td></tr>`;
+      return `<tr><td class="l day1">${j === 0 ? 'Bugün' : j === 1 ? 'Yarın' : esc(fmtWeek(g))}<small>${esc(fmtDay(g))}</small></td>${kol.map(c => `<td>${f(c)[j] == null ? '–' : b(f(c)[j])}</td>`).join('')}<td>${fark == null ? '–' : b === mm ? mm(fark) : dec(sicFark(fark), 0) + '°'}</td><td>${b === mm ? '' : uyum(fark)}</td></tr>`;
     }).join('');
     const bas = `<thead><tr><th class="l">Gün</th>${kol.map(c => `<th>${c.a}<small>${c.u}</small></th>`).join('')}<th>Fark<small>en çok, en az</small></th><th></th></tr></thead>`;
     modEl.innerHTML = `<div class="gb"><h3>En yüksek sıcaklık</h3></div><div class="tbl-wrap"><table>${bas}<tbody>${satir('', c => c.mx, v => `<span class="c-hi">${deg(v)}</span>`)}</tbody></table></div>
@@ -94,10 +94,10 @@
     const now = new Date(Date.now() + d.utc_offset_seconds * 1000).toISOString().slice(0, 13);
     let i0 = H.time.findIndex(t => t.slice(0, 13) >= now); if (i0 < 0) i0 = 0;
     const idx = H.time.map((_, i) => i).slice(i0).filter((_, j) => j % 3 === 0);
-    const vals = i => uyeT.map(k => H[k][i]);
+    const vals = i => uyeT.map(k => sicV(H[k][i]));
     const p10 = idx.map(i => yuzdelik(vals(i), .1)), p25 = idx.map(i => yuzdelik(vals(i), .25)), p50 = idx.map(i => yuzdelik(vals(i), .5)), p75 = idx.map(i => yuzdelik(vals(i), .75)), p90 = idx.map(i => yuzdelik(vals(i), .9));
     const x = idx.map(i => H.time[i]);
-    const g = seritGrafik({ x, adim: 18, yukseklik: 180, birim: '°C', ayrac: j => x[j].slice(11, 13) === '00', etiketSec: t => /T(00|12):00/.test(t), xEtiket: t => t.slice(11, 13) === '00' ? kisaGun(t.slice(0, 10)) : t.slice(11, 13),
+    const g = seritGrafik({ x, adim: 18, yukseklik: 180, birim: BIRIM_AD[BIRIM.sic], ayrac: j => x[j].slice(11, 13) === '00', etiketSec: t => /T(00|12):00/.test(t), xEtiket: t => t.slice(11, 13) === '00' ? kisaGun(t.slice(0, 10)) : t.slice(11, 13),
       seriler: [{ ad: '%10–90 aralığı', renk: 'var(--warm)', v: p10.map(() => null), bant: p10.map((v, j) => [v, p90[j]]) }, { ad: '%25–75 aralığı', renk: 'var(--warm)', v: p25.map(() => null), bant: p25.map((v, j) => [v, p75[j]]) }, { ad: 'Orta değer', renk: 'var(--warm)', v: p50, kalin: 2.5 }] });
     // Günlük: üyelerin yüzde kaçı 1 mm üstü yağış veriyor
     const gunler = [...new Set(H.time.slice(i0).map(t => t.slice(0, 10)))].slice(0, 7);
@@ -131,12 +131,12 @@
       SEV.forEach(([h], r) => {
         const y = 26 + r * rh, T = H[`temperature_${h}hPa`][i], V = H[`wind_speed_${h}hPa`][i], Y = H[`wind_direction_${h}hPa`][i], RH = H[`relative_humidity_${h}hPa`][i];
         g += `<rect x="${x + 1}" y="${y}" width="${cw - 2}" height="${rh - 2}" rx="3" style="fill:${sicakRenk(T)}"${RH >= 90 ? ' class="nemli"' : ''}/>`
-          + `<text x="${x + cw / 2}" y="${y + 15}" text-anchor="middle" class="tv2">${T == null ? '–' : n0(T) + '°'}</text>`
-          + (Y != null ? `<g transform="translate(${x + cw / 2 - 8} ${y + 26}) rotate(${(Y + 180) % 360})"><path d="M0 -6 L3 1 L0 -1 L-3 1 Z" fill="#13212C"/></g><text x="${x + cw / 2 + 4}" y="${y + 30}" class="rz2">${n0(V)}</text>` : '');
+          + `<text x="${x + cw / 2}" y="${y + 15}" text-anchor="middle" class="tv2">${T == null ? '–' : deg(T)}</text>`
+          + (Y != null ? `<g transform="translate(${x + cw / 2 - 8} ${y + 26}) rotate(${(Y + 180) % 360})"><path d="M0 -6 L3 1 L0 -1 L-3 1 Z" fill="#13212C"/></g><text x="${x + cw / 2 + 4}" y="${y + 30}" class="rz2">${rz(V)}</text>` : '');
       });
     });
     SEV.forEach(([h, m], r) => { g += `<text x="${L - 8}" y="${26 + r * rh + 16}" text-anchor="end" class="sv">${h} hPa</text><text x="${L - 8}" y="${26 + r * rh + 29}" text-anchor="end" class="sv2">${m}</text>`; });
-    g += `<text x="${L}" y="${Hh - 6}" class="sv2">Kutu rengi ve rakam: sıcaklık. Ok: rüzgarın gittiği yön, yanındaki sayı hız (km/sa). Çerçeveli kutu: nem %90 üstü (bulut).</text>`;
+    g += `<text x="${L}" y="${Hh - 6}" class="sv2">Kutu rengi ve rakam: sıcaklık. Ok: rüzgarın gittiği yön, yanındaki sayı hız (${RZ()}). Çerçeveli kutu: nem %90 üstü (bulut).</text>`;
     const don = maxOf(idx.map(i => H.freezing_level_height[i])), donA = minOf(idx.map(i => H.freezing_level_height[i]));
     el.innerHTML = `<div class="grafik-kutu"><svg class="chart air" width="${W}" height="${Hh}" viewBox="0 0 ${W} ${Hh}" role="img" aria-label="Yüksek atmosfer sıcaklık ve rüzgar tablosu">${g}</svg></div>
       <p class="kutu-not">Donma seviyesi (0°C yüksekliği) önümüzdeki 3 günde ${n0(donA)} ile ${n0(don)} m arasında. Bu seviyenin altındaki yağış yağmur, üstündeki kar olarak düşer. Pilotlar, yamaç paraşütçüleri ve dağcılar için yüksekteki rüzgar ve sıcaklık önemlidir.</p>`;
@@ -151,7 +151,7 @@
     catch (e) { if (s === seq) el.innerHTML = hataMsg('Uzun vadeli tahmin şu an alınamadı.'); return; }
     if (s !== seq) return;
     const W = d.weekly, M = d.monthly, wi = W.time.map((_, i) => i).filter(i => W.temperature_2m_anomaly[i] != null);
-    const ok = v => v == null ? '–' : (v > 0 ? '+' : '') + dec(v) + '°';
+    const ok = v => v == null ? '–' : (v > 0 ? '+' : '') + dec(sicFark(v)) + '°';
     const yk = v => v == null ? '–' : (v > 0 ? '+' : '') + n0(v) + ' mm';
     const yorum = v => v == null ? null : v >= 1.5 ? ['Normalden çok sıcak', 'e-cok'] : v >= 0.5 ? ['Normalden sıcak', 'e-yuksek'] : v > -0.5 ? ['Normale yakın', 'e-yok'] : v > -1.5 ? ['Normalden soğuk', 'e-az'] : ['Normalden çok soğuk', 'e-az'];
     const et = v => { const y = yorum(v); return y ? `<span class="etiket ${y[1]}">${y[0]}</span>` : ''; };
