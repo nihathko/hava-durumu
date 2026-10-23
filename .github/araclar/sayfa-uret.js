@@ -398,7 +398,7 @@ const SAYFALAR = {
     baslik: 'Dikkat', js: 'uyari', harita: true,
     aciklama: 'Önümüzdeki 3 günde kuvvetli yağış, kar, fırtına, aşırı sıcak ya da soğuk beklenen iller. Model verisinden otomatik değerlendirme.',
     h1: 'Dikkat gerektiren hava',
-    giris: 'Önümüzdeki 3 günde kuvvetli yağış, yoğun kar, kuvvetli rüzgar, aşırı sıcak ya da soğuk ve gök gürültülü fırtına beklenen iller. Bu değerlendirme model verisinden otomatik yapılır; <b>resmi uyarı değildir</b>. Resmi uyarılar için <a href="https://www.mgm.gov.tr/meteouyari/turkiye.aspx" target="_blank" rel="noopener">MGM MeteoUyarı</a>.',
+    giris: 'Önümüzdeki 3 günde kuvvetli yağış, yoğun kar, kuvvetli rüzgar, aşırı sıcak ya da soğuk, orman yangını riski ve gök gürültülü fırtına beklenen iller. Bu değerlendirme model verisinden otomatik yapılır; <b>resmi uyarı değildir</b>. Resmi uyarılar için <a href="https://www.mgm.gov.tr/meteouyari/turkiye.aspx" target="_blank" rel="noopener">MGM MeteoUyarı</a>.',
     govde: `      <section class="sec" aria-labelledby="h-u">
         <h2 id="h-u">Harita</h2>
         <p class="note" id="usay"></p>
@@ -427,7 +427,8 @@ const SAYFALAR = {
         </tbody></table></div>
         <p class="kutu-not">Eşikler Türkiye geneli için tek tiptir. MGM ise her bölgenin iklimine göre farklı eşikler ve uzman değerlendirmesi kullanır; bu yüzden buradaki renkler MeteoUyarı'dan farklı olabilir.</p>
       </section>`,
-    notlar: ['Değerlendirme Open-Meteo tahmin verisinden yapılır. Can ve mal güvenliği için yalnızca MGM\'nin resmi uyarılarını esas alın.']
+    notlar: ['Değerlendirme Open-Meteo tahmin verisinden yapılır. Can ve mal güvenliği için yalnızca MGM\'nin resmi uyarılarını esas alın.',
+      'Orman yangını riski sitenin kendi basit endeksidir (0–40): en yüksek sıcaklık, en düşük nem, rüzgar ve son 7 günün yağışından hesaplanır. 18 ve üstü dikkat, 23 ve üstü tehlikeli, 28 ve üstü çok tehlikelidir. Resmi yangın uyarıları için Orman Genel Müdürlüğü\'nü takip edin.']
   },
   analiz: {
     baslik: 'Analizler', js: 'analiz', harita: true, sonEk: '<script src="assets/normal-81.js"></script>\n',

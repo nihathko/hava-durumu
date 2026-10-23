@@ -3,6 +3,16 @@
   'use strict';
   const hEl = $('uharita'), lEl = $('uliste'), tEl = $('utablo');
   let V = null, gun = 0;
+  // Orman yangını için son 7 günün yağışı da gerekir: veri 7 gün öncesinden başlar, P kadar kaydırılır
+  const P = 7;
+  // Orman yangını riski (sitenin kendi basit endeksi, 0–40): sıcaklık, kuruluk, rüzgar ve son 7 günün yağışı
+  const yangin = (D, i) => {
+    if (i < P || D.temperature_2m_max[i] == null) return null;
+    const kuru = D.precipitation_sum.slice(i - P, i).reduce((t, x) => t + (x || 0), 0);
+    const e = Math.min(10, Math.max(0, (D.temperature_2m_max[i] - 20) / 2)) + Math.min(10, Math.max(0, (50 - (D.relative_humidity_2m_min[i] ?? 50)) / 4))
+      + Math.min(8, Math.max(0, (D.wind_speed_10m_max[i] ?? 0) / 5)) + (kuru < 1 ? 5 : kuru < 5 ? 2 : 0) - ((D.precipitation_sum[i] ?? 0) >= 5 ? 10 : 0);
+    return Math.max(0, Math.round(e));
+  };
   // Eşikler: [sarı, turuncu, kırmızı]; yön: 1 büyükse, -1 küçükse tehlikeli
   const OLCUT = [
     { k: 'yagis', kisa: 'Yağış', ad: 'Kuvvetli yağış', b: 'mm/gün', v: D => D.precipitation_sum, e: [30, 60, 100], y: 1, ne: 'Su baskını, sel ve ani taşkın riski. Dere yataklarından ve alt geçitlerden uzak durun.' },
@@ -10,6 +20,7 @@
     { k: 'ruzgar', kisa: 'Rüzgar', ad: 'Kuvvetli rüzgar', b: 'km/sa hamle', v: D => D.wind_gusts_10m_max, e: [60, 80, 100], y: 1, ne: 'Çatı uçması, ağaç ve direk devrilmesi. Açık alanlarda ve deniz kıyısında dikkatli olun.' },
     { k: 'sicak', kisa: 'Sıcak', ad: 'Aşırı sıcak', b: '°C', v: D => D.temperature_2m_max, e: [38, 41, 44], y: 1, ne: 'Güneş çarpması ve sıcak çarpması. Öğle saatlerinde dışarı çıkmayın, bol su için.' },
     { k: 'soguk', kisa: 'Soğuk', ad: 'Aşırı soğuk', b: '°C', v: D => D.temperature_2m_min, e: [-10, -18, -25], y: -1, ne: 'Don, buzlanma ve soğuk çarpması. Sobalı evlerde karbonmonoksit zehirlenmesine dikkat edin.' },
+    { k: 'yangin', kisa: 'Yangın', ad: 'Orman yangını riski', b: 'endeks', v: D => D.time.map((_, i) => yangin(D, i)), e: [18, 23, 28], y: 1, ne: 'Sıcak, kuru ve rüzgarlı hava. Ormanda ve ormana yakın yerlerde ateş yakmayın, mangal yapmayın, sigara atmayın. Duman görürseniz 112\'yi arayın.' },
     { k: 'firtina', kisa: 'Fırtına', ad: 'Gök gürültülü fırtına', b: 'J/kg', v: D => D.cape_max, e: [1000, 2000, 3000], y: 1, ne: 'Yıldırım, dolu ve ani kuvvetli rüzgar. Açık alanda kalmayın, ağaç altına sığınmayın.', kod: D => D.weather_code }
   ];
   const RENK = ['#4CAF50', '#F2C14E', '#F08A24', '#D7301F'], AD = ['Tehlike yok', 'Dikkat (sarı)', 'Tehlikeli (turuncu)', 'Çok tehlikeli (kırmızı)'];
@@ -17,14 +28,14 @@
   function ilDurum(ad) {
     const D = V[ad].daily, out = [];
     for (const o of OLCUT) {
-      const v = o.v(D)[gun]; let s = seviye(o, v);
+      const v = o.v(D)[gun + P]; let s = seviye(o, v);
       // Fırtına: kararsızlık yüksek ama model gök gürültüsü göstermiyorsa bir derece düşür
-      if (o.k === 'firtina' && s && ![95, 96, 99].includes(D.weather_code[gun])) s = Math.max(0, s - 1);
+      if (o.k === 'firtina' && s && ![95, 96, 99].includes(D.weather_code[gun + P])) s = Math.max(0, s - 1);
       if (s) out.push({ o, v, s });
     }
     return out.sort((a, b) => b.s - a.s);
   }
-  const deger = (o, v) => o.k === 'yagis' ? mm(v) + ' mm' : o.k === 'kar' ? dec(v) + ' cm' : o.k === 'ruzgar' ? rz(v) + ' ' + RZ() : o.k === 'firtina' ? n0(v) + ' J/kg' : deg(v);
+  const deger = (o, v) => o.k === 'yagis' ? mm(v) + ' mm' : o.k === 'kar' ? dec(v) + ' cm' : o.k === 'ruzgar' ? rz(v) + ' ' + RZ() : o.k === 'firtina' ? n0(v) + ' J/kg' : o.k === 'yangin' ? 'endeks ' + n0(v) : deg(v);
 
   function ciz() {
     const S = Object.fromEntries(IL.map(I => [I.ad, ilDurum(I.ad)]));
@@ -47,21 +58,21 @@
       { b: 'İl', l: 1, v: r => r.ad, h: r => `<a href="${anaSayfaLink(yerIl(r.ad))}">${esc(r.ad)}</a>` },
       { b: 'En yüksek seviye', l: 1, v: r => en(r.ad), h: r => `<span class="etiket" style="background:${RENK[en(r.ad)]};color:${en(r.ad) >= 2 ? '#fff' : en(r.ad) ? '#3A2A00' : '#fff'}">${AD[en(r.ad)]}</span>` },
       { b: 'Hadise', l: 1, v: r => S[r.ad].map(x => x.o.ad).join(', '), h: r => esc(S[r.ad].map(x => x.o.ad).join(', ') || '–') },
-      { b: 'Yağış', v: r => V[r.ad].daily.precipitation_sum[gun], h: r => mm(V[r.ad].daily.precipitation_sum[gun]) + ' mm' },
-      { b: 'Kar', v: r => V[r.ad].daily.snowfall_sum[gun], h: r => dec(V[r.ad].daily.snowfall_sum[gun]) + ' cm' },
-      { b: 'Hamle', v: r => V[r.ad].daily.wind_gusts_10m_max[gun], h: r => rz(V[r.ad].daily.wind_gusts_10m_max[gun]) + ' ' + RZ() },
-      { b: 'En yüksek', v: r => V[r.ad].daily.temperature_2m_max[gun], h: r => `<span class="c-hi">${deg(V[r.ad].daily.temperature_2m_max[gun])}</span>` },
-      { b: 'En düşük', v: r => V[r.ad].daily.temperature_2m_min[gun], h: r => `<span class="c-lo">${deg(V[r.ad].daily.temperature_2m_min[gun])}</span>` }
+      { b: 'Yağış', v: r => V[r.ad].daily.precipitation_sum[gun + P], h: r => mm(V[r.ad].daily.precipitation_sum[gun + P]) + ' mm' },
+      { b: 'Kar', v: r => V[r.ad].daily.snowfall_sum[gun + P], h: r => dec(V[r.ad].daily.snowfall_sum[gun + P]) + ' cm' },
+      { b: 'Hamle', v: r => V[r.ad].daily.wind_gusts_10m_max[gun + P], h: r => rz(V[r.ad].daily.wind_gusts_10m_max[gun + P]) + ' ' + RZ() },
+      { b: 'En yüksek', v: r => V[r.ad].daily.temperature_2m_max[gun + P], h: r => `<span class="c-hi">${deg(V[r.ad].daily.temperature_2m_max[gun + P])}</span>` },
+      { b: 'En düşük', v: r => V[r.ad].daily.temperature_2m_min[gun + P], h: r => `<span class="c-lo">${deg(V[r.ad].daily.temperature_2m_min[gun + P])}</span>` }
     ], IL.map(I => ({ ad: I.ad })), 1, true);
   }
 
   (async () => {
     hEl.innerHTML = yukleniyor('81 ilin tahmini değerlendiriliyor…');
     try {
-      const v = await cokNokta(OM, IL, { daily: 'weather_code,precipitation_sum,snowfall_sum,wind_gusts_10m_max,temperature_2m_max,temperature_2m_min,cape_max', timezone: 'Europe/Istanbul', forecast_days: 3, wind_speed_unit: 'kmh' });
+      const v = await cokNokta(OM, IL, { daily: 'weather_code,precipitation_sum,snowfall_sum,wind_gusts_10m_max,temperature_2m_max,temperature_2m_min,cape_max,relative_humidity_2m_min,wind_speed_10m_max', timezone: 'Europe/Istanbul', past_days: P, forecast_days: 3, wind_speed_unit: 'kmh' });
       V = Object.fromEntries(IL.map((I, i) => [I.ad, v[i]]));
     } catch (e) { hEl.innerHTML = hataMsg(); return; }
-    const gunler = V[IL[0].ad].daily.time;
+    const gunler = V[IL[0].ad].daily.time.slice(P);
     const say = g => { gun = g; return IL.filter(I => ilDurum(I.ad).length).length; };
     $('kisa').innerHTML = gunler.map((t, i) => `<div><dt>${i === 0 ? 'Bugün' : i === 1 ? 'Yarın' : esc(fmtWeek(t))}</dt><dd>${say(i)} il</dd></div>`).join('');
     sekmeler($('ugun'), gunler.map((t, i) => i === 0 ? 'Bugün' : i === 1 ? 'Yarın' : `${fmtWeek(t)}`), i => { gun = i; ciz(); });

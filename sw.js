@@ -2,7 +2,7 @@
 // böylece site uygulama olarak yüklenebilir ve internet yokken de açılır.
 // Önce ağdan alınır (her zaman en yeni sürüm), ağ yoksa önbellekten verilir.
 // Hava verisi (Open-Meteo) ve MGM görselleri başka sitelerden geldiği için hiç önbelleğe alınmaz.
-const CACHE = 'hava-v8';
+const CACHE = 'hava-v9';
 const FILES = [
   './', 'harita.html', 'uyari.html', 'radar.html', 'grafik.html', 'iklim.html', 'analiz.html', 'deniz.html', 'ziraat.html', 'ozel.html', 'bilgi.html', 'hakkinda.html',
   'assets/site.css', 'assets/gokyuzu.js', 'assets/ortak.js', 'assets/ana-ek.js', 'assets/ililce.js', 'assets/turkiye.js', 'assets/normal-81.js',
