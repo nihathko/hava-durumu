@@ -874,3 +874,38 @@ dialog.ayar .muted { margin: 0; color: var(--muted); font-size: 13px; }
 @media (max-width: 420px) { .ust-ar #theme { display: none; } }
 table.yol tr.yol-risk td { background: color-mix(in srgb, #F08A24 9%, transparent); }
 table.yol td small { display: block; color: var(--muted); font-size: 11.5px; }
+
+/* ---------- Tahmin haritaları ---------- */
+.alan { position: relative; }
+.alan canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.alan .trh { position: relative; min-width: 0; }
+.alan .trh path { stroke: rgba(30, 40, 50, .55); stroke-width: .6; }
+.coklu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.coklu.yedi { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.kucuk-harita { margin: 0; background: color-mix(in srgb, var(--panel-solid) 60%, transparent); border: 1px solid var(--cam-ciz); border-radius: 14px; padding: 8px; min-width: 0; }
+.kucuk-harita .trh-wrap { overflow: visible; margin: 0; padding: 0; }
+.kucuk-harita .trh { min-width: 0; }
+.kucuk-harita figcaption, .ikili figcaption { text-align: center; font-weight: 650; font-size: 14px; margin-top: 4px; }
+.coklu > .kucuk-harita:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 50%; justify-self: center; width: 100%; }
+.coklu.yedi > .kucuk-harita:last-child:nth-child(odd) { grid-column: auto; max-width: none; }
+.ikili { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ikili figure { margin: 0; min-width: 0; }
+.ikili .trh { min-width: 0; }
+.ikili .trh-wrap { overflow: visible; }
+.u-metin { margin-top: 14px; max-width: 80ch; }
+.u-metin p { margin: 0 0 8px; line-height: 1.55; }
+.kaydir-har { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.kaydir-har .btn { padding: 10px 14px; font-size: 20px; line-height: 1; }
+.slj { display: grid; gap: 6px; margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+.slj-b { font-weight: 600; }
+.slj-k { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.slj-k span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.slj-k i { width: 16px; height: 11px; border-radius: 3px; border: 1px solid rgba(0, 0, 0, .15); display: inline-block; }
+.bilgi-satir { margin-top: 10px !important; font-size: 13px !important; }
+@media (max-width: 900px) { .coklu.yedi { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ikili { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .coklu, .coklu.yedi { grid-template-columns: 1fr; }
+  .coklu > .kucuk-harita:last-child:nth-child(odd) { max-width: none; }
+  .kaydir-har { grid-template-columns: 1fr; }
+  .kaydir-har .btn { display: none; }
+}

@@ -39,7 +39,35 @@ jobs:
 
       - name: Tarih
         id: tarih
-        run: echo "gun=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "gun=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+          echo "uc=$(date -u +%Y-%m-%d)-$(( $(date -u +%-H) / 3 ))" >> "$GITHUB_OUTPUT"
+
+      # Tahmin haritaları: Türkiye ızgarası ve 81 il, 7 gün. 3 saatte bir yeniden hesaplanır, arada önbellekten gelir
+      - name: Tahmin haritası önbelleği
+        id: tahmin
+        uses: actions/cache@v4
+        with:
+          path: data/tahmin.json
+          key: tahmin-${{ steps.tarih.outputs.uc }}
+          restore-keys: tahmin-
+
+      - name: Tahmin haritası verisini hazırla (Open-Meteo)
+        if: steps.tahmin.outputs.cache-hit != 'true'
+        run: node .github/tahmin.js kisa || echo "tahmin alınamadı, önceki dosya kullanılır"
+
+      # Haftalık ve aylık eğilim (ECMWF SEAS5) günde bir kez
+      - name: Uzun vadeli tahmin önbelleği
+        id: uzun
+        uses: actions/cache@v4
+        with:
+          path: data/uzun-vade.json
+          key: uzun-vade-${{ steps.tarih.outputs.gun }}
+          restore-keys: uzun-vade-
+
+      - name: Uzun vadeli tahmin verisini hazırla (ECMWF SEAS5)
+        if: steps.uzun.outputs.cache-hit != 'true'
+        run: node .github/tahmin.js uzun || echo "uzun vade alınamadı"
 
       # 81 ilin aylık analiz verisi günde bir kez hesaplanır; aynı gün içindeki yayınlarda önbellekten gelir
       - name: Analiz verisi önbelleği

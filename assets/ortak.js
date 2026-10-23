@@ -228,11 +228,11 @@ const IKON = {
   uyari: '<path d="M12 3 2 20h20L12 3zM12 10v4.5M12 17.5v.5"/>', radar: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/>',
   grafik: '<path d="M3 20h18M5 16l4-5 4 3 6-8"/>', iklim: '<path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/>',
   analiz: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', deniz: '<path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 20c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M12 3v8M8 7l4-4 4 4"/>',
-  ziraat: '<path d="M12 21V9M12 9c0-4 3-6 7-6 0 4-3 6-7 6zM12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/>', ozel: '<path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+  tahmin: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17h2"/>', ziraat: '<path d="M12 21V9M12 9c0-4 3-6 7-6 0 4-3 6-7 6zM12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/>', ozel: '<path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
   bilgi: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>', hakkinda: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17v.5"/>'
 };
 const SAYFALAR = [
-  ['index.html', 'Hava durumu'], ['harita.html', 'Harita'], ['uyari.html', 'Dikkat'], ['radar.html', 'Radar ve uydu'], ['grafik.html', 'Grafik ve modeller'],
+  ['index.html', 'Hava durumu'], ['harita.html', 'Harita'], ['tahmin.html', 'Tahminler'], ['uyari.html', 'Dikkat'], ['radar.html', 'Radar ve uydu'], ['grafik.html', 'Grafik ve modeller'],
   ['iklim.html', 'İklim'], ['analiz.html', 'Analizler'], ['deniz.html', 'Denizcilik'], ['ziraat.html', 'Ziraat'], ['ozel.html', 'Özel tahminler'],
   ['bilgi.html', 'Bilgi'], ['hakkinda.html', 'Hakkında']
 ];
@@ -453,17 +453,28 @@ const OM_AQ = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 const OM_DENIZ = 'https://marine-api.open-meteo.com/v1/marine';
 const OM_ARSIV = 'https://archive-api.open-meteo.com/v1/archive';
 
+// Yedi coğrafi bölge ve illeri (Türkiye haritası ve tahmin haritaları sayfalarındaki otomatik metinler için)
+const BOLGE = {
+  'Marmara': ['Edirne', 'Kırklareli', 'Tekirdağ', 'İstanbul', 'Kocaeli', 'Yalova', 'Sakarya', 'Bilecik', 'Bursa', 'Balıkesir', 'Çanakkale'],
+  'Ege': ['İzmir', 'Manisa', 'Aydın', 'Denizli', 'Muğla', 'Afyonkarahisar', 'Kütahya', 'Uşak'],
+  'Akdeniz': ['Antalya', 'Isparta', 'Burdur', 'Mersin', 'Adana', 'Hatay', 'Osmaniye', 'Kahramanmaraş'],
+  'İç Anadolu': ['Ankara', 'Konya', 'Kayseri', 'Eskişehir', 'Sivas', 'Kırıkkale', 'Aksaray', 'Karaman', 'Kırşehir', 'Niğde', 'Nevşehir', 'Yozgat', 'Çankırı'],
+  'Karadeniz': ['Zonguldak', 'Bartın', 'Karabük', 'Düzce', 'Bolu', 'Kastamonu', 'Sinop', 'Samsun', 'Çorum', 'Amasya', 'Tokat', 'Ordu', 'Giresun', 'Trabzon', 'Gümüşhane', 'Bayburt', 'Rize', 'Artvin'],
+  'Doğu Anadolu': ['Erzurum', 'Erzincan', 'Kars', 'Ardahan', 'Iğdır', 'Ağrı', 'Malatya', 'Elazığ', 'Tunceli', 'Bingöl', 'Muş', 'Bitlis', 'Van', 'Hakkari'],
+  'Güneydoğu Anadolu': ['Gaziantep', 'Kilis', 'Adıyaman', 'Şanlıurfa', 'Diyarbakır', 'Mardin', 'Batman', 'Siirt', 'Şırnak']
+};
+
 // ---------- Türkiye haritası (SVG) ----------
 // TR_HARITA assets/turkiye.js dosyasından gelir (yalnızca harita kullanan sayfalarda yüklenir)
 const izdusum = (lat, lon) => [(lon - TR_HARITA.lon0) * TR_HARITA.c * TR_HARITA.k, (TR_HARITA.lat0 - lat) * TR_HARITA.k];
 // fill(il adı) → renk; etiket(il) → { ust, alt, ikon } (il merkezinin üstüne yazılır); ek: illerin üstüne, alt: illerin altına çizilecek katman
-function haritaSvg({ fill, etiket, ek = '', alt = '', aria = 'Türkiye haritası' }) {
+function haritaSvg({ fill, etiket, ek = '', alt = '', aria = 'Türkiye haritası', ikonOlcek = 0.28 }) {
   const paths = Object.entries(TR_HARITA.il).map(([ad, d]) => `<path data-il="${esc(ad)}" d="${d}" style="fill:${fill ? fill(ad) : '#E6ECF1'}"/>`).join('');
   let lbl = '';
   if (etiket) for (const I of IL) {
     const e = etiket(I.ad); if (!e) continue;
     const [x, y] = izdusum(I.lat, I.lon);
-    lbl += `<g class="hl-et" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">${e.ikon ? `<g class="wi" transform="translate(-9 -21) scale(.28)">${e.ikon.replace('<svg class="wi" viewBox="0 0 64 64" aria-hidden="true">', '').replace('</svg>', '')}</g>` : ''}${e.ust != null ? `<text class="hl-u" y="${e.ikon ? 9 : 3}">${esc(e.ust)}</text>` : ''}${e.alt != null ? `<text class="hl-a" y="${e.ikon ? 17 : 11}">${esc(e.alt)}</text>` : ''}</g>`;
+    lbl += `<g class="hl-et" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">${e.ikon ? `<g class="wi" transform="translate(${(-32 * ikonOlcek).toFixed(1)} ${(-64 * ikonOlcek - 3).toFixed(1)}) scale(${ikonOlcek})">${e.ikon.replace('<svg class="wi" viewBox="0 0 64 64" aria-hidden="true">', '').replace('</svg>', '')}</g>` : ''}${e.ust != null ? `<text class="hl-u" y="${e.ikon ? 9 : 3}">${esc(e.ust)}</text>` : ''}${e.alt != null ? `<text class="hl-a" y="${e.ikon ? 17 : 11}">${esc(e.alt)}</text>` : ''}</g>`;
   }
   return `<svg class="trh" viewBox="0 0 ${TR_HARITA.w} ${TR_HARITA.h}" role="img" aria-label="${esc(aria)}">${alt}<g class="hl-il">${paths}</g>${ek}<g class="wi-g">${lbl}</g></svg>`;
 }

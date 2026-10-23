@@ -97,6 +97,48 @@ const SAYFALAR = {
     notlar: ['İllerin değerleri il merkezine ait model tahminidir (Open-Meteo). Havalimanı ölçümleri gerçek gözlemdir (NOAA, METAR) ve yarım saatte bir güncellenir.',
       'Harita sınırları: geoBoundaries, © OpenStreetMap katkıcıları (ODbL).']
   },
+  tahmin: {
+    baslik: 'Tahmin haritaları', js: 'tahmin', harita: true,
+    aciklama: '5 günlük haritalı tahmin, en düşük ve en yüksek sıcaklık haritaları, yağış miktarı tahmin haritası, haftalık, aylık ve mevsimlik tahmin.',
+    h1: 'Tahmin haritaları',
+    giris: 'Türkiye geneli için 5 günlük haritalı tahmin, günlük en düşük ve en yüksek sıcaklık, yağış miktarı, önümüzdeki 4 hafta ve 3 ayın sıcaklık ve yağış eğilimi. Haritalar yaklaşık 50 km aralıklı tahmin noktalarından çizilir.',
+    govde: `      <section class="sec" aria-labelledby="h-5g">
+        <h2 id="h-5g">5 günlük tahmin (haritalı)</h2>
+        <p class="note" id="g5-not"></p>
+        <div class="tabs" id="g5-gos" aria-label="Gösterim şekli"></div>
+        <div class="tabs" id="g5-gun" aria-label="Gün" hidden></div>
+        <div id="g5"></div>
+        <p class="note bilgi-satir" id="g5-guncel"></p>
+        <p class="note bilgi-satir">Tahmin tutarlılığı ilk 3 günde yüksek, 4. ve 5. günlerde daha düşüktür. Simgelerin anlamı ve hissedilen sıcaklık için <a href="bilgi.html#sozluk">Bilgi</a> sayfasına bakabilirsin.</p>
+      </section>
+      <section class="sec" aria-labelledby="h-sic">
+        <h2 id="h-sic">En düşük ve en yüksek sıcaklık</h2>
+        <p class="note" id="s-bas"></p>
+        <div class="tabs" id="s-tur" aria-label="Gösterim şekli"></div>
+        <div class="tabs" id="s-gun" aria-label="Gün"></div>
+        <div class="trh-wrap" id="s-har"></div>
+        <div id="s-lj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-yag">
+        <h2 id="h-yag">Yağış miktarı tahmini</h2>
+        <p class="note" id="y-bas"></p>
+        <div class="tabs" id="y-gun" aria-label="Gün"></div>
+        <div class="kaydir-har"><button class="btn ikincil" id="y-geri" type="button" aria-label="Önceki gün">‹</button><div class="trh-wrap" id="y-har"></div><button class="btn ikincil" id="y-ileri" type="button" aria-label="Sonraki gün">›</button></div>
+        <div id="y-lj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-uv">
+        <h2 id="h-uv">Orta ve uzun vadeli tahmin</h2>
+        <p class="note">Haftalık tahmin önümüzdeki 7 günün haritalarıdır. 2., 3. ve 4. hafta ile mevsimlik tahmin, sıcaklık ve yağışın mevsim normallerinin altında mı üstünde mi olacağını gösterir (ECMWF uzun vadeli tahmin modeli). Büyük ölçekli eğilimi gösterir; yerel olaylar temsil edilemeyebilir.</p>
+        <div class="tabs" id="u-tur" aria-label="Tahmin türü"></div>
+        <p class="note" style="margin:0 0 6px" id="u-alt-b">Hafta</p>
+        <div class="tabs" id="u-alt" aria-label="Dönem"></div>
+        <div id="u-har"></div>
+        <div class="u-metin" id="u-metin"></div>
+      </section>`,
+    notlar: ['Kısa vadeli haritalar Open-Meteo tahmin verisinden (ECMWF, ICON, GFS ve diğer modellerin en uygun birleşimi), uzun vadeli haritalar ECMWF SEAS5 mevsimsel tahmininden hazırlanır. Veri GitHub tarafından 3 saatte bir (uzun vade günde bir) yenilenir.',
+      'Kesintisiz renkli haritalar, yaklaşık 50 km (uzun vadede 100 km) aralıklı tahmin noktaları arasında ara değer hesaplanarak çizilir; il merkezlerindeki rakamlar o ilin kendi tahminidir. Dağlık bölgelerde yerel farklar haritada görünmeyebilir.',
+      'Resmi tahminler için Meteoroloji Genel Müdürlüğü\'nü takip edin. Harita sınırları: geoBoundaries, © OpenStreetMap katkıcıları (ODbL).']
+  },
   radar: {
     baslik: 'Radar ve uydu', js: 'radar',
     basEk: '<link rel="stylesheet" href="assets/leaflet/leaflet.css">\n', sonEk: '<script src="assets/leaflet/leaflet.js"></script>\n',

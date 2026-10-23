@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tahmin haritaları · Hava Durumu</title>
+<meta name="description" content="5 günlük haritalı tahmin, en düşük ve en yüksek sıcaklık haritaları, yağış miktarı tahmin haritası, haftalık, aylık ve mevsimlik tahmin.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Tahmin haritaları</h1>
+      <p class="giris" id="giris">Türkiye geneli için 5 günlük haritalı tahmin, günlük en düşük ve en yüksek sıcaklık, yağış miktarı, önümüzdeki 4 hafta ve 3 ayın sıcaklık ve yağış eğilimi. Haritalar yaklaşık 50 km aralıklı tahmin noktalarından çizilir.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-5g">
+        <h2 id="h-5g">5 günlük tahmin (haritalı)</h2>
+        <p class="note" id="g5-not"></p>
+        <div class="tabs" id="g5-gos" aria-label="Gösterim şekli"></div>
+        <div class="tabs" id="g5-gun" aria-label="Gün" hidden></div>
+        <div id="g5"></div>
+        <p class="note bilgi-satir" id="g5-guncel"></p>
+        <p class="note bilgi-satir">Tahmin tutarlılığı ilk 3 günde yüksek, 4. ve 5. günlerde daha düşüktür. Simgelerin anlamı ve hissedilen sıcaklık için <a href="bilgi.html#sozluk">Bilgi</a> sayfasına bakabilirsin.</p>
+      </section>
+      <section class="sec" aria-labelledby="h-sic">
+        <h2 id="h-sic">En düşük ve en yüksek sıcaklık</h2>
+        <p class="note" id="s-bas"></p>
+        <div class="tabs" id="s-tur" aria-label="Gösterim şekli"></div>
+        <div class="tabs" id="s-gun" aria-label="Gün"></div>
+        <div class="trh-wrap" id="s-har"></div>
+        <div id="s-lj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-yag">
+        <h2 id="h-yag">Yağış miktarı tahmini</h2>
+        <p class="note" id="y-bas"></p>
+        <div class="tabs" id="y-gun" aria-label="Gün"></div>
+        <div class="kaydir-har"><button class="btn ikincil" id="y-geri" type="button" aria-label="Önceki gün">‹</button><div class="trh-wrap" id="y-har"></div><button class="btn ikincil" id="y-ileri" type="button" aria-label="Sonraki gün">›</button></div>
+        <div id="y-lj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-uv">
+        <h2 id="h-uv">Orta ve uzun vadeli tahmin</h2>
+        <p class="note">Haftalık tahmin önümüzdeki 7 günün haritalarıdır. 2., 3. ve 4. hafta ile mevsimlik tahmin, sıcaklık ve yağışın mevsim normallerinin altında mı üstünde mi olacağını gösterir (ECMWF uzun vadeli tahmin modeli). Büyük ölçekli eğilimi gösterir; yerel olaylar temsil edilemeyebilir.</p>
+        <div class="tabs" id="u-tur" aria-label="Tahmin türü"></div>
+        <p class="note" style="margin:0 0 6px" id="u-alt-b">Hafta</p>
+        <div class="tabs" id="u-alt" aria-label="Dönem"></div>
+        <div id="u-har"></div>
+        <div class="u-metin" id="u-metin"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Kısa vadeli haritalar Open-Meteo tahmin verisinden (ECMWF, ICON, GFS ve diğer modellerin en uygun birleşimi), uzun vadeli haritalar ECMWF SEAS5 mevsimsel tahmininden hazırlanır. Veri GitHub tarafından 3 saatte bir (uzun vade günde bir) yenilenir.</li>
+        <li>Kesintisiz renkli haritalar, yaklaşık 50 km (uzun vadede 100 km) aralıklı tahmin noktaları arasında ara değer hesaplanarak çizilir; il merkezlerindeki rakamlar o ilin kendi tahminidir. Dağlık bölgelerde yerel farklar haritada görünmeyebilir.</li>
+        <li>Resmi tahminler için Meteoroloji Genel Müdürlüğü'nü takip edin. Harita sınırları: geoBoundaries, © OpenStreetMap katkıcıları (ODbL).</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/gokyuzu.js"></script>
+<script src="assets/ililce.js"></script>
+<script src="assets/turkiye.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/tahmin.js"></script>
+</body>
+</html>

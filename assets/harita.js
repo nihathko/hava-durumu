@@ -144,15 +144,6 @@
   }
 
   // ---------- Bölgelerde hava (MGM'nin günlük tahmini gibi, model verisinden otomatik metin) ----------
-  const BOLGE = {
-    'Marmara': ['Edirne', 'Kırklareli', 'Tekirdağ', 'İstanbul', 'Kocaeli', 'Yalova', 'Sakarya', 'Bilecik', 'Bursa', 'Balıkesir', 'Çanakkale'],
-    'Ege': ['İzmir', 'Manisa', 'Aydın', 'Denizli', 'Muğla', 'Afyonkarahisar', 'Kütahya', 'Uşak'],
-    'Akdeniz': ['Antalya', 'Isparta', 'Burdur', 'Mersin', 'Adana', 'Hatay', 'Osmaniye', 'Kahramanmaraş'],
-    'İç Anadolu': ['Ankara', 'Konya', 'Kayseri', 'Eskişehir', 'Sivas', 'Kırıkkale', 'Aksaray', 'Karaman', 'Kırşehir', 'Niğde', 'Nevşehir', 'Yozgat', 'Çankırı'],
-    'Karadeniz': ['Zonguldak', 'Bartın', 'Karabük', 'Düzce', 'Bolu', 'Kastamonu', 'Sinop', 'Samsun', 'Çorum', 'Amasya', 'Tokat', 'Ordu', 'Giresun', 'Trabzon', 'Gümüşhane', 'Bayburt', 'Rize', 'Artvin'],
-    'Doğu Anadolu': ['Erzurum', 'Erzincan', 'Kars', 'Ardahan', 'Iğdır', 'Ağrı', 'Malatya', 'Elazığ', 'Tunceli', 'Bingöl', 'Muş', 'Bitlis', 'Van', 'Hakkari'],
-    'Güneydoğu Anadolu': ['Gaziantep', 'Kilis', 'Adıyaman', 'Şanlıurfa', 'Diyarbakır', 'Mardin', 'Batman', 'Siirt', 'Şırnak']
-  };
   const yagis = k => ['drizzle', 'rain', 'snow', 'thunder'].includes(cond(k)[1]);
   const birlestir = a => a.length <= 1 ? a.join('') : a.slice(0, -1).join(', ') + ' ve ' + a[a.length - 1];
   function bolgeMetni(iller, j) {
