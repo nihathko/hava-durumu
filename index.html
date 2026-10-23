@@ -104,6 +104,7 @@
 <script src="assets/gokyuzu.js"></script>
 <script src="assets/ililce.js"></script>
 <script src="assets/ortak.js"></script>
+<script src="assets/ana-ek.js"></script>
 <script>
 (() => {
   'use strict';
@@ -141,8 +142,8 @@
     u.search = new URLSearchParams({
       latitude: p.lat, longitude: p.lon, timezone: 'auto', forecast_days: 16, wind_speed_unit: 'kmh',
       current: 'temperature_2m,apparent_temperature,relative_humidity_2m,is_day,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,surface_pressure,precipitation',
-      hourly: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation_probability,precipitation,is_day',
-      daily: 'weather_code,temperature_2m_max,temperature_2m_min,relative_humidity_2m_min,relative_humidity_2m_max,wind_speed_10m_mean,wind_direction_10m_dominant,precipitation_probability_max,precipitation_sum,sunrise,sunset,daylight_duration,uv_index_max'
+      hourly: 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation_probability,precipitation,is_day,pressure_msl,dew_point_2m,cloud_cover,visibility,uv_index,cape',
+      daily: 'weather_code,temperature_2m_max,temperature_2m_min,relative_humidity_2m_min,relative_humidity_2m_max,wind_speed_10m_mean,wind_direction_10m_dominant,precipitation_probability_max,precipitation_sum,sunrise,sunset,daylight_duration,uv_index_max,sunshine_duration,precipitation_hours'
     });
     const r = await fetch(u);
     if (!r.ok) throw new Error('forecast ' + r.status);
@@ -376,6 +377,8 @@
   const SRC_AIR = '<p class="src">Kaynak: Copernicus CAMS, Open-Meteo üzerinden. Model tahminidir.</p>';
   function fillAir(a) {
     const aq = $('aq'), po = $('pol');
+    lastAir = a || null;
+    if (lastData && $('sag')) { $('sag').innerHTML = saglikKart(lastData, lastAir); $('etk').innerHTML = etkinlikKart(lastData, lastAir); }
     if (!aq || !po) return;
     if (!a) {
       const msg = '<p class="muted">Şu an alınamadı. Sayfa yenilendiğinde yeniden denenecek.</p>';
@@ -507,6 +510,7 @@
     store.set('hava.fav', favs);
     drawFavs(); updStar();
   }
+  details.addEventListener('click', e => { const b = e.target.closest('[data-yk]'); if (b && yakin[+b.dataset.yk]) { const y = yakin[+b.dataset.yk]; scrollTo({ top: 0, behavior: 'smooth' }); load({ name: y.name, sub: y.sub, lat: y.lat, lon: y.lon, il: y.il, ilce: y.ilce }); } });
   $('favs').addEventListener('click', e => {
     const a = e.target.closest('[data-f]'), x = e.target.closest('[data-fx]');
     if (a) load(favs[+a.dataset.f]);
@@ -563,9 +567,9 @@
     const H = d.hourly, D = d.daily, i0 = nowIndex(d);
     const saat = H.time.map((_, i) => i).slice(i0, i0 + 25).map((i, j) => `<li class="slayt-k"><span class="sk-s">${j === 0 ? 'Şimdi' : hhmm(H.time[i])}</span>${icon(H.weather_code[i], H.is_day[i])}<b>${deg(H.temperature_2m[i])}</b><span class="sk-y">${(H.precipitation_probability[i] ?? 0) >= 10 ? '<svg class="damla" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 1C3 5 1 7 1 9.5a4 4 0 0 0 8 0C9 7 7 5 5 1z" fill="currentColor"/></svg>%' + H.precipitation_probability[i] : '&nbsp;'}</span></li>`).join('');
     const gun = D.time.slice(0, 15).map((t, i) => { const lo = minOf(D.temperature_2m_min.slice(0, 15)), hi = maxOf(D.temperature_2m_max.slice(0, 15)), a = (D.temperature_2m_min[i] - lo) / (hi - lo || 1) * 100, b = (D.temperature_2m_max[i] - lo) / (hi - lo || 1) * 100;
-      return `<li class="slayt-k gun"><span class="sk-s">${i === 0 ? 'Bugün' : i === 1 ? 'Yarın' : esc(kisaGun(t))}</span>${icon(D.weather_code[i], 1)}<span class="sk-t"><span class="c-lo">${deg(D.temperature_2m_min[i])}</span><i class="sk-bar"><i style="left:${a.toFixed(0)}%;right:${(100 - b).toFixed(0)}%"></i></i><span class="c-hi">${deg(D.temperature_2m_max[i])}</span></span><span class="sk-y">${(D.precipitation_probability_max[i] ?? 0) >= 20 ? '<svg class="damla" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 1C3 5 1 7 1 9.5a4 4 0 0 0 8 0C9 7 7 5 5 1z" fill="currentColor"/></svg>%' + D.precipitation_probability_max[i] : '&nbsp;'}</span></li>`; }).join('');
-    const kap = (id, bas, ic) => `<section class="sec slayt" aria-labelledby="${id}"><div class="sl-bas"><h2 id="${id}">${bas}</h2><div class="sl-ok"><button class="ic-btn sl-geri" type="button" aria-label="Geri">‹</button><button class="ic-btn sl-ileri" type="button" aria-label="İleri">›</button></div></div><ul class="slayt-iz">${ic}</ul></section>`;
-    return kap('h-sl1', 'Saat saat', saat) + kap('h-sl2', '15 gün', gun);
+      return `<li class="slayt-k gun"><span class="sk-s">${i === 0 ? 'Bugün' : i === 1 ? 'Yarın' : esc(kisaGun(t))}</span>${icon(D.weather_code[i], 1)}<span class="sk-t"><span class="c-lo">${deg(D.temperature_2m_min[i])}</span><i class="sk-bar"><i style="left:${a.toFixed(0)}%;right:${(100 - b).toFixed(0)}%"></i></i><span class="c-hi">${deg(D.temperature_2m_max[i])}</span></span><span class="sk-y">${(D.precipitation_probability_max[i] ?? 0) >= 20 ? '<svg class="damla" viewBox="0 0 10 14" aria-hidden="true"><path d="M5 1C3 5 1 7 1 9.5a4 4 0 0 0 8 0C9 7 7 5 5 1z" fill="currentColor"/></svg>%' + D.precipitation_probability_max[i] + ((D.precipitation_sum[i] ?? 0) >= 0.5 ? ', ' + mm(D.precipitation_sum[i]) + ' mm' : '') : '&nbsp;'}</span>${D.sunshine_duration && D.sunshine_duration[i] != null ? `<span class="sk-g">${dec(D.sunshine_duration[i] / 3600, 0)} sa güneş</span>` : ''}</li>`; }).join('');
+    const kap = (id, bas, ic, not = '') => `<section class="sec slayt" aria-labelledby="${id}"><div class="sl-bas"><h2 id="${id}">${bas}</h2><div class="sl-ok"><button class="ic-btn sl-geri" type="button" aria-label="Geri">‹</button><button class="ic-btn sl-ileri" type="button" aria-label="İleri">›</button></div></div>${not ? `<p class="note hafta">${esc(not)}</p>` : ''}<ul class="slayt-iz">${ic}</ul></section>`;
+    return kap('h-sl1', 'Saat saat', saat) + kap('h-sl2', '15 gün', gun, haftaOzet(d));
   }
   const HOPARLOR = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
   // Sesli dinle: tarayıcının kendi Türkçe sesiyle özeti okur (internet gerekmez, hiçbir yere veri gönderilmez)
@@ -580,9 +584,10 @@
     if (tr) u.voice = tr;
     ss.speak(u);
   }
-  let lastClim = null, staleAt = 0;
+  let lastClim = null, staleAt = 0, lastAir = null, yakin = [];
   function render(d, p, clim) {
     const C = d.current, D = d.daily, ch = chartSvg(d), maxDays = Math.min(14, D.time.length - 1);
+    yakin = yakinYerler(p);
     view.innerHTML = `
       <section class="now" aria-label="Şu anki hava durumu">
         <div class="head">
@@ -600,6 +605,7 @@
             <div class="ci">${icon(C.weather_code, C.is_day)}<span class="t">${esc(cond(C.weather_code)[0])}</span></div>
             <span class="f">Hissedilen <b>${deg(C.apparent_temperature)}</b></span>
             <span class="f">Bugün en düşük <b>${deg(D.temperature_2m_min[0])}</b>, en yüksek <b>${deg(D.temperature_2m_max[0])}</b></span>
+            <span class="f" id="dun" hidden></span>
           </div>
         </div>
         <p class="sum">${esc(summary(d).join(' '))}</p>
@@ -626,7 +632,12 @@
         <section class="card" id="pol" aria-labelledby="h-pol"><h2 id="h-pol">Polen</h2><p class="muted">Yükleniyor…</p></section>
         ${skyCard(d, p)}
       </div>
+      <div class="sec band2">
+        <section class="card" id="sag" aria-labelledby="h-sag">${saglikKart(d, lastAir)}</section>
+        <section class="card" id="etk" aria-labelledby="h-etk">${etkinlikKart(d, lastAir)}</section>
+      </div>
       ${mgmBox(p)}
+      ${yakin.length ? `<section class="sec" aria-labelledby="h-yk"><h2 id="h-yk">Yakındaki yerler</h2><div id="yakin">${yakinKart(yakin, null)}</div></section>` : ''}
       <section class="sec" aria-labelledby="h-saat">
         <h2 id="h-saat">Saatlik tahmin</h2>
         <p class="note">3 saatlik dilimler. Beklenen hadise, o 3 saatteki hâkim hava durumudur; hamle, bu sürede beklenen en yüksek rüzgar hızıdır. Sıcaklık, nem ve rüzgar, dilimin bittiği saatte beklenen değerlerdir.</p>
@@ -643,7 +654,13 @@
           <tbody id="days">${dailyRows(d, clim)}</tbody>
         </table></div>
         ${maxDays > 5 ? `<button class="btn more" id="more" type="button">${allDays ? '5 güne dön' : `${maxDays} güne kadar göster`}</button>` : ''}
-      </section>`;
+      </section>
+      <section class="sec" aria-labelledby="h-guv">
+        <h2 id="h-guv">Tahmin güveni ve yağış aralığı</h2>
+        <p class="note">ECMWF, ICON ve GFS modellerinin tahmini karşılaştırılır. Modeller birbirine ne kadar yakınsa tahmine o kadar güvenilir. Yağış sütunu, modellerin en az ve en çok beklediği miktardır.</p>
+        <div id="guven"><p class="muted">Yükleniyor…</p></div>
+      </section>
+      <section class="sec" id="atm" aria-labelledby="h-atm">${atmosferKart(d, undefined)}</section>`;
     const mg = $('mgm');
     if (mg) mg.querySelectorAll('img').forEach(im => im.addEventListener('error', () => { mg.hidden = true; }));
     $('refresh').onclick = () => load(current);
@@ -694,6 +711,11 @@
     const climate = (tries = 0) => getClimate(p).then(c => { if (seq === loadSeq) { lastClim = c; $('days').innerHTML = dailyRows(d, c); } })
       .catch(() => { if (seq !== loadSeq) return; lastClim = false; $('days').innerHTML = dailyRows(d, false); if (tries < 2) setTimeout(() => { if (seq === loadSeq) climate(tries + 1); }, tries ? 90000 : 30000); });
     climate();
+    ekVeri(p).then(e => { if (seq !== loadSeq) return; const t = dunBuSaat(e, d), el = $('dun'); if (el && t) { el.innerHTML = t; el.hidden = false; } if ($('atm')) $('atm').innerHTML = atmosferKart(d, e); })
+      .catch(() => { if (seq === loadSeq && $('atm')) $('atm').innerHTML = atmosferKart(d, null); });
+    modelVeri(p).then(m => { if (seq === loadSeq && $('guven')) $('guven').innerHTML = guvenTablo(m, d); })
+      .catch(() => { if (seq === loadSeq && $('guven')) $('guven').innerHTML = '<p class="muted">Model karşılaştırması şu an alınamadı. Sayfa yenilendiğinde yeniden denenecek.</p>'; });
+    if (yakin.length) yakinVeri(yakin).then(v => { if (seq === loadSeq && $('yakin')) $('yakin').innerHTML = yakinKart(yakin, v); }).catch(() => {});
   }
 
   // ---------- Arama ----------

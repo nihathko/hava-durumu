@@ -449,6 +449,86 @@ function haritaBagla(kap, bilgi) {
   kap.addEventListener('pointerleave', e => { const t = kap.querySelector(':scope > .tip'); if (e.pointerType === 'mouse' && t) { t.hidden = true; temizle(); } });
 }
 
+// ---------- Rüzgar akışı ----------
+// Haritanın üstünde rüzgarın estiği yöne akan çizgiler. İl merkezlerindeki rüzgar (vek(il) → [km/sa, geldiği yön])
+// ters mesafe ağırlığıyla bütün haritaya yayılır. Harita her yeniden çizildiğinde tekrar çağrılır; vek boşsa akış durur.
+function ruzgarAkisi(kap, vek) {
+  if (kap._akis) { cancelAnimationFrame(kap._akis.raf); kap._akis.ro.disconnect(); kap._akis.cv.remove(); kap._akis = null; }
+  const svg = kap.querySelector('svg.trh');
+  if (!vek || !svg) return;
+  // Hareketi azalt açıksa çizgiler akmaz, rüzgar yönünü gösteren sabit akım çizgileri bir kez çizilir
+  const durgun = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const W = TR_HARITA.w, H = TR_HARITA.h, A = 8, GX = Math.ceil(W / A) + 1, GY = Math.ceil(H / A) + 1;
+  const N = IL.map(I => {
+    const v = vek(I.ad); if (!v || v[0] == null || v[1] == null) return null;
+    const [x, y] = izdusum(I.lat, I.lon), a = v[1] * Math.PI / 180;
+    return [x, y, -Math.sin(a) * v[0], Math.cos(a) * v[0]];
+  }).filter(Boolean);
+  if (!N.length) return;
+  const U = new Float32Array(GX * GY), V = new Float32Array(GX * GY);
+  for (let j = 0; j < GY; j++) for (let i = 0; i < GX; i++) {
+    let su = 0, sv = 0, sw = 0;
+    for (const [x, y, u, v] of N) { const w = 1 / ((x - i * A) ** 2 + (y - j * A) ** 2 + 400); su += u * w; sv += v * w; sw += w; }
+    U[j * GX + i] = su / sw; V[j * GX + i] = sv / sw;
+  }
+  const alan = (x, y) => {
+    const fx = Math.min(GX - 1.001, Math.max(0, x / A)), fy = Math.min(GY - 1.001, Math.max(0, y / A)), i = fx | 0, j = fy | 0, a = fx - i, b = fy - j, k = j * GX + i;
+    const l = F => (F[k] * (1 - a) + F[k + 1] * a) * (1 - b) + (F[k + GX] * (1 - a) + F[k + GX + 1] * a) * b;
+    return [l(U), l(V)];
+  };
+  const yol = new Path2D();
+  for (const d of Object.values(TR_HARITA.il)) yol.addPath(new Path2D(d));
+  const cv = document.createElement('canvas'), ctx = cv.getContext('2d');
+  cv.className = 'akis'; cv.setAttribute('aria-hidden', 'true');
+  kap.appendChild(cv);
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  let olcek = 1;
+  const boyut = () => {
+    const r = svg.getBoundingClientRect(), k = kap.getBoundingClientRect(); olcek = r.width / W || 1;
+    cv.style.cssText = `left:${r.left - k.left + kap.scrollLeft}px;top:${r.top - k.top + kap.scrollTop}px;width:${r.width}px;height:${r.height}px`;
+    cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+    ctx.setTransform(olcek * dpr, 0, 0, olcek * dpr, 0, 0);
+    ctx.clip(yol);
+    if (durgun) sabit();
+  };
+  const say = innerWidth < 700 ? 650 : 1300, P = [], HIZ = 0.05;
+  const sabit = () => {
+    ctx.lineWidth = 1.3 / olcek; ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(14,40,64,.6)';
+    for (let k = 0; k < 420; k++) {
+      let x = Math.random() * W, y = Math.random() * H;
+      ctx.beginPath(); ctx.moveTo(x, y);
+      for (let n = 0; n < 20; n++) { const [u, v] = alan(x, y); x += u * HIZ * 4; y += v * HIZ * 4; ctx.lineTo(x, y); }
+      ctx.stroke();
+    }
+  };
+  const ro = new ResizeObserver(boyut);
+  boyut(); ro.observe(svg);
+  if (durgun) { kap._akis = { cv, ro, raf: 0 }; return; }
+  const yeni = p => { p.x = Math.random() * W; p.y = Math.random() * H; p.yas = Math.random() * 80 | 0; return p; };
+  for (let i = 0; i < say; i++) P.push(yeni({}));
+  const akis = { cv, ro, raf: 0 };
+  kap._akis = akis;
+  const kare = () => {
+    if (!cv.isConnected) { ro.disconnect(); return; }
+    akis.raf = requestAnimationFrame(kare);
+    if (document.hidden) return;
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'rgba(0,0,0,.09)'; ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.lineWidth = 1.4 / olcek; ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(14,40,64,.7)';
+    ctx.beginPath();
+    for (const p of P) {
+      const [u, v] = alan(p.x, p.y), nx = p.x + u * HIZ, ny = p.y + v * HIZ;
+      if (++p.yas > 90 || Math.hypot(u, v) < 0.5 || nx < 0 || ny < 0 || nx > W || ny > H) { yeni(p); p.yas = 0; continue; }
+      ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny);
+      p.x = nx; p.y = ny;
+    }
+    ctx.stroke();
+  };
+  kare();
+}
+
 // ---------- Havalimanı ölçümleri (METAR, NOAA) ----------
 // data/metar.json, GitHub'da yarım saatte bir çalışan iş tarafından NOAA'dan alınır (tarayıcı NOAA'ya doğrudan erişemez)
 async function havalimanlari() {

@@ -43,7 +43,7 @@
       fill = ad => { const d = deger(ad); return d ? ruzgarRenk(gun ? d.h : d.r) : null; };
       etiket = ad => { const d = deger(ad); return d && { ust: n0(gun ? d.h : d.r), alt: d.ry != null ? dir(d.ry) : null }; };
       lj = lejant(RUZGAR, 'km/sa', gun ? 'En kuvvetli hamle' : 'Rüzgar hızı');
-      not = gun ? 'Rakam günün en kuvvetli hamlesi (km/sa), altında hâkim rüzgar yönü.' : 'Rakam şu anki rüzgar hızı (km/sa), altında rüzgarın geldiği yön.';
+      not = (gun ? 'Rakam günün en kuvvetli hamlesi (km/sa), altında hâkim rüzgar yönü.' : 'Rakam şu anki rüzgar hızı (km/sa), altında rüzgarın geldiği yön.') + ' Akan çizgiler rüzgarın estiği yönü gösterir; ne kadar hızlı akıyorsa rüzgar o kadar kuvvetlidir.';
     }
     if (gozlem) {
       if (!M || !M.s.length) { not = 'Havalimanı ölçümleri şu an alınamadı.'; }
@@ -56,6 +56,7 @@
     ljEl.innerHTML = lj;
     $('hnot').textContent = not + ' İl üzerine gel ya da dokun; ayrıntılı tahmine oradan geçebilirsin.';
     haritaBagla(hEl, bilgi);
+    ruzgarAkisi(hEl, kat === 2 ? ad => { const d = deger(ad); return d && [d.r, d.ry]; } : null);
     siralar(); tablo();
   }
 
@@ -205,6 +206,7 @@
       const [, f, e, l] = KAT[k];
       el.innerHTML = haritaSvg({ fill: ad => f(S[ad]), etiket: ad => e(S[ad]), aria: `${KAT[k][0]} haritası, ${zaman[i]}` });
       $('slj2').innerHTML = l();
+      ruzgarAkisi(el, k === 2 ? ad => [S[ad].wind_speed_10m[i], S[ad].wind_direction_10m[i]] : null);
       zEl.textContent = `${fmtWeek(ymd(zaman[i]))} ${hhmm(zaman[i])}`;
       ar.value = String(i);
       haritaBagla(el, ad => { const h = S[ad]; return `<b>${esc(ad)}</b>${esc(fmtWeek(ymd(zaman[i])))} ${hhmm(zaman[i])}<br>${esc(cond(h.weather_code[i])[0])}<br>Sıcaklık <span>${deg(h.temperature_2m[i])}</span><br>Yağış <span>${dec(h.precipitation[i])} mm</span>, bulut <span>%${n0(h.cloud_cover[i])}</span><br>Rüzgar <span>${h.wind_direction_10m[i] != null ? dir(h.wind_direction_10m[i]) : ''} ${n0(h.wind_speed_10m[i])} km/sa</span>${h.snow_depth[i] > 0 ? `<br>Kar <span>${n0(h.snow_depth[i] * 100)} cm</span>` : ''}`; });
