@@ -1,0 +1,118 @@
+// Ziraat: 81 il zirai don uyarısı, seçili yer için toprak, su dengesi, ilaçlama saatleri, büyüme derece-gün, akarsu debisi
+(() => {
+  'use strict';
+  let seq = 0;
+  const DON = [[-10, '#313695'], [-5, '#4575B4'], [-2, '#74ADD1'], [0, '#ABD9E9'], [2, '#E0F3F8'], [6, '#F2F5E8'], [12, '#FEE090']], donRenk = rampa(DON);
+
+  // ---------- Zirai don (81 il, 7 gün) ----------
+  async function don() {
+    const hEl = $('donh');
+    hEl.innerHTML = yukleniyor('81 ilin 7 günlük en düşük sıcaklığı yükleniyor…');
+    let v;
+    try { v = await cokNokta(OM, IL, { daily: 'temperature_2m_min', timezone: 'Europe/Istanbul', forecast_days: 7 }, 60); }
+    catch (e) { hEl.innerHTML = hataMsg(); return; }
+    const R = Object.fromEntries(IL.map((I, i) => { const D = v[i].daily, m = minOf(D.temperature_2m_min), j = D.temperature_2m_min.indexOf(m); return [I.ad, { m, gun: D.time[j], dizi: D.temperature_2m_min, t: D.time }]; }));
+    hEl.innerHTML = haritaSvg({ fill: ad => donRenk(R[ad].m), etiket: ad => ({ ust: deg(R[ad].m), alt: R[ad].m <= 2 ? kisaGun(R[ad].gun) : null }), aria: '7 günlük en düşük sıcaklık haritası' });
+    $('donlj').innerHTML = lejant(DON, '°C', '7 günün en düşük sıcaklığı');
+    haritaBagla(hEl, ad => { const r = R[ad]; return `<b>${esc(ad)}</b>7 günün en düşüğü <span>${deg(r.m)}</span> (${esc(kisaGun(r.gun))})<br>${r.t.map((t, j) => `${esc(kisaGun(t))}: <span>${deg(r.dizi[j])}</span>`).join('<br>')}<br><a href="${anaSayfaLink(yerIl(ad))}">Ayrıntılı tahmin</a>`; });
+    const L = IL.map(I => ({ ad: I.ad, ...R[I.ad] })).sort((a, b) => a.m - b.m);
+    const grup = (bas, f) => { const g = L.filter(f); return `<div class="sira"><h3>${bas} <small class="muted">(${g.length})</small></h3>${g.length ? `<ol>${g.slice(0, 20).map(x => `<li><span><a href="${anaSayfaLink(yerIl(x.ad))}">${esc(x.ad)}</a></span><b>${deg(x.m)} <small class="muted">${esc(kisaGun(x.gun))}</small></b></li>`).join('')}</ol>${g.length > 20 ? `<p class="muted">ve ${g.length - 20} il daha</p>` : ''}` : '<p class="muted">Yok</p>'}</div>`; };
+    $('donl').innerHTML = grup('Kuvvetli don (−2°C ve altı)', x => x.m <= -2) + grup('Don (−2 ile 0°C)', x => x.m > -2 && x.m <= 0) + grup('Don riski (0 ile 2°C)', x => x.m > 0 && x.m <= 2);
+    const sayi = L.filter(x => x.m <= 0).length;
+    $('kisa').insertAdjacentHTML('afterbegin', `<div><dt>7 günde don beklenen il</dt><dd>${sayi}</dd></div>`);
+  }
+
+  // ---------- Seçili yer ----------
+  const nemYorum = v => v == null ? '–' : v < 0.1 ? ['Kuru', 'e-yuksek'] : v < 0.2 ? ['Az nemli', 'e-orta'] : v < 0.35 ? ['Nemli', 'e-az'] : ['Islak', 'e-orta'];
+  async function yer(p) {
+    const s = ++seq;
+    ['toprak', 'su', 'ilac', 'gdd', 'akarsu'].forEach(k => { $(k).innerHTML = yukleniyor(); });
+    $('kisa').querySelectorAll('[data-yer]').forEach(x => x.remove());
+    $('kisa').insertAdjacentHTML('beforeend', `<div data-yer><dt>Seçili yer</dt><dd>${esc(p.name)}</dd></div>`);
+    document.title = `${p.name} ziraat · Hava Durumu`;
+    let d;
+    try {
+      d = await getJSON(omURL(OM, { latitude: p.lat, longitude: p.lon, timezone: 'auto', past_days: 31, forecast_days: 7, wind_speed_unit: 'kmh',
+        hourly: 'temperature_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m,wind_gusts_10m,soil_temperature_0cm,soil_temperature_6cm,soil_temperature_18cm,soil_temperature_54cm,soil_moisture_0_to_1cm,soil_moisture_1_to_3cm,soil_moisture_3_to_9cm,soil_moisture_9_to_27cm,soil_moisture_27_to_81cm',
+        daily: 'temperature_2m_max,temperature_2m_min,precipitation_sum,et0_fao_evapotranspiration' }), 30);
+    } catch (e) { if (s === seq) ['toprak', 'su', 'ilac', 'gdd'].forEach(k => { $(k).innerHTML = hataMsg(); }); return; }
+    if (s !== seq) return;
+    const H = d.hourly, D = d.daily, now = new Date(Date.now() + d.utc_offset_seconds * 1000).toISOString().slice(0, 13);
+    let i0 = H.time.findIndex(t => t.slice(0, 13) >= now); if (i0 < 0) i0 = 0;
+    const bugun = now.slice(0, 10), g0 = D.time.indexOf(bugun);
+
+    // Toprak
+    const DER = [['soil_temperature_0cm', 'Yüzey'], ['soil_temperature_6cm', '6 cm'], ['soil_temperature_18cm', '18 cm'], ['soil_temperature_54cm', '54 cm']];
+    const NEM = [['soil_moisture_0_to_1cm', '0–1 cm'], ['soil_moisture_1_to_3cm', '1–3 cm'], ['soil_moisture_3_to_9cm', '3–9 cm'], ['soil_moisture_9_to_27cm', '9–27 cm'], ['soil_moisture_27_to_81cm', '27–81 cm']];
+    const idx = H.time.map((_, i) => i).slice(i0, i0 + 168), x = idx.map(i => H.time[i]);
+    const ortak = { x, adim: 6, ayrac: i => x[i].endsWith('T00:00'), etiketSec: t => /T(00|12):00/.test(t), xEtiket: t => t.endsWith('T00:00') ? kisaGun(t.slice(0, 10)) : t.slice(11, 13) };
+    const TR = ['#C7372F', '#E8833A', '#B8962E', '#6C5BB5'], NR = ['#9BD3A2', '#5DB46F', '#3F9E8F', '#2E8FB8', '#2160A8'];
+    const g1 = seritGrafik({ ...ortak, yukseklik: 150, birim: '°C', seriler: DER.map(([k, a], j) => ({ ad: a, renk: TR[j], v: idx.map(i => H[k][i]), kalin: j ? 1.6 : 2.2 })) });
+    const g2 = seritGrafik({ ...ortak, yukseklik: 130, birim: '%', seriler: NEM.map(([k, a], j) => ({ ad: a, renk: NR[j], v: idx.map(i => H[k][i] == null ? null : H[k][i] * 100), kalin: 1.8 })) });
+    const dip = 'soil_temperature_6cm', ekim = H[dip][i0];
+    $('toprak').innerHTML = `<div class="ikili"><div><div class="gb"><h3>Toprak sıcaklığı, şu an</h3></div><table><tbody>${DER.map(([k, a]) => `<tr><td class="l">${a}</td><td>${dec(H[k][i0])}°</td></tr>`).join('')}</tbody></table></div>
+      <div><div class="gb"><h3>Toprak nemi, şu an</h3></div><table><tbody>${NEM.map(([k, a]) => { const y = nemYorum(H[k][i0]); return `<tr><td class="l">${a}</td><td>%${n0(H[k][i0] * 100)}</td><td>${Array.isArray(y) ? `<span class="etiket ${y[1]}">${y[0]}</span>` : y}</td></tr>`; }).join('')}</tbody></table></div></div>
+      <p class="kutu-not">${ekim >= 10 ? `6 cm derinlikte toprak ${dec(ekim)}°C. Mısır ve ayçiçeği gibi sıcak iklim bitkilerinin çimlenmesi için en az 10°C gerekir; bu eşik geçilmiş.` : `6 cm derinlikte toprak ${dec(ekim)}°C. Mısır ve ayçiçeği gibi sıcak iklim bitkileri için 10°C, buğday ve arpa için 4°C üstü çimlenme için uygundur.`} Nem değerleri hacimce yüzdedir; yorumlar ortalama bir toprak için yaklaşıktır.</p>
+      <div class="gb"><h3>7 günlük toprak sıcaklığı</h3><span class="lj">${DER.map(([, a], j) => `<span><i style="background:${TR[j]}"></i>${a}</span>`).join('')}</span></div><div class="grafik-kutu" id="zg1">${g1.svg}</div>
+      <div class="gb"><h3>7 günlük toprak nemi</h3><span class="lj">${NEM.map(([, a], j) => `<span><i style="background:${NR[j]}"></i>${a}</span>`).join('')}</span></div><div class="grafik-kutu" id="zg2">${g2.svg}</div>`;
+    const ip = j => { const i = idx[j]; return `<b>${esc(fmtWeek(ymd(H.time[i])))} ${hhmm(H.time[i])}</b>${DER.map(([k, a]) => `${a} <span>${dec(H[k][i])}°</span>`).join(', ')}<br>${NEM.map(([k, a]) => `${a} <span>%${n0(H[k][i] * 100)}</span>`).join(', ')}`; };
+    grafikIpucu($('zg1'), g1, ip); grafikIpucu($('zg2'), g2, ip);
+
+    // Su dengesi
+    const gecen = D.time.map((t, j) => j).filter(j => j >= g0 - 7 && j < g0), gelen = D.time.map((t, j) => j).filter(j => j >= g0 && j < g0 + 7);
+    const top = (js, k) => sumOf(js.map(j => D[k][j]));
+    const ihtiyac = js => Math.max(0, top(js, 'et0_fao_evapotranspiration') - top(js, 'precipitation_sum'));
+    $('su').innerHTML = `<dl class="kv ozet3"><div><dt>Geçen 7 gün</dt><dd>${mm(top(gecen, 'precipitation_sum'))} mm yağış, ${mm(top(gecen, 'et0_fao_evapotranspiration'))} mm buharlaşma</dd></div>
+      <div><dt>Gelecek 7 gün</dt><dd>${mm(top(gelen, 'precipitation_sum'))} mm yağış, ${mm(top(gelen, 'et0_fao_evapotranspiration'))} mm buharlaşma</dd></div>
+      <div><dt>Gelecek 7 gün sulama ihtiyacı</dt><dd>${mm(ihtiyac(gelen))} mm <small>≈ ${n0(ihtiyac(gelen))} ton/dekar</small></dd></div></dl>
+      <div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th class="l">Gün</th>${[...gecen, ...gelen].map(j => `<th${j === g0 ? ' class="bugun"' : ''}>${esc(kisaGun(D.time[j]))}</th>`).join('')}</tr></thead><tbody>
+        <tr><td class="l">Yağış (mm)</td>${[...gecen, ...gelen].map(j => `<td>${mm(D.precipitation_sum[j])}</td>`).join('')}</tr>
+        <tr><td class="l">Buharlaşma ET₀ (mm)</td>${[...gecen, ...gelen].map(j => `<td>${mm(D.et0_fao_evapotranspiration[j])}</td>`).join('')}</tr>
+        <tr><td class="l">Denge (mm)</td>${[...gecen, ...gelen].map(j => { const b = (D.precipitation_sum[j] ?? 0) - (D.et0_fao_evapotranspiration[j] ?? 0); return `<td><span class="${b < 0 ? 'c-hi' : 'c-lo'}">${b > 0 ? '+' : ''}${dec(b)}</span></td>`; }).join('')}</tr>
+      </tbody></table></div>
+      <p class="kutu-not">Sulama ihtiyacı kısa çim örtüsü için hesaplanır; bitkinin türüne ve gelişme dönemine göre bitki katsayısıyla (Kc, genelde 0,3 ile 1,2 arası) çarpılmalıdır. 1 mm su, dekar başına 1 ton suya eşittir.</p>`;
+
+    // İlaçlama saatleri (48 saat)
+    const sa = H.time.map((_, i) => i).slice(i0, i0 + 48);
+    const uygun = i => {
+      const r = H.wind_speed_10m[i], h = H.wind_gusts_10m[i], t = H.temperature_2m[i], n = H.relative_humidity_2m[i], y = H.precipitation[i], yi = Math.max(H.precipitation_probability[i + 1] ?? 0, H.precipitation_probability[i + 2] ?? 0);
+      const neden = [];
+      if (y > 0) neden.push('yağış var'); if (yi >= 40) neden.push('yağış bekleniyor'); if (r > 15 || h > 25) neden.push('rüzgar kuvvetli'); if (r < 3) neden.push('rüzgar çok zayıf (sürüklenme riski)');
+      if (t < 8) neden.push('hava soğuk'); if (t > 28) neden.push('hava sıcak'); if (n < 40) neden.push('nem düşük');
+      return [!neden.length ? 2 : neden.length === 1 && /zayıf|nem düşük/.test(neden[0]) ? 1 : 0, neden];
+    };
+    const gunGrup = {}; sa.forEach(i => { (gunGrup[H.time[i].slice(0, 10)] = gunGrup[H.time[i].slice(0, 10)] || []).push(i); });
+    const toplamUygun = sa.filter(i => uygun(i)[0] === 2).length;
+    $('ilac').innerHTML = `<p class="muted" style="margin:0 0 10px">Önümüzdeki 48 saatte uygun saat sayısı: <b>${toplamUygun}</b>. Kareye gelince ya da dokununca nedeni görünür.</p>
+      <div class="ilac">${Object.entries(gunGrup).map(([g, ii]) => `<div class="ilac-g"><b>${esc(fmtWeek(g))}</b><div class="ilac-s">${ii.map(i => { const [u, nd] = uygun(i); return `<span class="hk h${u}" title="${hhmm(H.time[i])}: ${u === 2 ? 'uygun' : esc(nd.join(', '))}" tabindex="0">${H.time[i].slice(11, 13)}</span>`; }).join('')}</div></div>`).join('')}</div>
+      <div class="lj" style="margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap"><span><span class="hk h2 kucuk"></span> Uygun</span><span><span class="hk h1 kucuk"></span> Sınırlı</span><span><span class="hk h0 kucuk"></span> Uygun değil</span></div>`;
+
+    // Büyüme derece-gün (taban 10°C)
+    const gg = D.time.map((t, j) => [t, j]).filter(([, j]) => j <= g0 + 6).map(([t, j]) => [t, Math.max(0, ((D.temperature_2m_max[j] ?? 0) + (D.temperature_2m_min[j] ?? 0)) / 2 - 10), j > g0]);
+    let kum = 0; const kumD = gg.map(x => (kum += x[1], Math.round(kum * 10) / 10));
+    const g3 = seritGrafik({ x: gg.map(x => x[0]), adim: 16, yukseklik: 150, birim: '°C·gün', sifir: true, etiketAdim: 7, xEtiket: t => noon(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+      seriler: [{ ad: 'Günlük', renk: '#9BD3A2', v: gg.map(x => x[1]), tur: 'cubuk' }, { ad: 'Birikimli', renk: '#2E7D4F', v: kumD, kalin: 2.5 }], ayrac: i => gg[i][0] === bugun });
+    const gecmis30 = kumD[g0 - 1] ?? 0;
+    $('gdd').innerHTML = `<dl class="kv ozet3"><div><dt>Son 30 gün</dt><dd>${n0(gecmis30)} °C·gün</dd></div><div><dt>Gelecek 7 gün eklenecek</dt><dd>${n0(kumD[kumD.length - 1] - gecmis30)} °C·gün</dd></div></dl>
+      <div class="gb"><h3>Günlük ve birikimli derece-gün</h3><span class="lj"><span><i style="background:#9BD3A2"></i>Günlük</span><span><i style="background:#2E7D4F"></i>Birikimli</span></span></div><div class="grafik-kutu" id="zg3">${g3.svg}</div>`;
+    grafikIpucu($('zg3'), g3, j => `<b>${esc(fmtDay(gg[j][0]))}${gg[j][2] ? ' (tahmin)' : ''}</b>Günlük <span>${dec(gg[j][1])}</span><br>Birikimli <span>${dec(kumD[j])}</span>`);
+
+    // Akarsu debisi
+    try {
+      const f = await getJSON(omURL('https://flood-api.open-meteo.com/v1/flood', { latitude: p.lat, longitude: p.lon, past_days: 30, forecast_days: 30, daily: 'river_discharge,river_discharge_p25,river_discharge_p75' }), 180);
+      if (s !== seq) return;
+      const F = f.daily;
+      if (!F.river_discharge.some(v => v != null && v > 0)) { $('akarsu').innerHTML = '<p class="muted">Bu noktaya yakın, modelde yer alan bir akarsu yok.</p>'; return; }
+      const bi = F.time.indexOf(bugun);
+      const g4 = seritGrafik({ x: F.time, adim: 10, yukseklik: 170, birim: 'm³/sn', sifir: true, etiketAdim: 7, ayrac: i => i === bi, xEtiket: t => noon(t).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', timeZone: 'UTC' }),
+        seriler: [{ ad: 'Tahmin aralığı', renk: '#2E8FB8', v: F.time.map(() => null), bant: F.time.map((t, j) => j >= bi ? [F.river_discharge_p25[j], F.river_discharge_p75[j]] : null) }, { ad: 'Debi', renk: '#2160A8', v: F.river_discharge, kalin: 2.2 }] });
+      const simdi = F.river_discharge[bi], enY = maxOf(F.river_discharge.slice(bi));
+      $('akarsu').innerHTML = `<dl class="kv ozet3"><div><dt>Bugün</dt><dd>${dec(simdi)} m³/sn</dd></div><div><dt>30 günde en yüksek</dt><dd>${dec(enY)} m³/sn</dd></div><div><dt>Eğilim</dt><dd>${enY > simdi * 1.5 ? 'Artış bekleniyor' : F.river_discharge[Math.min(bi + 7, F.time.length - 1)] < simdi * 0.8 ? 'Azalıyor' : 'Yaklaşık aynı'}</dd></div></dl>
+        <div class="gb"><h3>Son 30 gün ve gelecek 30 gün</h3><span class="lj"><span><i style="background:#2160A8"></i>Debi</span><span><i style="background:#2E8FB8;opacity:.35;height:10px"></i>Tahmin aralığı (%25–75)</span></span></div><div class="grafik-kutu" id="zg4">${g4.svg}</div>`;
+      grafikIpucu($('zg4'), g4, j => `<b>${esc(fmtDay(F.time[j]))}${j > bi ? ' (tahmin)' : ''}</b>Debi <span>${dec(F.river_discharge[j])} m³/sn</span>${j >= bi ? `<br>Aralık <span>${dec(F.river_discharge_p25[j])} – ${dec(F.river_discharge_p75[j])}</span>` : ''}`);
+    } catch (e) { if (s === seq) $('akarsu').innerHTML = hataMsg('Akarsu verisi şu an alınamadı.'); }
+  }
+
+  don();
+  yerSecici($('yer'), yer);
+})();

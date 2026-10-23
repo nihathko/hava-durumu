@@ -1,0 +1,471 @@
+// Hava Durumu — tüm sayfaların ortak kodu (yardımcılar, simgeler, gökyüzü, tema, menü, yer seçici, harita)
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const trSort = (a, b) => a.localeCompare(b, 'tr');
+
+// ---------- Hava kodları (WMO) ----------
+const CODES = {
+  0: ['Açık', 'clear'], 1: ['Az bulutlu', 'clear'], 2: ['Parçalı bulutlu', 'partly'], 3: ['Çok bulutlu', 'cloud'],
+  45: ['Sisli', 'fog'], 48: ['Kırağılı sis', 'fog'],
+  51: ['Hafif çisenti', 'drizzle'], 53: ['Çisenti', 'drizzle'], 55: ['Yoğun çisenti', 'drizzle'],
+  56: ['Donan çisenti', 'drizzle'], 57: ['Yoğun donan çisenti', 'drizzle'],
+  61: ['Hafif yağmurlu', 'rain'], 63: ['Yağmurlu', 'rain'], 65: ['Kuvvetli yağmurlu', 'rain'],
+  66: ['Donan yağmur', 'rain'], 67: ['Kuvvetli donan yağmur', 'rain'],
+  71: ['Hafif kar yağışlı', 'snow'], 73: ['Kar yağışlı', 'snow'], 75: ['Yoğun kar yağışlı', 'snow'], 77: ['Kar taneleri', 'snow'],
+  80: ['Hafif sağanak', 'rain'], 81: ['Sağanak yağışlı', 'rain'], 82: ['Kuvvetli sağanak', 'rain'],
+  85: ['Kar sağanağı', 'snow'], 86: ['Yoğun kar sağanağı', 'snow'],
+  95: ['Gök gürültülü sağanak', 'thunder'], 96: ['Dolulu fırtına', 'thunder'], 99: ['Kuvvetli dolulu fırtına', 'thunder']
+};
+const cond = c => CODES[c] || ['Bilinmiyor', 'cloud'];
+
+// ---------- İkonlar ----------
+const cloudPath = 'M18 40h28a10 10 0 0 0 0-20 14 14 0 0 0-27-3A11 11 0 0 0 18 40z';
+function icon(code, day) {
+  const kind = cond(code)[1];
+  const sun = '<circle class="sun" cx="32" cy="32" r="12"/>' + Array.from({ length: 8 }, (_, i) => `<rect class="sun" x="30.5" y="8" width="3" height="8" rx="1.5" transform="rotate(${i * 45} 32 32)"/>`).join('');
+  const moon = '<path class="moon" d="M40 14a18 18 0 1 0 10 30 15 15 0 1 1-10-30z"/>';
+  const small = inner => `<g transform="translate(4 2) scale(.62)">${inner}</g>`;
+  const cl = (dark, ty) => `<path class="cloud${dark ? ' dark' : ''}" transform="translate(0 ${ty})" d="${cloudPath}"/>`;
+  let g;
+  switch (kind) {
+    case 'clear': g = day ? sun : moon; break;
+    case 'partly': g = small(day ? sun : moon) + cl(false, 6); break;
+    case 'cloud': g = `<path class="cloud dark" transform="translate(8 -2) scale(.8)" d="${cloudPath}"/>` + cl(false, 8); break;
+    case 'fog': g = cl(false, 0) + '<path class="fog" d="M14 48h36M18 55h28"/>'; break;
+    case 'drizzle': g = cl(false, 2) + '<path class="drop" d="M26 50l-2 4M38 50l-2 4M32 56l-2 4"/>'; break;
+    case 'rain': g = cl(true, 2) + '<path class="drop" d="M24 52l-3 7M33 52l-3 7M42 52l-3 7"/>'; break;
+    case 'snow': g = cl(false, 2) + '<circle class="flake" cx="24" cy="54" r="2.6"/><circle class="flake" cx="33" cy="58" r="2.6"/><circle class="flake" cx="42" cy="54" r="2.6"/>'; break;
+    default: g = cl(true, 2) + '<path class="bolt" d="M34 44l-8 11h6l-3 9 10-13h-6l3-7z"/>';
+  }
+  return `<svg class="wi" viewBox="0 0 64 64" aria-hidden="true">${g}</svg>`;
+}
+// Rüzgarın estiği yönü gösteren ok (yön, rüzgarın geldiği taraftır)
+const arrow = d => `<svg viewBox="0 0 16 16" aria-hidden="true" style="transform:rotate(${(d + 180) % 360}deg)"><path d="M8 1.5v12M8 1.5 4 6M8 1.5l4 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+// ---------- Gökyüzü sahnesi ----------
+const SKY = {
+  'clear-1': ['#5BA4E6', '#9CCBF2', '#DCEEFB'], 'clear-0': ['#0B1430', '#18284F', '#2D3E66'],
+  'partly-1': ['#6AA6DC', '#A8CDEB', '#E2EEF8'], 'partly-0': ['#0E1733', '#1C2A4D', '#33405F'],
+  'cloud-1': ['#8A9BAD', '#B5C2CF', '#DCE3EA'], 'cloud-0': ['#141A24', '#222B38', '#38414F'],
+  'fog-1': ['#A9B4BF', '#CBD3DB', '#E6EAEE'], 'fog-0': ['#1B2028', '#2B313B', '#454C57'],
+  'drizzle-1': ['#7D8E9F', '#A6B4C2', '#CDD6DF'], 'drizzle-0': ['#11171F', '#1F2732', '#353E4B'],
+  'rain-1': ['#56657A', '#7F8EA0', '#A9B5C2'], 'rain-0': ['#0B1017', '#171E28', '#2A333F'],
+  'snow-1': ['#A4B4C6', '#CDD8E4', '#EEF3F8'], 'snow-0': ['#1A2230', '#2A3546', '#46536A'],
+  'thunder-1': ['#3C4250', '#5B6271', '#7E8595'], 'thunder-0': ['#07090E', '#141821', '#272C38']
+};
+function setScene(code, day) {
+  const k = cond(code)[1], d = day ? 1 : 0, sc = $('scene');
+  const [a, b, c] = SKY[`${k}-${d}`];
+  sc.dataset.k = k; sc.dataset.d = d;
+  sc.style.setProperty('--s1', a); sc.style.setProperty('--s2', b); sc.style.setProperty('--s3', c);
+  document.body.style.background = b;
+  // Gökyüzüne yazılan yazılar: açık renk gökte koyu, gece ve koyu bulutlu/yağışlı gökte beyaz
+  const dark = d && ['clear', 'partly', 'cloud', 'fog', 'drizzle', 'snow'].includes(k), st = document.documentElement.style;
+  st.setProperty('--on', dark ? '#0E2233' : '#FFFFFF');
+  st.setProperty('--on-muted', dark ? 'rgba(14, 34, 51, .76)' : 'rgba(255, 255, 255, .8)');
+  st.setProperty('--on-line', dark ? 'rgba(14, 34, 51, .2)' : 'rgba(255, 255, 255, .26)');
+  st.setProperty('--on-shadow', dark ? 'none' : '0 1px 14px rgba(0, 0, 0, .28)');
+  const tc = document.querySelector('meta[name=theme-color]');
+  if (tc) tc.content = a;
+  store.set('hava.sahne', [code, d]); // diğer sayfalar da aynı gökyüzüyle açılsın
+}
+
+// ---------- Biçimlendirme ----------
+const n0 = v => (v == null || Number.isNaN(v) ? '–' : Math.round(v) === 0 ? 0 : Math.round(v));
+const deg = v => `${n0(v)}°`;
+const DIRS = ['K', 'KKD', 'KD', 'DKD', 'D', 'DGD', 'GD', 'GGD', 'G', 'GGB', 'GB', 'BGB', 'B', 'BKB', 'KB', 'KKB'];
+const dir = d => DIRS[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
+// Rüzgar yönü (ok + harf) ve isteğe bağlı hız; veri yoksa çizgi
+const wind = (d, v) => d == null ? '–' : `<span class="wd">${arrow(d)}${dir(d)}${v != null ? ' ' + n0(v) : ''}</span>`;
+const hhmm = iso => iso.slice(11, 16);
+const ymd = iso => iso.slice(0, 10);
+const noon = d => new Date(d + 'T12:00:00Z');
+const fmtDay = d => noon(d).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+const fmtWeek = d => noon(d).toLocaleDateString('tr-TR', { weekday: 'long', timeZone: 'UTC' });
+const longDate = d => noon(d).toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
+const coord = (v, pos, neg) => `${Math.abs(v).toFixed(2).replace('.', ',')}° ${v >= 0 ? pos : neg}`;
+// MGM görsellerindeki merkez adı: büyük harf, Türkçe karaktersiz (Kahramanmaraş = K.MARAS)
+const mgmCode = il => il === 'Kahramanmaraş' ? 'K.MARAS'
+  : il.toLocaleUpperCase('tr').replace(/[ÇĞİÖŞÜ]/g, c => ({ Ç: 'C', Ğ: 'G', İ: 'I', Ö: 'O', Ş: 'S', Ü: 'U' }[c])).replace(/\s+/g, '');
+
+// ---------- İl listesi (alfabetik) ----------
+const IL = ILILCE.slice().sort((a, b) => trSort(a.ad, b.ad));
+
+// Türkçe karakterlere duyarsız karşılaştırma: "sanliurfa" = "Şanlıurfa"
+const fold = s => s.toLocaleLowerCase('tr').replace(/[çğıöşü]/g, c => ({ ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' }[c]));
+
+// ---------- Kısa bildirim ----------
+let toastT;
+function toast(html) {
+  let t = $('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; t.setAttribute('role', 'status'); document.body.appendChild(t); }
+  t.innerHTML = html; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 6000);
+}
+
+// ---------- Tema: Sistem / Açık / Koyu ----------
+const THEMES = ['system', 'light', 'dark'], TNAME = { system: 'Sistem', light: 'Açık', dark: 'Koyu' };
+const TICON = {
+  system: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg>',
+  light: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>',
+  dark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+};
+let theme = store.get('hava.tema', 'system');
+if (!THEMES.includes(theme)) theme = 'system';
+function applyTheme() {
+  if (theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme;
+  const b = $('theme');
+  b.innerHTML = TICON[theme];
+  b.title = `Tema: ${TNAME[theme]}`;
+  b.setAttribute('aria-label', `Tema: ${TNAME[theme]}. Değiştirmek için dokun`);
+}
+
+
+// ---------- Yer arama (önce kendi listemiz, sonra dünya geneli) ----------
+// Önce kendi il/ilçe listemizde ara (anında, internetsiz); il adıyla başlayanlar en üstte
+function localPlaces(q) {
+  const f = fold(q), out = [];
+  for (const il of IL) if (fold(il.ad).startsWith(f)) out.push({ name: il.ad, sub: 'İl merkezi, Türkiye', lat: il.lat, lon: il.lon, cc: 'TR', il: il.ad, ilce: null });
+  for (const il of IL) for (const x of il.ilceler) if (x[0] !== 'Merkez' && fold(x[0]).startsWith(f)) out.push({ name: x[0], sub: il.ad + ', Türkiye', lat: x[1], lon: x[2], cc: 'TR', il: il.ad, ilce: x[0] });
+  return out.slice(0, 8);
+}
+async function searchPlaces(q, signal) {
+  const local = localPlaces(q);
+  if (local.length >= 8) return local;
+  // Haritada tek bir yer adı olmayan bölge adları için en bilinen nokta
+  const ALIAS = { kapadokya: 'Göreme' };
+  const alias = fold(q).length >= 4 && Object.keys(ALIAS).find(k => k.startsWith(fold(q)));
+  const u = new URL('https://geocoding-api.open-meteo.com/v1/search');
+  u.search = new URLSearchParams({ name: alias ? ALIAS[alias] : q, count: 10, language: 'tr', format: 'json' });
+  let remote = [];
+  try {
+    const r = await fetch(u, { signal });
+    if (r.ok) remote = (await r.json()).results || [];
+  } catch (e) { if (e.name === 'AbortError') throw e; if (!local.length) throw e; }
+  const seen = new Set(local.map(p => fold(p.name) + '|' + (p.il || '')));
+  const more = remote.map(x => {
+    const tr = x.country_code === 'TR';
+    const il = tr ? IL.find(y => y.ad.toLocaleLowerCase('tr') === (x.admin1 || '').toLocaleLowerCase('tr')) : null;
+    const a2 = (x.admin2 || '').replace(/ (İlçesi|Merkez)$/, '');
+    const low = s => s.toLocaleLowerCase('tr');
+    const ilce = il ? il.ilceler.find(y => low(y[0]) === low(x.name)) || il.ilceler.find(y => low(y[0]) === low(a2)) : null;
+    return {
+      name: x.name, sub: [a2 && a2 !== x.name ? a2 : '', x.admin1, (x.country || '').replace(/ Cumhuriyeti$/, '')].filter(Boolean).join(', '),
+      lat: x.latitude, lon: x.longitude, cc: x.country_code, il: il ? il.ad : null, ilce: ilce ? ilce[0] : null
+    };
+  }).filter(p => !seen.has(fold(p.name) + '|' + (p.il || ''))).sort((a, b) => (b.cc === 'TR') - (a.cc === 'TR'));
+  return local.concat(more).slice(0, 8);
+}
+
+// ---------- Sayılar ----------
+const dec = (v, n = 1) => (v == null || Number.isNaN(v) ? '–' : (+v).toFixed(n).replace('.', ','));
+const mm = v => (v == null ? '–' : dec(v, v >= 10 ? 0 : 1));
+const pct = v => (v == null ? '–' : '%' + n0(v));
+const maxOf = a => { const v = a.filter(x => x != null); return v.length ? Math.max(...v) : null; };
+const minOf = a => { const v = a.filter(x => x != null); return v.length ? Math.min(...v) : null; };
+const sumOf = a => a.reduce((s, x) => s + (x ?? 0), 0);
+const avgOf = a => { const v = a.filter(x => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
+const AYLAR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+const AY_K = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+const bugunTR = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); // Türkiye saati (UTC+3)
+const gunEkle = (d, n) => new Date(Date.parse(d + 'T12:00:00Z') + n * 864e5).toISOString().slice(0, 10);
+const kisaGun = d => noon(d).toLocaleDateString('tr-TR', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
+// Beaufort ölçeği (km/sa)
+const BOFOR = [[1, 'Sakin'], [6, 'Esinti'], [12, 'Hafif rüzgar'], [20, 'Tatlı rüzgar'], [29, 'Orta rüzgar'], [39, 'Sert rüzgar'], [50, 'Kuvvetli rüzgar'],
+  [62, 'Fırtınamsı'], [75, 'Fırtına'], [89, 'Kuvvetli fırtına'], [103, 'Çok kuvvetli fırtına'], [118, 'Kasırga benzeri'], [Infinity, 'Kasırga']];
+const bofor = v => { const i = BOFOR.findIndex(x => v < x[0]); return [i, BOFOR[i][1]]; };
+
+// ---------- Renk ölçekleri (haritalar) ----------
+function rampa(stops) {
+  return v => {
+    if (v == null || Number.isNaN(v)) return '#C9D2DA';
+    if (v <= stops[0][0]) return stops[0][1];
+    for (let i = 1; i < stops.length; i++) if (v <= stops[i][0]) {
+      const [a, ca] = stops[i - 1], [b, cb] = stops[i], t = (v - a) / (b - a);
+      const h = c => [1, 3, 5].map(j => parseInt(c.slice(j, j + 2), 16));
+      const x = h(ca), y = h(cb);
+      return '#' + x.map((p, j) => Math.round(p + (y[j] - p) * t).toString(16).padStart(2, '0')).join('');
+    }
+    return stops[stops.length - 1][1];
+  };
+}
+// Sıcaklık: soğuk mavi, ılık sarı, sıcak kırmızı (RdYlBu)
+const SICAK = [[-20, '#313695'], [-10, '#4575B4'], [-2, '#74ADD1'], [4, '#ABD9E9'], [10, '#E0F3F8'], [15, '#FEE090'], [20, '#FDAE61'], [26, '#F46D43'], [32, '#D73027'], [40, '#A50026']];
+const sicakRenk = rampa(SICAK);
+const YAGIS = [[0, '#EEF2F5'], [0.5, '#D3E6F4'], [2, '#A6CDEB'], [5, '#6AAADF'], [10, '#3A84CC'], [20, '#2160A8'], [40, '#123C78']];
+const yagisRenk = rampa(YAGIS);
+const RUZGAR = [[0, '#EEF4EE'], [10, '#CDE8CF'], [20, '#9BD3A2'], [35, '#5DB46F'], [50, '#F2C14E'], [65, '#E8833A'], [85, '#C7372F']];
+const ruzgarRenk = rampa(RUZGAR);
+// Lejant: ölçeği ve değerleri gösteren küçük şerit
+const lejant = (stops, birim, baslik) => `<div class="lejant" aria-label="${esc(baslik)} ölçeği"><span class="lj-b">${esc(baslik)}</span><span class="lj-s" style="background:linear-gradient(90deg,${stops.map((s, i) => `${s[1]} ${(i / (stops.length - 1) * 100).toFixed(0)}%`).join(',')})"></span><span class="lj-v">${stops.map(s => `<i>${dec(s[0], 0)}</i>`).join('')}</span><span class="lj-u">${esc(birim)}</span></div>`;
+
+// ---------- Siteye ait sayfalar ve üst menü ----------
+const SAYFALAR = [
+  ['index.html', 'Hava durumu'], ['harita.html', 'Türkiye haritası'], ['radar.html', 'Radar ve uydu'], ['grafik.html', 'Grafik ve modeller'],
+  ['iklim.html', 'İklim'], ['deniz.html', 'Denizcilik'], ['ziraat.html', 'Ziraat'], ['ozel.html', 'Özel tahminler'], ['hakkinda.html', 'Hakkında']
+];
+const SITE_IC = `<svg class="site-ic" viewBox="0 0 64 64" aria-hidden="true"><circle cx="24" cy="24" r="12" fill="#F2B227"/><g fill="#F2B227"><rect x="22.5" y="2" width="3" height="7" rx="1.5"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-90 24 24)"/></g><path d="M22 52h28a10 10 0 0 0 0-20 14 14 0 0 0-27-3A11 11 0 0 0 22 52z" fill="#fff" stroke="#8FA2B6" stroke-width="1.5"/></svg>`;
+const ustHtml = () => `<header class="bar">
+    <a class="site" href="index.html" aria-label="Hava Durumu, ana sayfa">${SITE_IC}<span class="site-t"><b>Hava Durumu</b><small>Türkiye'nin 81 ili ve 973 ilçesi, dünya geneli</small></span></a>
+    <div class="tools"><button class="ic-btn" id="theme" type="button" aria-label="Tema: Sistem"></button>
+      <div class="brand" aria-label="HKO Software"><span class="mark" aria-hidden="true"><b>&lt;</b>hko<b>/&gt;</b></span><span class="name">HKO SOFTWARE</span></div></div>
+  </header>`;
+function kurUst() {
+  const u = $('ust');
+  if (u) u.innerHTML = ustHtml();
+  const nav = $('nav');
+  if (nav) {
+    const cur = location.pathname.split('/').pop() || 'index.html';
+    nav.innerHTML = SAYFALAR.map(([h, t]) => `<a href="${h}"${h === cur ? ' aria-current="page"' : ''}>${t}</a>`).join('');
+    const a = nav.querySelector('[aria-current]');
+    if (a) nav.scrollLeft = a.offsetLeft - nav.clientWidth / 2 + a.offsetWidth / 2;
+  }
+  const b = $('theme');
+  if (b) {
+    b.addEventListener('click', () => {
+      theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+      store.set('hava.tema', theme); applyTheme(); toast(`Tema: ${TNAME[theme]}`);
+    });
+    applyTheme();
+  }
+  // Alt sayfalar son bakılan yerin gökyüzüyle açılır (ana sayfa kendi verisiyle günceller)
+  const sc = store.get('hava.sahne', null);
+  setScene(sc ? sc[0] : 0, sc ? sc[1] : 1);
+}
+
+// ---------- Yer: bağlantıdan, son bakılandan ya da varsayılan ----------
+function yerIl(il, ilceAd) {
+  const I = IL.find(x => x.ad === il);
+  if (!I) return null;
+  const x = ilceAd ? I.ilceler.find(y => y[0] === ilceAd) : null;
+  if (!x) return { name: I.ad, sub: 'İl merkezi, Türkiye', lat: I.lat, lon: I.lon, il: I.ad, ilce: null };
+  if (x[0] === 'Merkez') return { name: I.ad, sub: 'Merkez ilçe, Türkiye', lat: x[1], lon: x[2], il: I.ad, ilce: x[0] };
+  return { name: x[0], sub: I.ad + ', Türkiye', lat: x[1], lon: x[2], il: I.ad, ilce: x[0] };
+}
+function yerBaglanti() {
+  const s = new URLSearchParams(location.search);
+  if (s.get('il')) { const p = yerIl(s.get('il'), s.get('ilce')); if (p) return p; }
+  const lat = +s.get('lat'), lon = +s.get('lon');
+  if (s.get('lat') && s.get('lon') && Math.abs(lat) <= 90 && Math.abs(lon) <= 180)
+    return { name: (s.get('ad') || 'Paylaşılan yer').slice(0, 60), sub: 'Paylaşılan konum', lat: +lat.toFixed(2), lon: +lon.toFixed(2), il: null, ilce: null };
+  return null;
+}
+const yerBaslangic = () => yerBaglanti() || store.get('hava.yer', null) || yerIl('Trabzon', 'Ortahisar');
+function yerAdres(p) {
+  const u = new URL(location.pathname, location.origin);
+  if (p.il) { u.searchParams.set('il', p.il); if (p.ilce) u.searchParams.set('ilce', p.ilce); }
+  else { u.searchParams.set('lat', (+p.lat).toFixed(2)); u.searchParams.set('lon', (+p.lon).toFixed(2)); u.searchParams.set('ad', p.name); }
+  return u.search;
+}
+const anaSayfaLink = p => 'index.html' + yerAdres(p);
+
+// ---------- Yer seçici (alt sayfalar): il, ilçe ve arama ----------
+function yerSecici(el, onPick, ilkYer) {
+  el.innerHTML = `<div class="pick">
+    <div class="field"><label for="ys-il">İl</label><select id="ys-il"></select></div>
+    <div class="field"><label for="ys-ilce">İlçe</label><select id="ys-ilce"></select></div>
+    <div class="field search" role="search"><label for="ys-q">Ya da ara</label>
+      <input id="ys-q" type="search" placeholder="Şehir, ilçe veya yer adı" autocomplete="off" enterkeyhint="search" aria-controls="ys-r">
+      <ul class="results" id="ys-r" hidden></ul></div></div>`;
+  const ilS = $('ys-il'), ilceS = $('ys-ilce'), q = $('ys-q'), res = $('ys-r');
+  ilS.innerHTML = '<option value="" hidden>Seçilmedi</option>' + IL.map((x, i) => `<option value="${i}">${esc(x.ad)}</option>`).join('');
+  const doldur = (i, ilceAd) => {
+    const I = IL[i], mk = I.ilceler.findIndex(x => x[0] === 'Merkez');
+    const list = I.ilceler.map(x => x[0]).filter(a => a !== 'Merkez').sort(trSort);
+    ilceS.innerHTML = (mk >= 0 ? '<option value="Merkez">Merkez</option>' : '<option value="">İl merkezi</option>') + list.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+    ilceS.value = ilceAd && I.ilceler.some(x => x[0] === ilceAd) ? ilceAd : (mk >= 0 ? 'Merkez' : '');
+  };
+  const sec = p => {
+    store.set('hava.yer', p);
+    try { history.replaceState(null, '', location.pathname + yerAdres(p)); } catch (e) {}
+    if (p.il) { const i = IL.findIndex(x => x.ad === p.il); ilS.value = String(i); doldur(i, p.ilce); }
+    else { ilS.value = ''; ilceS.innerHTML = '<option value="">—</option>'; }
+    onPick(p);
+  };
+  ilS.addEventListener('change', () => { doldur(+ilS.value); sec(yerIl(IL[+ilS.value].ad, ilceS.value || null)); });
+  ilceS.addEventListener('change', () => sec(yerIl(IL[+ilS.value].ad, ilceS.value || null)));
+  let found = [], tmr, ctl;
+  q.addEventListener('input', () => {
+    clearTimeout(tmr);
+    const v = q.value.trim();
+    if (v.length < 2) { res.hidden = true; return; }
+    tmr = setTimeout(async () => {
+      if (ctl) ctl.abort();
+      ctl = new AbortController();
+      try { found = await searchPlaces(v, ctl.signal); } catch (e) { if (e.name === 'AbortError') return; found = []; }
+      res.innerHTML = found.length ? found.map((p, i) => `<li><button type="button" data-i="${i}"><span>${esc(p.name)}</span><span class="s">${esc(p.sub)}</span></button></li>`).join('') : '<li class="empty">Sonuç bulunamadı.</li>';
+      res.hidden = false;
+    }, 280);
+  });
+  q.addEventListener('keydown', e => { if (e.key === 'Enter' && found[0]) { e.preventDefault(); res.hidden = true; q.value = ''; sec(found[0]); } if (e.key === 'Escape') res.hidden = true; });
+  res.addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) { res.hidden = true; q.value = ''; sec(found[+b.dataset.i]); } });
+  document.addEventListener('click', e => { if (!e.target.closest('.search')) res.hidden = true; });
+  sec(ilkYer || yerBaslangic());
+}
+
+// ---------- Veri istekleri ----------
+// Kısa süreli önbellek: aynı sayfada sekme değiştirince ya da yeniden açınca aynı veri tekrar istenmesin
+async function getJSON(url, dk = 15) {
+  const key = 'hava.o.' + url;
+  try { const c = JSON.parse(sessionStorage.getItem(key)); if (c && Date.now() - c.t < dk * 6e4) return c.v; } catch (e) {}
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(r.status + ' ' + url);
+  const v = await r.json();
+  try { sessionStorage.setItem(key, JSON.stringify({ t: Date.now(), v })); } catch (e) {}
+  return v;
+}
+const omURL = (base, params) => { const u = new URL(base); u.search = new URLSearchParams(params); return u.href; };
+// Birden çok nokta için tek istek (Open-Meteo virgülle ayrılmış koordinat kabul eder); sonuç her zaman dizi
+async function cokNokta(base, noktalar, params, dk = 15) {
+  const out = [];
+  for (let i = 0; i < noktalar.length; i += 100) {
+    const parca = noktalar.slice(i, i + 100);
+    const v = await getJSON(omURL(base, { latitude: parca.map(p => (+p.lat).toFixed(3)).join(','), longitude: parca.map(p => (+p.lon).toFixed(3)).join(','), ...params }), dk);
+    out.push(...(Array.isArray(v) ? v : [v]));
+  }
+  return out;
+}
+const OM = 'https://api.open-meteo.com/v1/forecast';
+const OM_AQ = 'https://air-quality-api.open-meteo.com/v1/air-quality';
+const OM_DENIZ = 'https://marine-api.open-meteo.com/v1/marine';
+const OM_ARSIV = 'https://archive-api.open-meteo.com/v1/archive';
+
+// ---------- Türkiye haritası (SVG) ----------
+// TR_HARITA assets/turkiye.js dosyasından gelir (yalnızca harita kullanan sayfalarda yüklenir)
+const izdusum = (lat, lon) => [(lon - TR_HARITA.lon0) * TR_HARITA.c * TR_HARITA.k, (TR_HARITA.lat0 - lat) * TR_HARITA.k];
+// fill(il adı) → renk; etiket(il) → { ust, alt, ikon } (il merkezinin üstüne yazılır); ek: SVG içine eklenecek ek katman
+function haritaSvg({ fill, etiket, ek = '', aria = 'Türkiye haritası' }) {
+  const paths = Object.entries(TR_HARITA.il).map(([ad, d]) => `<path data-il="${esc(ad)}" d="${d}" style="fill:${fill ? fill(ad) : '#E6ECF1'}"/>`).join('');
+  let lbl = '';
+  if (etiket) for (const I of IL) {
+    const e = etiket(I.ad); if (!e) continue;
+    const [x, y] = izdusum(I.lat, I.lon);
+    lbl += `<g class="hl-et" transform="translate(${x.toFixed(1)} ${y.toFixed(1)})">${e.ikon ? `<g class="wi" transform="translate(-9 -21) scale(.28)">${e.ikon.replace('<svg class="wi" viewBox="0 0 64 64" aria-hidden="true">', '').replace('</svg>', '')}</g>` : ''}${e.ust != null ? `<text class="hl-u" y="${e.ikon ? 9 : 3}">${esc(e.ust)}</text>` : ''}${e.alt != null ? `<text class="hl-a" y="${e.ikon ? 17 : 11}">${esc(e.alt)}</text>` : ''}</g>`;
+  }
+  return `<svg class="trh" viewBox="0 0 ${TR_HARITA.w} ${TR_HARITA.h}" role="img" aria-label="${esc(aria)}"><g class="hl-il">${paths}</g>${ek}<g class="wi-g">${lbl}</g></svg>`;
+}
+// Haritanın üzerinde gezinince/dokununca il bilgisi (bilgi kutusundaki bağlantıya tıklanabilir).
+// Harita yeniden çizildiğinde tekrar çağrılabilir; dinleyiciler bir kez eklenir.
+function haritaBagla(kap, bilgi) {
+  kap._bilgi = bilgi;
+  let tip = kap.querySelector(':scope > .tip');
+  if (!tip) { tip = document.createElement('div'); tip.className = 'tip tip-tik'; tip.hidden = true; kap.appendChild(tip); }
+  if (kap._bagli) return;
+  kap._bagli = true;
+  const temizle = () => kap.querySelectorAll('path.on').forEach(x => x.classList.remove('on'));
+  const goster = e => {
+    const t = kap.querySelector(':scope > .tip');
+    if (t.contains(e.target)) return;
+    const p = e.target.closest('path[data-il]');
+    if (!p) { if (e.type === 'pointerdown') { t.hidden = true; temizle(); } return; }
+    temizle(); p.classList.add('on');
+    t.innerHTML = kap._bilgi(p.dataset.il); t.hidden = false;
+    const r = kap.getBoundingClientRect(), x = e.clientX - r.left + kap.scrollLeft, y = e.clientY - r.top;
+    const w = t.offsetWidth, h = t.offsetHeight;
+    t.style.left = Math.max(4, Math.min(x + 14, kap.scrollLeft + kap.clientWidth - w - 4)) + 'px';
+    t.style.top = (y + 16 + h > r.height ? Math.max(4, y - h - 12) : y + 16) + 'px';
+  };
+  kap.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') goster(e); });
+  kap.addEventListener('pointerdown', goster);
+  kap.addEventListener('pointerleave', e => { const t = kap.querySelector(':scope > .tip'); if (e.pointerType === 'mouse' && t) { t.hidden = true; temizle(); } });
+}
+
+// ---------- Havalimanı ölçümleri (METAR, NOAA) ----------
+// data/metar.json, GitHub'da yarım saatte bir çalışan iş tarafından NOAA'dan alınır (tarayıcı NOAA'ya doğrudan erişemez)
+async function havalimanlari() {
+  const r = await fetch('data/metar.json', { cache: 'no-cache' });
+  if (!r.ok) throw new Error('metar');
+  const m = await r.json();
+  const km = (a, b, c, d) => { const R = Math.PI / 180, x = (c - a) * R, y = (d - b) * R, h = Math.sin(x / 2) ** 2 + Math.cos(a * R) * Math.cos(c * R) * Math.sin(y / 2) ** 2; return 12742 * Math.asin(Math.sqrt(h)); };
+  for (const s of m.s) { let b = null; for (const I of IL) { const d = km(s.lat, s.lon, I.lat, I.lon); if (!b || d < b.d) b = { ad: I.ad, d }; } s.il = b && b.d < 90 ? b.ad : null; }
+  return m;
+}
+
+// ---------- Sıralanabilir tablo ----------
+// kolonlar: [{ b: başlık, v: satır → sıralama değeri, h: satır → hücre HTML, l: sola yaslı }]
+function siraliTablo(kap, kolonlar, satirlar, ilkSira = 0, azalan = false) {
+  let k = ilkSira, desc = azalan;
+  const ciz = () => {
+    const s = satirlar.slice().sort((a, b) => {
+      const x = kolonlar[k].v(a), y = kolonlar[k].v(b);
+      if (x == null) return 1; if (y == null) return -1;
+      return (typeof x === 'string' ? trSort(x, y) : x - y) * (desc ? -1 : 1);
+    });
+    kap.innerHTML = `<table class="srt"><thead><tr>${kolonlar.map((c, i) => `<th class="${c.l ? 'l' : ''}" aria-sort="${i === k ? (desc ? 'descending' : 'ascending') : 'none'}"><button type="button" data-k="${i}">${c.b}${i === k ? (desc ? ' ▾' : ' ▴') : ''}</button></th>`).join('')}</tr></thead>
+      <tbody>${s.map(r => `<tr>${kolonlar.map(c => `<td class="${c.l ? 'l' : ''}">${c.h(r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  };
+  kap.addEventListener('click', e => { const b = e.target.closest('th button'); if (!b) return; const i = +b.dataset.k; if (i === k) desc = !desc; else { k = i; desc = typeof kolonlar[i].v(satirlar[0]) !== 'string'; } ciz(); });
+  ciz();
+}
+
+// ---------- Sekmeler ----------
+function sekmeler(kap, adlar, onSec, ilk = 0) {
+  kap.innerHTML = adlar.map((a, i) => `<button type="button" role="tab" aria-selected="${i === ilk}" data-i="${i}">${a}</button>`).join('');
+  kap.setAttribute('role', 'tablist');
+  kap.addEventListener('click', e => {
+    const b = e.target.closest('button[data-i]'); if (!b) return;
+    kap.querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    onSec(+b.dataset.i);
+  });
+  onSec(ilk);
+}
+
+// ---------- Basit çizgi/çubuk grafik (küçük çoklu grafikler) ----------
+// seriler: [{ ad, renk, v: [...], tur: 'cizgi'|'cubuk'|'alan', bant: [[alt, üst], ...] }]; x: etiket dizisi
+function seritGrafik({ x, seriler, yukseklik = 120, birim = '', genislik = null, adim = null, ayrac = null, sifir = false, etiketAdim = 1, etiketSec = null, xEtiket = v => v }) {
+  const n = x.length, W = adim ? adim * n + 50 : (genislik || 720), L = 40, R = 10, T = 12, B = 22, H = yukseklik;
+  const tum = seriler.flatMap(s => [...s.v, ...(s.bant ? s.bant.flat() : [])]).filter(v => v != null);
+  let lo = Math.min(...tum), hi = Math.max(...tum);
+  if (sifir) lo = Math.min(0, lo);
+  if (hi === lo) { hi += 1; lo -= sifir ? 0 : 1; }
+  const pad = (hi - lo) * 0.08; if (!sifir) lo -= pad; hi += pad;
+  const sx = i => L + (i + 0.5) * (W - L - R) / n, sy = v => T + (hi - v) / (hi - lo) * (H - T - B), bw = Math.max(2, (W - L - R) / n - 2);
+  const ticks = []; { const st = Math.pow(10, Math.floor(Math.log10((hi - lo) / 3))); const m = [1, 2, 5, 10].find(f => (hi - lo) / (st * f) <= 5) * st; for (let v = Math.ceil(lo / m) * m; v <= hi; v += m) ticks.push(+v.toFixed(6)); }
+  let g = ticks.map(v => `<line class="grid" x1="${L}" x2="${W - R}" y1="${sy(v).toFixed(1)}" y2="${sy(v).toFixed(1)}"/><text x="${L - 6}" y="${(sy(v) + 4).toFixed(1)}" text-anchor="end">${dec(v, Math.abs(v) < 10 && v % 1 ? 1 : 0)}</text>`).join('');
+  if (ayrac) x.forEach((v, i) => { if (i && ayrac(i)) g += `<line class="grid gun" x1="${(L + i * (W - L - R) / n).toFixed(1)}" x2="${(L + i * (W - L - R) / n).toFixed(1)}" y1="${T}" y2="${H - B}"/>`; });
+  x.forEach((v, i) => { if (etiketSec ? etiketSec(v, i) : i % etiketAdim === 0) g += `<text x="${sx(i).toFixed(1)}" y="${H - 6}" text-anchor="middle">${esc(xEtiket(v, i))}</text>`; });
+  for (const s of seriler) {
+    if (s.bant) {
+      const up = s.bant.map((b, i) => b && b[1] != null ? `${sx(i).toFixed(1)} ${sy(b[1]).toFixed(1)}` : null).filter(Boolean);
+      const dn = s.bant.map((b, i) => b && b[0] != null ? `${sx(i).toFixed(1)} ${sy(b[0]).toFixed(1)}` : null).filter(Boolean).reverse();
+      if (up.length) g += `<path d="M${up.join('L')}L${dn.join('L')}Z" style="fill:${s.renk}" opacity=".18"/>`;
+    }
+    if (s.tur === 'cubuk') s.v.forEach((v, i) => { if (v == null || v === 0) return; const y0 = sy(Math.max(lo, 0)), y1 = sy(v); g += `<rect x="${(sx(i) - bw / 2).toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1, Math.abs(y0 - y1)).toFixed(1)}" rx="1.5" style="fill:${s.renk}"/>`; });
+    else {
+      let d = '', on = false;
+      s.v.forEach((v, i) => { if (v == null) { on = false; return; } d += `${on ? 'L' : 'M'}${sx(i).toFixed(1)} ${sy(v).toFixed(1)}`; on = true; });
+      if (s.tur === 'alan' && d) g += `<path d="${d}L${sx(n - 1).toFixed(1)} ${sy(Math.max(lo, 0)).toFixed(1)}L${sx(0).toFixed(1)} ${sy(Math.max(lo, 0)).toFixed(1)}Z" style="fill:${s.renk}" opacity=".22"/>`;
+      g += `<path d="${d}" style="fill:none;stroke:${s.renk}" stroke-width="${s.kalin || 2}" stroke-linejoin="round" stroke-linecap="round"${s.kesik ? ' stroke-dasharray="4 3"' : ''}/>`;
+    }
+  }
+  return { svg: `<svg class="chart sg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(seriler.map(s => s.ad).join(', '))} grafiği">${g}<text class="birim" x="${L - 6}" y="${T - 2}" text-anchor="end">${esc(birim)}</text><line class="hl" x1="0" x2="0" y1="${T}" y2="${H - B}" style="display:none"/></svg>`, sx, n, L, R, W };
+}
+// Grafik üzerinde gezinince ilgili sütunun değerlerini göster
+function grafikIpucu(kap, geo, icerik) {
+  const tip = document.createElement('div'); tip.className = 'tip'; tip.hidden = true; kap.appendChild(tip);
+  const svg = kap.querySelector('svg'), hl = svg.querySelector('.hl');
+  const goster = e => {
+    const r = svg.getBoundingClientRect(), i = Math.floor((e.clientX - r.left - geo.L) / ((geo.W - geo.L - geo.R) / geo.n));
+    if (i < 0 || i >= geo.n) { tip.hidden = true; hl.style.display = 'none'; return; }
+    const x = geo.sx(i); hl.setAttribute('x1', x); hl.setAttribute('x2', x); hl.style.display = '';
+    tip.innerHTML = icerik(i); tip.hidden = false;
+    const w = tip.offsetWidth;
+    tip.style.left = (x + 14 + w > svg.clientWidth ? x - 14 - w : x + 14) + (svg.offsetLeft || 0) + 'px';
+    tip.style.top = '8px';
+  };
+  svg.addEventListener('pointermove', goster); svg.addEventListener('pointerdown', goster);
+  svg.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { tip.hidden = true; hl.style.display = 'none'; } });
+}
+
+// ---------- Durum mesajı ----------
+const yukleniyor = (msg = 'Yükleniyor…') => `<p class="muted yuk">${esc(msg)}</p>`;
+const hataMsg = (msg = 'Veri şu an alınamadı. İnternet bağlantını kontrol edip sayfayı yenile.') => `<p class="hata" role="alert">${esc(msg)}</p>`;
+
+// ---------- Sayfa açılışı ----------
+kurUst();
+// Uygulama olarak yükleme ve internetsiz açılış için sayfa dosyalarını önbelleğe alan servis çalışanı
+if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').catch(() => {});

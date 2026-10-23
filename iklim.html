@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>İklim · Hava Durumu</title>
+<meta name="description" content="1991–2020 aylık iklim değerleri ve rekorlar, son 30 günün normalden farkı, son 3 ayın yağışı ve 2050'ye kadar iklim projeksiyonu.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      <div class="yerkutu" id="yer"></div>
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">İklim</h1>
+      <p class="giris" id="giris">Seçtiğin yerin 30 yıllık iklimi: aylık ortalamalar, rekor sıcaklıklar, yağış. Ayrıca son günlerin normalden ne kadar farklı olduğu ve iklim modellerine göre 2050'ye kadar beklenen değişim.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-ay">
+        <h2 id="h-ay">Aylık iklim değerleri, 1991–2020</h2>
+        <p class="note" id="aynot">30 yıllık günlük veriden hesaplanır. İlk açılışta veri birkaç saniyede iner, sonra cihazında saklanır.</p>
+        <div id="ay"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-son">
+        <h2 id="h-son">Son 30 gün normalden ne kadar farklı?</h2>
+        <p class="note">Her günün ortalama sıcaklığı, 1991–2020'de aynı tarihin ortalamasıyla karşılaştırılır. Kırmızı çubuk normalden sıcak, mavi çubuk normalden soğuk.</p>
+        <div id="son"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-yil">
+        <h2 id="h-yil">Son 3 ayın yağışı</h2>
+        <p class="note">Son 3 ayda düşen toplam yağış ile 1991–2020 normalinde aynı dönemde düşen yağışın karşılaştırması. Basit bir kuraklık göstergesidir.</p>
+        <div id="yil"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-gel">
+        <h2 id="h-gel">Gelecekte iklim</h2>
+        <p class="note">İklim modellerinin (CMIP6, yüksek çözünürlüklü HighResMIP) bu bölge için 2050'ye kadar öngördüğü yıllık ortalama sıcaklık. Tek tek yılların değil, eğilimin önemli olduğu bir projeksiyondur.</p>
+        <div id="gel"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Geçmiş veriler: ECMWF ERA5 yeniden analiz (Open-Meteo Archive). Yaklaşık 25 km'lik ızgaraya aittir; MGM istasyon ölçümlerinden farklı olabilir.</li>
+        <li>İklim projeksiyonu: CMIP6 HighResMIP modelleri (Open-Meteo Climate API).</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/iklim.js"></script>
+</body>
+</html>

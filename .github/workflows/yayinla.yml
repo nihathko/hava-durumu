@@ -1,0 +1,45 @@
+# Siteyi GitHub Pages'e yayınlar. Her gönderimde ve yarım saatte bir çalışır:
+# havalimanı ölçümlerini (METAR/TAF, NOAA) indirip data/metar.json olarak sitenin yanına koyar.
+name: Siteyi yayınla
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  yayinla:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.yayin.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Havalimanı ölçümlerini indir
+        run: |
+          mkdir -p data
+          curl -sf --max-time 60 "https://aviationweather.gov/api/data/metar?bbox=35.8,25.6,42.2,45&format=json" -o data/metar-ham.json || echo '[]' > data/metar-ham.json
+          curl -sf --max-time 60 "https://aviationweather.gov/api/data/taf?bbox=35.8,25.6,42.2,45&format=json" -o data/taf-ham.json || echo '[]' > data/taf-ham.json
+          node .github/metar.js
+          rm -f data/metar-ham.json data/taf-ham.json
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: yayin
+        uses: actions/deploy-pages@v4

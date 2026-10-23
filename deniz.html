@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Denizcilik · Hava Durumu</title>
+<meta name="description" content="Karadeniz, Marmara, Ege ve Akdeniz kıyılarında dalga yüksekliği, dalga yönü ve periyodu, deniz suyu sıcaklığı ve kıyı rüzgarı.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Denizcilik</h1>
+      <p class="giris" id="giris">Kıyılarımızda dalga yüksekliği, deniz suyu sıcaklığı ve rüzgar. Bir noktaya dokununca o noktanın 5 günlük dalga ve rüzgar tahmini açılır.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-dh">
+        <h2 id="h-dh">Kıyılar</h2>
+        <p class="note" id="dnot"></p>
+        <div class="tabs" id="dkat" aria-label="Harita katmanı"></div>
+        <div class="trh-wrap" id="dharita"></div>
+        <div id="dlj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-dn">
+        <h2 id="h-dn">Seçili nokta</h2>
+        <p class="note" id="dsec"></p>
+        <div id="dnok"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-dt">
+        <h2 id="h-dt">Tüm noktalar</h2>
+        <p class="note">Deniz durumu dalga yüksekliğine göre (Douglas ölçeği), rüzgar Beaufort ölçeğine göre adlandırılır.</p>
+        <div class="tbl-wrap" id="dtablo"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Dalga ve deniz suyu sıcaklığı: Open-Meteo Marine API (ECMWF WAM, DWD, Copernicus Marine). Rüzgar: Open-Meteo.</li>
+        <li>Bu bilgiler seyir için resmi kaynak değildir. Denizde can güvenliği için <a href="https://pirireis.mgm.gov.tr" target="_blank" rel="noopener">MGM Denizcilik</a> ve Kıyı Emniyeti duyurularını takip edin.</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/turkiye.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/deniz.js"></script>
+</body>
+</html>

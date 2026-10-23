@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ziraat · Hava Durumu</title>
+<meta name="description" content="Zirai don uyarısı, toprak sıcaklığı ve nemi, buharlaşma ve sulama ihtiyacı, ilaçlama için uygun saatler, büyüme derece-gün ve akarsu debisi.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      <div class="yerkutu" id="yer"></div>
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Ziraat</h1>
+      <p class="giris" id="giris">Çiftçi için: önümüzdeki 7 günde don beklenen iller, seçtiğin yerin toprak sıcaklığı ve nemi, sulama ihtiyacı, ilaçlama için uygun saatler ve akarsu debisi.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-don">
+        <h2 id="h-don">Zirai don uyarısı, 7 gün</h2>
+        <p class="note">Harita, her ilin önümüzdeki 7 gündeki en düşük sıcaklığını gösterir. 0°C ve altı don, −2°C ve altı kuvvetli don demektir; çiçeklenme ve fide dönemindeki ürünlere zarar verebilir.</p>
+        <div class="trh-wrap" id="donh"></div>
+        <div id="donlj"></div>
+        <div class="siralar" id="donl" style="margin-top:22px"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-tp">
+        <h2 id="h-tp">Toprak</h2>
+        <p class="note" id="tpnot">Seçili yer için toprak sıcaklığı ve nemi, katman katman.</p>
+        <div id="toprak"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-su">
+        <h2 id="h-su">Buharlaşma ve sulama ihtiyacı</h2>
+        <p class="note">Referans buharlaşma (ET₀), kısa ve sağlıklı bir çim örtüsünün bir günde kaybettiği su miktarıdır. Yağış bunun altında kalıyorsa bitki sulama ister.</p>
+        <div id="su"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-il">
+        <h2 id="h-il">İlaçlama ve püskürtme için uygun saatler</h2>
+        <p class="note">Önümüzdeki 48 saat. Uygun saat: rüzgar 3–15 km/sa, yağış yok ve sonraki 2 saatte yağış ihtimali düşük, sıcaklık 8–28°C, nem %40'ın üstünde.</p>
+        <div id="ilac"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-gdd">
+        <h2 id="h-gdd">Büyüme derece-gün</h2>
+        <p class="note">Bitkilerin gelişimi için biriken sıcaklık. Her gün için (en yüksek + en düşük) / 2 − 10°C hesaplanır, eksi değerler sıfır sayılır. Mısır, pamuk ve sebzelerde ekim ve hasat zamanını kestirmek için kullanılır.</p>
+        <div id="gdd"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ak">
+        <h2 id="h-ak">Akarsu debisi</h2>
+        <p class="note">Seçili yere en yakın akarsu hücresinin günlük debisi (m³/sn), Copernicus GloFAS taşkın modelinden. Küçük dereler için geçerli değildir; eğilimi gösterir.</p>
+        <div id="akarsu"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Toprak, buharlaşma (FAO-56 Penman-Monteith) ve tahminler: Open-Meteo. Akarsu debisi: Copernicus GloFAS (Open-Meteo Flood API).</li>
+        <li>Resmi tarımsal tahmin ve zirai don uyarıları için <a href="https://tarim.mgm.gov.tr/" target="_blank" rel="noopener">MGM Tarımsal Meteoroloji</a>.</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/turkiye.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/ziraat.js"></script>
+</body>
+</html>

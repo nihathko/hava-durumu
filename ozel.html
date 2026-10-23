@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Özel tahminler · Hava Durumu</title>
+<meta name="description" content="Kayak merkezleri, toz taşınımı, havalimanı ölçümleri ve tahminleri, son depremler, uzay havası ve dünya şehirleri.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Özel tahminler</h1>
+      <p class="giris" id="giris">Kayak merkezlerinde kar, Afrika'dan gelen toz, havalimanlarının gerçek ölçümleri, son depremler, kutup ışığı ihtimali ve dünya şehirleri.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" id="kayak-b" aria-labelledby="h-ky">
+        <h2 id="h-ky">Kayak merkezleri</h2>
+        <p class="note">Tahminler pistin ortalama yüksekliğine göre düzeltilir. Kar kalınlığı model değeridir; merkezlerin açıkladığı pist ölçümünden farklı olabilir.</p>
+        <div class="tbl-wrap" id="kayak"></div>
+      </section>
+      <section class="sec" id="toz-b" aria-labelledby="h-tz">
+        <h2 id="h-tz">Toz taşınımı</h2>
+        <p class="note">Havadaki çöl tozu yoğunluğu (µg/m³), önümüzdeki 3 günün en yüksek değeri. Toz, astım ve solunum yolu rahatsızlığı olanlar için önemlidir; yağmurla birlikte "çamur yağmuru" yapabilir.</p>
+        <div class="trh-wrap" id="tozh"></div>
+        <div id="tozlj"></div>
+      </section>
+      <section class="sec" id="hava-b" aria-labelledby="h-hv">
+        <h2 id="h-hv">Havalimanları</h2>
+        <p class="note" id="hvnot">Gerçek ölçümler (METAR) ve havalimanı tahminleri (TAF). Yarım saatte bir güncellenir.</p>
+        <div class="tbl-wrap" id="metar"></div>
+      </section>
+      <section class="sec" id="deprem-b" aria-labelledby="h-dp">
+        <h2 id="h-dp">Son depremler</h2>
+        <p class="note">Türkiye ve çevresinde son 7 günde olan 2,5 ve üstü depremler. Resmi bilgi için AFAD ve Kandilli Rasathanesi'ni takip edin.</p>
+        <div class="tbl-wrap" id="deprem"></div>
+      </section>
+      <section class="sec" id="uzay-b" aria-labelledby="h-uz">
+        <h2 id="h-uz">Uzay havası</h2>
+        <p class="note">Güneş fırtınalarının şiddeti (Kp endeksi, 0–9). Kp 7 ve üstü olduğunda Türkiye'nin kuzeyinden kutup ışığı görülebilir; GPS ve radyo iletişimi etkilenebilir.</p>
+        <div id="uzay"></div>
+      </section>
+      <section class="sec" id="dunya-b" aria-labelledby="h-dn">
+        <h2 id="h-dn">Dünya şehirleri</h2>
+        <p class="note">Şehre dokununca ayrıntılı tahmini açılır. Saatler o şehrin yerel saatidir.</p>
+        <div class="kartlar" id="dunya"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Kayak, toz ve dünya şehirleri: Open-Meteo (toz: Copernicus CAMS). Havalimanları: NOAA Aviation Weather Center. Depremler: EMSC (Avrupa-Akdeniz Sismoloji Merkezi), yedek olarak USGS. Uzay havası: NOAA SWPC.</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/turkiye.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/ozel.js"></script>
+</body>
+</html>

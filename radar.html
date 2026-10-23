@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radar ve uydu · Hava Durumu</title>
+<meta name="description" content="Son iki saatin yağış radarı ve kısa süreli radar tahmini, NASA uydu görüntüleri ve uydudan tespit edilen yangın noktaları.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/leaflet/leaflet.css">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Radar ve uydu</h1>
+      <p class="giris" id="giris">Yağış radarı son iki saati ve önümüzdeki dakikaları gösterir. Uydu katmanında NASA'nın günlük gerçek renkli görüntüsü ve uydudan görülen yangın, ısı noktaları var.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-r">
+        <h2 id="h-r">Harita</h2>
+        <p class="note" id="rnot"></p>
+        <div class="tabs" id="rkat" aria-label="Katman"></div>
+        <div class="lharita" id="lmap" role="region" aria-label="Radar ve uydu haritası"></div>
+        <div class="oynat" id="oynat">
+          <button class="btn" id="oy" type="button">Oynat</button>
+          <input type="range" id="kare" min="0" max="0" value="0" aria-label="Radar zamanı">
+          <span class="zaman" id="zmn"></span>
+        </div>
+      </section>
+      <section class="sec" aria-labelledby="h-ro">
+        <h2 id="h-ro">Nasıl okunur</h2>
+        <div class="ikili">
+          <div><h3>Radar</h3><ul class="duz">
+            <li>Renkler yağışın şiddetini gösterir: açık mavi hafif, sarı ve turuncu kuvvetli, kırmızı ve mor çok kuvvetli (dolu olabilir).</li>
+            <li>Oynat düğmesi son iki saatin hareketini ve kısa süreli radar tahminini sırayla gösterir; yağışın nereye ilerlediğini buradan görebilirsin.</li>
+            <li>Radar kapsamı her bölgede aynı değildir. Radar görmeyen bir yerde yağış olmasına rağmen ekranda renk çıkmayabilir.</li>
+          </ul></div>
+          <div><h3>Uydu</h3><ul class="duz">
+            <li>Gerçek renkli görüntü uydunun gündüz geçişinde çekilir; günde bir kez yenilenir. Beyaz alanlar bulut ya da kar örtüsüdür.</li>
+            <li>Yangın ve ısı noktaları son 24 saatte uydunun tespit ettiği sıcak noktalardır; orman yangını dışında sanayi bacaları da görünebilir.</li>
+            <li>Görüntü tarihi haritanın altında yazar.</li>
+          </ul></div>
+        </div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Radar: <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a> (Weather data by RainViewer). Uydu ve yangın noktaları: NASA GIBS, EOSDIS. Harita altlığı: © OpenStreetMap katkıcıları.</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/leaflet/leaflet.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/radar.js"></script>
+</body>
+</html>

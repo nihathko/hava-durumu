@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Türkiye haritası · Hava Durumu</title>
+<meta name="description" content="81 ilin şu anki hava durumu ve 5 günlük haritalı tahmini, havalimanı ölçümleri, en sıcak ve en soğuk iller.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Türkiye haritası</h1>
+      <p class="giris" id="giris">81 ilin şu anki hava durumu ve önümüzdeki 5 gün. Haritada sıcaklık, yağış ya da rüzgarı seç; "Şimdi" görünümünde 54 havalimanının gerçek ölçümlerini de açabilirsin.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-h">
+        <h2 id="h-h">Harita</h2>
+        <p class="note" id="hnot"></p>
+        <div class="tabs" id="zaman" aria-label="Gün"></div>
+        <div class="tabs" id="katman" aria-label="Harita katmanı"></div>
+        <div class="trh-wrap" id="harita"></div>
+        <div id="lj"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-s">
+        <h2 id="h-s">Sıralamalar</h2>
+        <p class="note" id="snot"></p>
+        <div class="siralar" id="siralar"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-t">
+        <h2 id="h-t">81 il</h2>
+        <p class="note">Sütun başlığına dokunarak sırala. İl adına dokununca o ilin ayrıntılı tahmini açılır.</p>
+        <div class="tbl-wrap" id="tablo"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>İllerin değerleri il merkezine ait model tahminidir (Open-Meteo). Havalimanı ölçümleri gerçek gözlemdir (NOAA, METAR) ve yarım saatte bir güncellenir.</li>
+        <li>Harita sınırları: geoBoundaries, © OpenStreetMap katkıcıları (ODbL).</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/turkiye.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/harita.js"></script>
+</body>
+</html>

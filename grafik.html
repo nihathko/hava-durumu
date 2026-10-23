@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Grafik ve modeller · Hava Durumu</title>
+<meta name="description" content="10 günlük saatlik grafik (meteogram), farklı ülkelerin hava modellerinin karşılaştırması, MET Norway tahmini ve belirsizlik bandı.">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#11141A">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Hava Durumu">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<script>
+  // Seçilen tema sayfa çizilmeden uygulanır
+  try { const t = JSON.parse(localStorage.getItem('hava.tema')); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
+  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
+  <div class="clouds c2"></div><div class="clouds c1"></div>
+  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
+</div>
+
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <div id="ust"></div>
+      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
+      <div class="yerkutu" id="yer"></div>
+    </div>
+    <section class="sayfa" aria-labelledby="h-sayfa">
+      <h1 id="h-sayfa">Grafik ve modeller</h1>
+      <p class="giris" id="giris">Seçtiğin yer için 10 günü saat saat gösteren grafikler, beş farklı hava modelinin ve MET Norway'in tahmini yan yana, ve tahminin ne kadar kesin olduğunu gösteren belirsizlik bandı.</p>
+      <dl class="kisa" id="kisa"></dl>
+    </section>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details">
+      <section class="sec" aria-labelledby="h-m">
+        <h2 id="h-m">10 günlük ayrıntılı grafik</h2>
+        <p class="note">Tüm grafikler aynı saat eksenini kullanır; yana kaydırılabilir. Üzerine gelince ya da dokununca o saatin değerleri çıkar.</p>
+        <div id="mg"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-mod">
+        <h2 id="h-mod">Modeller ne diyor?</h2>
+        <p class="note">Hava tahminleri bilgisayar modelleriyle yapılır. Burada farklı ülkelerin meteoroloji kurumlarının modelleri ve bağımsız bir kaynak olarak MET Norway aynı yer için yan yana. Modeller birbirine yakınsa tahmin daha güvenilirdir.</p>
+        <div id="mod"></div>
+      </section>
+      <section class="sec" aria-labelledby="h-ens">
+        <h2 id="h-ens">Tahmin ne kadar kesin?</h2>
+        <p class="note">Topluluk (ensemble) tahmini: aynı model, başlangıç değerleri biraz değiştirilerek onlarca kez çalıştırılır. Bant ne kadar genişse tahmin o kadar belirsizdir.</p>
+        <div id="ens"></div>
+      </section>
+    </div>
+    <footer class="notes">
+      <ul>
+        <li>Modeller: ECMWF IFS (Avrupa), ICON (Almanya, DWD), GFS (ABD, NOAA), ARPEGE (Fransa, Météo-France), UKMO (Birleşik Krallık, Met Office), Open-Meteo üzerinden. Bağımsız tahmin: <a href="https://api.met.no/" target="_blank" rel="noopener">MET Norway</a> (CC BY 4.0).</li>
+        <li>Topluluk tahmini: DWD ICON-EPS ve ECMWF ENS, Open-Meteo Ensemble API.</li>
+        <li><a href="hakkinda.html#gizlilik">Gizlilik ve kullanım</a>, <a href="hakkinda.html#kaynaklar">veri kaynakları ve lisanslar</a>. Tahminler yaklaşık değerlerdir; can ve mal güvenliği için <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">MGM</a>'nin resmi uyarılarını takip edin.</li>
+      </ul>
+    </footer>
+  </div></div>
+</main>
+
+<script src="assets/ililce.js"></script>
+<script src="assets/ortak.js"></script>
+<script src="assets/grafik.js"></script>
+</body>
+</html>

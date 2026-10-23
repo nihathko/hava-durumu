@@ -1,10 +1,14 @@
-// Hava Durumu servis çalışanı: sayfanın kendi dosyalarını (sayfa, yazı tipleri, simgeler) önbelleğe alır,
+// Hava Durumu servis çalışanı: sitenin kendi dosyalarını (sayfalar, kod, yazı tipleri, simgeler, harita kitaplığı) önbelleğe alır,
 // böylece site uygulama olarak yüklenebilir ve internet yokken de açılır.
 // Önce ağdan alınır (her zaman en yeni sürüm), ağ yoksa önbellekten verilir.
 // Hava verisi (Open-Meteo) ve MGM görselleri başka sitelerden geldiği için hiç önbelleğe alınmaz.
-const CACHE = 'hava-v2';
+const CACHE = 'hava-v3';
 const FILES = [
-  './', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
+  './', 'harita.html', 'radar.html', 'grafik.html', 'iklim.html', 'deniz.html', 'ziraat.html', 'ozel.html', 'hakkinda.html',
+  'assets/site.css', 'assets/ortak.js', 'assets/ililce.js', 'assets/turkiye.js',
+  'assets/harita.js', 'assets/radar.js', 'assets/grafik.js', 'assets/iklim.js', 'assets/deniz.js', 'assets/ziraat.js', 'assets/ozel.js', 'assets/hakkinda.js',
+  'assets/leaflet/leaflet.js', 'assets/leaflet/leaflet.css',
+  'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
   'fonts/figtree-400-700-latin.woff2', 'fonts/figtree-400-700-latin-ext.woff2',
   'fonts/bricolage-grotesque-latin.woff2', 'fonts/bricolage-grotesque-latin-ext.woff2'
 ];
@@ -25,8 +29,8 @@ self.addEventListener('fetch', e => {
   const nav = req.mode === 'navigate';
   e.respondWith(
     fetch(req).then(res => {
-      if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(c => c.put(nav ? './' : req, copy)); }
+      if (res.ok) { const copy = res.clone(); const u = new URL(req.url); u.search = ''; caches.open(CACHE).then(c => c.put(nav ? u.href : req, copy)); }
       return res;
-    }).catch(() => caches.match(nav ? './' : req, { ignoreSearch: nav }).then(r => r || Response.error()))
+    }).catch(() => caches.match(req, { ignoreSearch: nav }).then(r => r || (nav ? caches.match('./') : null)).then(r => r || Response.error()))
   );
 });
