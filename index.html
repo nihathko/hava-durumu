@@ -156,8 +156,15 @@ button, select, input { font: inherit; color: inherit; }
   border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); }
 
 /* Arama listesi alttaki panellerin üstünde kalsın (bulanıklık efekti her paneli ayrı katman yapar) */
-.top { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; padding: 12px; position: relative; z-index: 20; }
-.pick { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.top { display: flex; flex-direction: column; gap: 12px; padding: 14px; position: relative; z-index: 20; }
+/* Sitenin adı ve logosu */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px 12px; border-bottom: 1px solid var(--line); }
+.site { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; min-width: 0; }
+.site-ic { width: 46px; height: 46px; flex: none; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .18)); }
+.site-t { display: flex; flex-direction: column; min-width: 0; }
+.site-t b { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; }
+.site-t small { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.pick { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; align-items: flex-end; }
 .field { position: relative; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .field label { font-size: 12px; color: var(--muted); padding-left: 4px; }
 select, .search input { height: 42px; border-radius: 11px; border: 1px solid var(--line); background: var(--panel-solid); padding: 0 12px; outline: none; min-width: 0; }
@@ -178,7 +185,7 @@ select:focus, .search input:focus { border-color: var(--brand); }
 .results .s { color: var(--muted); font-size: 13px; }
 .results .empty { padding: 9px 12px; color: var(--muted); }
 
-.brand { margin-left: auto; align-self: center; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1; user-select: none; padding: 0 6px; }
+.brand { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1; user-select: none; padding: 0 6px; }
 .brand .mark { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
 .brand .mark b { color: var(--brand); }
 .brand .name { font-size: 9.5px; font-weight: 700; letter-spacing: .32em; margin-right: -.32em; color: var(--muted); }
@@ -265,8 +272,11 @@ td.past em { font-style: normal; color: var(--muted); font-size: 12px; margin-le
 @media (max-width: 600px) {
   body { padding-top: 12px; }
   .top { padding: 10px; }
-  .brand { order: -1; margin: 0 0 2px auto; }
-  .brand .mark { font-size: 21px; }
+  .brand .mark { font-size: 19px; }
+  .brand .name { font-size: 8px; }
+  .site-ic { width: 38px; height: 38px; }
+  .site-t b { font-size: 21px; }
+  .site-t small { font-size: 11.5px; }
   .pick { flex-basis: 100%; }
   .field.f-il, .field.f-ilce { flex: 1 1 40%; }
   #il, #ilce { width: 100%; }
@@ -303,6 +313,20 @@ dialog.legal .close:hover { color: var(--fg); background: color-mix(in srgb, var
 
 <main class="shell">
   <div class="panel top">
+    <header class="topbar">
+      <a class="site" href="./" aria-label="Hava Durumu, ana sayfa">
+        <svg class="site-ic" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="24" cy="24" r="12" fill="#F2B227"/>
+          <g fill="#F2B227"><rect x="22.5" y="2" width="3" height="7" rx="1.5"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-90 24 24)"/></g>
+          <path d="M22 52h28a10 10 0 0 0 0-20 14 14 0 0 0-27-3A11 11 0 0 0 22 52z" fill="#fff" stroke="#8FA2B6" stroke-width="1.5"/>
+        </svg>
+        <span class="site-t"><b>Hava Durumu</b><small>Türkiye'nin 81 ili ve 973 ilçesi, dünya geneli</small></span>
+      </a>
+      <div class="brand" aria-label="HKO Software">
+        <span class="mark" aria-hidden="true"><b>&lt;</b>hko<b>/&gt;</b></span>
+        <span class="name">HKO SOFTWARE</span>
+      </div>
+    </header>
     <div class="pick">
       <div class="field f-il"><label for="il">İl</label><select id="il"></select></div>
       <div class="field f-ilce"><label for="ilce">İlçe</label><select id="ilce"></select></div>
@@ -314,10 +338,6 @@ dialog.legal .close:hover { color: var(--fg); background: color-mix(in srgb, var
         </button>
         <ul class="results" id="results" hidden></ul>
       </div>
-    </div>
-    <div class="brand" aria-label="HKO Software">
-      <span class="mark" aria-hidden="true"><b>&lt;</b>hko<b>/&gt;</b></span>
-      <span class="name">HKO SOFTWARE</span>
     </div>
   </div>
 
