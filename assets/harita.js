@@ -41,9 +41,9 @@
       not = 'Rakam günlük toplam yağış (mm), altındaki yüzde yağış ihtimali.';
     } else {
       fill = ad => { const d = deger(ad); return d ? ruzgarRenk(gun ? d.h : d.r) : null; };
-      etiket = ad => { const d = deger(ad); return d && { ust: n0(gun ? d.h : d.r), alt: d.ry != null ? dir(d.ry) : null }; };
+      etiket = ad => { const d = deger(ad); return d && { ust: rz(gun ? d.h : d.r), alt: d.ry != null ? dir(d.ry) : null }; };
       lj = lejant(RUZGAR, 'km/sa', gun ? 'En kuvvetli hamle' : 'Rüzgar hızı');
-      not = (gun ? 'Rakam günün en kuvvetli hamlesi (km/sa), altında hâkim rüzgar yönü.' : 'Rakam şu anki rüzgar hızı (km/sa), altında rüzgarın geldiği yön.') + ' Akan çizgiler rüzgarın estiği yönü gösterir; ne kadar hızlı akıyorsa rüzgar o kadar kuvvetlidir.';
+      not = (gun ? `Rakam günün en kuvvetli hamlesi (${RZ()}), altında hâkim rüzgar yönü.` : `Rakam şu anki rüzgar hızı (${RZ()}), altında rüzgarın geldiği yön.`) + ' Akan çizgiler rüzgarın estiği yönü gösterir; ne kadar hızlı akıyorsa rüzgar o kadar kuvvetlidir.';
     }
     if (gozlem) {
       if (!M || !M.s.length) { not = 'Havalimanı ölçümleri şu an alınamadı.'; }
@@ -63,8 +63,8 @@
   function bilgi(ad) {
     const d = deger(ad); if (!d) return esc(ad);
     let s = `<b>${esc(ad)}</b>${esc(cond(d.kod)[0])}<br>`;
-    if (gun === 0) s += `Sıcaklık <span>${deg(d.t)}</span>, hissedilen <span>${deg(d.his)}</span><br>Nem <span>%${n0(d.nem)}</span>, rüzgar <span>${d.ry != null ? dir(d.ry) + ' ' : ''}${n0(d.r)} km/sa</span><br>Bugün <span>${deg(d.min)} / ${deg(d.max)}</span>, yağış <span>${mm(d.y)} mm</span>`;
-    else s += `En düşük <span>${deg(d.min)}</span>, en yüksek <span>${deg(d.max)}</span><br>Yağış <span>${mm(d.y)} mm</span>, ihtimal <span>%${n0(d.yi)}</span><br>Rüzgar <span>${n0(d.r)} km/sa</span>, hamle <span>${n0(d.h)} km/sa</span>`;
+    if (gun === 0) s += `Sıcaklık <span>${deg(d.t)}</span>, hissedilen <span>${deg(d.his)}</span><br>Nem <span>%${n0(d.nem)}</span>, rüzgar <span>${d.ry != null ? dir(d.ry) + ' ' : ''}${rz(d.r)} ${RZ()}</span><br>Bugün <span>${deg(d.min)} / ${deg(d.max)}</span>, yağış <span>${mm(d.y)} mm</span>`;
+    else s += `En düşük <span>${deg(d.min)}</span>, en yüksek <span>${deg(d.max)}</span><br>Yağış <span>${mm(d.y)} mm</span>, ihtimal <span>%${n0(d.yi)}</span><br>Rüzgar <span>${rz(d.r)} ${RZ()}</span>, hamle <span>${rz(d.h)} ${RZ()}</span>`;
     const m = M && M.s.filter(x => x.il === ad);
     if (gun === 0 && m && m.length) s += `<br>Ölçüm (${esc(m[0].ad)}): <span>${deg(m[0].t)}</span>`;
     return s + `<br><a href="${anaSayfaLink(yerIl(ad))}">Ayrıntılı tahmin</a>`;
@@ -77,11 +77,11 @@
     if (gun === 0) {
       const yagan = L.filter(x => (x.yson ?? 0) > 0).sort((a, b) => b.yson - a.yson).slice(0, 10);
       sEl.innerHTML = liste('En sıcak iller', ilk(x => x.t, true), x => deg(x.t), '') + liste('En soğuk iller', ilk(x => x.t, false), x => deg(x.t), '')
-        + liste('En rüzgarlı iller', ilk(x => x.r, true), x => n0(x.r), ' km/sa') + liste('Şu an yağış alan iller', yagan, x => mm(x.yson), ' mm/sa');
+        + liste('En rüzgarlı iller', ilk(x => x.r, true), x => rz(x.r), ' ' + RZ()) + liste('Şu an yağış alan iller', yagan, x => mm(x.yson), ' mm/sa');
       $('snot').textContent = 'Şu anki model değerleri. Gerçek ölçümler için haritada "Havalimanı ölçümleri"ni seç.';
     } else {
       sEl.innerHTML = liste('En yüksek sıcaklık', ilk(x => x.max, true), x => deg(x.max), '') + liste('En düşük sıcaklık (gece)', ilk(x => x.min, false), x => deg(x.min), '')
-        + liste('En çok yağış', ilk(x => x.y, true).filter(x => x.y > 0), x => mm(x.y), ' mm') + liste('En kuvvetli hamle', ilk(x => x.h, true), x => n0(x.h), ' km/sa');
+        + liste('En çok yağış', ilk(x => x.y, true).filter(x => x.y > 0), x => mm(x.y), ' mm') + liste('En kuvvetli hamle', ilk(x => x.h, true), x => rz(x.h), ' ' + RZ());
       $('snot').textContent = gun === -1 ? 'Dün için model analizi: ölçüm değildir ama ölçüme çok yakındır. İstasyon ölçümleri yalnızca MGM\'de yayımlanır.' : `${zamanAd(gun)} için tahmin.`;
     }
   }
@@ -92,14 +92,14 @@
     const kol = gun === 0 ? [
       { b: 'İl', l: 1, v: r => r.ad, h: r => link(r.ad) }, { b: 'Hadise', l: 1, v: r => cond(r.kod)[0], h: ev },
       { b: 'Sıcaklık', v: r => r.t, h: r => deg(r.t) }, { b: 'Hissedilen', v: r => r.his, h: r => deg(r.his) }, { b: 'Nem', v: r => r.nem, h: r => pct(r.nem) },
-      { b: 'Rüzgar', v: r => r.r, h: r => wind(r.ry, r.r) }, { b: 'Hamle', v: r => r.h, h: r => n0(r.h) },
+      { b: 'Rüzgar', v: r => r.r, h: r => wind(r.ry, r.r) }, { b: 'Hamle', v: r => r.h, h: r => rz(r.h) },
       { b: 'Bugün en düşük', v: r => r.min, h: r => `<span class="c-lo">${deg(r.min)}</span>` }, { b: 'Bugün en yüksek', v: r => r.max, h: r => `<span class="c-hi">${deg(r.max)}</span>` },
       { b: 'Bugün yağış', v: r => r.y, h: r => mm(r.y) + ' mm' }
     ] : [
       { b: 'İl', l: 1, v: r => r.ad, h: r => link(r.ad) }, { b: 'Hadise', l: 1, v: r => cond(r.kod)[0], h: ev },
       { b: 'En düşük', v: r => r.min, h: r => `<span class="c-lo">${deg(r.min)}</span>` }, { b: 'En yüksek', v: r => r.max, h: r => `<span class="c-hi">${deg(r.max)}</span>` },
       { b: 'Yağış', v: r => r.y, h: r => mm(r.y) + ' mm' }, { b: 'Yağış ihtimali', v: r => r.yi, h: r => pct(r.yi) },
-      { b: 'Rüzgar', v: r => r.r, h: r => wind(r.ry, r.r) }, { b: 'Hamle', v: r => r.h, h: r => n0(r.h) }
+      { b: 'Rüzgar', v: r => r.r, h: r => wind(r.ry, r.r) }, { b: 'Hamle', v: r => r.h, h: r => rz(r.h) }
     ];
     siraliTablo(tEl, kol, L, 0);
     $('h-t').textContent = `81 il, ${zamanAd(gun).toLocaleLowerCase('tr')}`;
@@ -189,7 +189,7 @@
     el.innerHTML = yukleniyor('Saatlik model verisi yükleniyor…');
     let S;
     try {
-      const v = await cokNokta(OM, IL, { hourly: 'temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,cloud_cover,snow_depth,weather_code,is_day', timezone: 'Europe/Istanbul', forecast_hours: 72, wind_speed_unit: 'kmh' }, 30);
+      const v = await cokNokta(OM, IL, { hourly: 'temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,cloud_cover,snow_depth,weather_code,is_day,cape', timezone: 'Europe/Istanbul', forecast_hours: 72, wind_speed_unit: 'kmh' }, 30);
       S = Object.fromEntries(IL.map((I, i) => [I.ad, v[i].hourly]));
     } catch (e) { el.innerHTML = hataMsg(); return; }
     const zaman = S[IL[0].ad].time;
@@ -198,8 +198,9 @@
     const KAT = [
       ['Sıcaklık', h => sicakRenk(h.temperature_2m[i]), h => ({ ikon: icon(h.weather_code[i], h.is_day[i]), ust: deg(h.temperature_2m[i]) }), () => lejant(SICAK, '°C', 'Sıcaklık')],
       ['Yağış', h => yagisRenk((h.precipitation[i] ?? 0) * 6), h => h.precipitation[i] > 0 ? { ust: dec(h.precipitation[i]) } : null, () => lejant(YAGIS.map(([v, c]) => [v / 6, c]), 'mm/saat', 'Saatlik yağış')],
-      ['Rüzgar', h => ruzgarRenk(h.wind_speed_10m[i]), h => ({ ust: n0(h.wind_speed_10m[i]), alt: h.wind_direction_10m[i] != null ? dir(h.wind_direction_10m[i]) : null }), () => lejant(RUZGAR, 'km/sa', 'Rüzgar hızı')],
+      ['Rüzgar', h => ruzgarRenk(h.wind_speed_10m[i]), h => ({ ust: rz(h.wind_speed_10m[i]), alt: h.wind_direction_10m[i] != null ? dir(h.wind_direction_10m[i]) : null }), () => lejant(RUZGAR, 'km/sa', 'Rüzgar hızı')],
       ['Bulut', h => bulutRenk(h.cloud_cover[i]), h => ({ ust: '%' + n0(h.cloud_cover[i]) }), () => lejant(BULUT, '%', 'Bulutluluk')],
+      ['Gök gürültüsü', h => firtinaRenk(h.cape[i] ?? 0), h => [95, 96, 99].includes(h.weather_code[i]) ? { ikon: icon(h.weather_code[i], h.is_day[i]), ust: n0(h.cape[i]) } : (h.cape[i] ?? 0) >= 300 ? { ust: n0(h.cape[i]) } : null, () => lejant(FIRTINA, 'J/kg', 'Gök gürültüsü ve yıldırım potansiyeli (CAPE)')],
       ['Kar kalınlığı', h => karRenk((h.snow_depth[i] ?? 0) * 100), h => (h.snow_depth[i] ?? 0) > 0.005 ? { ust: n0(h.snow_depth[i] * 100) + ' cm' } : null, () => lejant(KAR, 'cm', 'Kar kalınlığı')]
     ];
     const ciz = () => {
@@ -209,7 +210,7 @@
       ruzgarAkisi(el, k === 2 ? ad => [S[ad].wind_speed_10m[i], S[ad].wind_direction_10m[i]] : null);
       zEl.textContent = `${fmtWeek(ymd(zaman[i]))} ${hhmm(zaman[i])}`;
       ar.value = String(i);
-      haritaBagla(el, ad => { const h = S[ad]; return `<b>${esc(ad)}</b>${esc(fmtWeek(ymd(zaman[i])))} ${hhmm(zaman[i])}<br>${esc(cond(h.weather_code[i])[0])}<br>Sıcaklık <span>${deg(h.temperature_2m[i])}</span><br>Yağış <span>${dec(h.precipitation[i])} mm</span>, bulut <span>%${n0(h.cloud_cover[i])}</span><br>Rüzgar <span>${h.wind_direction_10m[i] != null ? dir(h.wind_direction_10m[i]) : ''} ${n0(h.wind_speed_10m[i])} km/sa</span>${h.snow_depth[i] > 0 ? `<br>Kar <span>${n0(h.snow_depth[i] * 100)} cm</span>` : ''}`; });
+      haritaBagla(el, ad => { const h = S[ad]; return `<b>${esc(ad)}</b>${esc(fmtWeek(ymd(zaman[i])))} ${hhmm(zaman[i])}<br>${esc(cond(h.weather_code[i])[0])}<br>Sıcaklık <span>${deg(h.temperature_2m[i])}</span><br>Yağış <span>${dec(h.precipitation[i])} mm</span>, bulut <span>%${n0(h.cloud_cover[i])}</span><br>Rüzgar <span>${h.wind_direction_10m[i] != null ? dir(h.wind_direction_10m[i]) : ''} ${rz(h.wind_speed_10m[i])} ${RZ()}</span>${h.snow_depth[i] > 0 ? `<br>Kar <span>${n0(h.snow_depth[i] * 100)} cm</span>` : ''}${(h.cape[i] ?? 0) >= 300 ? `<br>Gök gürültüsü potansiyeli <span>${n0(h.cape[i])} J/kg</span>` : ''}`; });
     };
     const dur = () => { clearInterval(tmr); tmr = null; oy.textContent = 'Oynat'; };
     oy.addEventListener('click', () => { if (tmr) return dur(); oy.textContent = 'Durdur'; tmr = setInterval(() => { i = (i + 3) % zaman.length; ciz(); }, 900); });

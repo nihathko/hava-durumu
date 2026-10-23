@@ -217,7 +217,7 @@
       const R = Object.fromEntries(IL.map((I, k) => [I.ad, puan(v[k], gunler[j])]));
       el.innerHTML = haritaSvg({ fill: a => R[a] ? envRenk(R[a].p) : null, etiket: a => R[a] && R[a].p >= 50 ? { ust: ad(R[a].p) } : null, aria: 'Enverziyon riski haritası' });
       $('envlj').innerHTML = lejant(ENV, '/100', 'Enverziyon şiddeti');
-      haritaBagla(el, a => { const r = R[a]; return r ? `<b>${esc(a)}</b>Enverziyon: <span>${ad(r.p)}</span> (${r.p}/100)<br>Yerden yukarı sıcaklık farkı <span>${r.fark > 0 ? '+' : ''}${dec(r.fark)}°</span><br>Rüzgar <span>${n0(r.r)} km/sa</span>` : esc(a); });
+      haritaBagla(el, a => { const r = R[a]; return r ? `<b>${esc(a)}</b>Enverziyon: <span>${ad(r.p)}</span> (${r.p}/100)<br>Yerden yukarı sıcaklık farkı <span>${r.fark > 0 ? '+' : ''}${dec(r.fark)}°</span><br>Rüzgar <span>${rz(r.r)} ${RZ()}</span>` : esc(a); });
     });
   }
 

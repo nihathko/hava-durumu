@@ -24,7 +24,7 @@
     }
     return out.sort((a, b) => b.s - a.s);
   }
-  const deger = (o, v) => o.k === 'yagis' ? mm(v) + ' mm' : o.k === 'kar' ? dec(v) + ' cm' : o.k === 'ruzgar' ? n0(v) + ' km/sa' : o.k === 'firtina' ? n0(v) + ' J/kg' : deg(v);
+  const deger = (o, v) => o.k === 'yagis' ? mm(v) + ' mm' : o.k === 'kar' ? dec(v) + ' cm' : o.k === 'ruzgar' ? rz(v) + ' ' + RZ() : o.k === 'firtina' ? n0(v) + ' J/kg' : deg(v);
 
   function ciz() {
     const S = Object.fromEntries(IL.map(I => [I.ad, ilDurum(I.ad)]));
@@ -49,7 +49,7 @@
       { b: 'Hadise', l: 1, v: r => S[r.ad].map(x => x.o.ad).join(', '), h: r => esc(S[r.ad].map(x => x.o.ad).join(', ') || '–') },
       { b: 'Yağış', v: r => V[r.ad].daily.precipitation_sum[gun], h: r => mm(V[r.ad].daily.precipitation_sum[gun]) + ' mm' },
       { b: 'Kar', v: r => V[r.ad].daily.snowfall_sum[gun], h: r => dec(V[r.ad].daily.snowfall_sum[gun]) + ' cm' },
-      { b: 'Hamle', v: r => V[r.ad].daily.wind_gusts_10m_max[gun], h: r => n0(V[r.ad].daily.wind_gusts_10m_max[gun]) + ' km/sa' },
+      { b: 'Hamle', v: r => V[r.ad].daily.wind_gusts_10m_max[gun], h: r => rz(V[r.ad].daily.wind_gusts_10m_max[gun]) + ' ' + RZ() },
       { b: 'En yüksek', v: r => V[r.ad].daily.temperature_2m_max[gun], h: r => `<span class="c-hi">${deg(V[r.ad].daily.temperature_2m_max[gun])}</span>` },
       { b: 'En düşük', v: r => V[r.ad].daily.temperature_2m_min[gun], h: r => `<span class="c-lo">${deg(V[r.ad].daily.temperature_2m_min[gun])}</span>` }
     ], IL.map(I => ({ ad: I.ad })), 1, true);

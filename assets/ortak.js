@@ -69,11 +69,21 @@ function setScene(code, day, ek = {}) {
 
 // ---------- Biçimlendirme ----------
 const n0 = v => (v == null || Number.isNaN(v) ? '–' : Math.round(v) === 0 ? 0 : Math.round(v));
-const deg = v => `${n0(v)}°`;
+// Birimler: bu cihazda saklanır. Veriler her zaman °C, km/sa ve hPa olarak alınır, gösterirken çevrilir.
+const BIRIM = Object.assign({ sic: 'c', ruz: 'kmh', bas: 'hpa' }, store.get('hava.birim', {}));
+const BIRIM_AD = { c: '°C', f: '°F', kmh: 'km/sa', ms: 'm/sn', kn: 'knot', hpa: 'hPa', mmhg: 'mmHg', inhg: 'inHg' };
+const sicV = v => (v == null ? v : BIRIM.sic === 'f' ? v * 9 / 5 + 32 : v);
+const sicFark = v => (BIRIM.sic === 'f' ? v * 1.8 : v);
+const deg = v => `${n0(sicV(v))}°`;
+const rzV = v => (v == null ? v : BIRIM.ruz === 'ms' ? v / 3.6 : BIRIM.ruz === 'kn' ? v / 1.852 : v);
+const rz = v => n0(rzV(v));
+const RZ = () => BIRIM_AD[BIRIM.ruz];
+const bs = v => (v == null ? '–' : BIRIM.bas === 'mmhg' ? n0(v * 0.750062) : BIRIM.bas === 'inhg' ? (v * 0.0295300).toFixed(2).replace('.', ',') : n0(v));
+const BS = () => BIRIM_AD[BIRIM.bas];
 const DIRS = ['K', 'KKD', 'KD', 'DKD', 'D', 'DGD', 'GD', 'GGD', 'G', 'GGB', 'GB', 'BGB', 'B', 'BKB', 'KB', 'KKB'];
 const dir = d => DIRS[Math.round(((d % 360) + 360) % 360 / 22.5) % 16];
 // Rüzgar yönü (ok + harf) ve isteğe bağlı hız; veri yoksa çizgi
-const wind = (d, v) => d == null ? '–' : `<span class="wd">${arrow(d)}${dir(d)}${v != null ? ' ' + n0(v) : ''}</span>`;
+const wind = (d, v) => d == null ? '–' : `<span class="wd">${arrow(d)}${dir(d)}${v != null ? ' ' + rz(v) : ''}</span>`;
 const hhmm = iso => iso.slice(11, 16);
 const ymd = iso => iso.slice(0, 10);
 const noon = d => new Date(d + 'T12:00:00Z');
@@ -201,6 +211,9 @@ const ORAN = [[0, '#8C510A'], [40, '#D8B365'], [80, '#F6E8C3'], [100, '#F2F2F2']
 const oranRenk = rampa(ORAN);
 const BULUT = [[0, '#EAF3FB'], [30, '#C9D6E2'], [60, '#9AA9B8'], [100, '#5E6B78']];
 const bulutRenk = rampa(BULUT);
+// Gök gürültüsü potansiyeli (CAPE, J/kg): 300 altı düşük, 1000 üstü yüksek, 2500 üstü çok yüksek
+const FIRTINA = [[0, '#EEF2F5'], [300, '#F6E7A8'], [1000, '#F2B24E'], [2500, '#E0453A'], [4000, '#8E3AA8']];
+const firtinaRenk = rampa(FIRTINA);
 const KAR = [[0, '#EEF2F5'], [1, '#DCE9F5'], [10, '#B9D3EE'], [30, '#8DB3E2'], [60, '#6A8FD1'], [120, '#7B5BB5']];
 const karRenk = rampa(KAR);
 // km/sa → deniz mili/saat (knot)
@@ -236,6 +249,7 @@ function kurUst() {
         <div class="daha"><button type="button" class="daha-b" aria-expanded="false" aria-haspopup="true"${diger.some(([h]) => h === cur) ? ' data-aktif="1"' : ''}>Daha fazla <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
           <div class="daha-m" hidden>${diger.map(link).join('')}</div></div></nav>
       <div class="ust-ar">
+        <button class="ic-btn" id="ayarB" type="button" aria-label="Ayarlar" title="Ayarlar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
         <button class="ic-btn" id="theme" type="button" aria-label="Tema: Sistem"></button>
         <span class="hko" aria-label="HKO Software"><span class="mark" aria-hidden="true"><b>&lt;</b>hko<b>/&gt;</b></span><span class="name">HKO SOFTWARE</span></span>
         <button class="ic-btn menu-b" id="menuB" type="button" aria-label="Menüyü aç" aria-expanded="false" aria-controls="cekmece"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -247,9 +261,35 @@ function kurUst() {
   ck.innerHTML = `<div class="ck-arka" data-kapat></div><aside class="ck-panel" role="dialog" aria-modal="true" aria-label="Site menüsü">
       <div class="ck-bas"><a class="logo" href="index.html">${SITE_IC}<span class="logo-t"><b>Hava Durumu</b><small>HKO Software</small></span></a><button class="ic-btn" type="button" data-kapat aria-label="Menüyü kapat">✕</button></div>
       <nav class="ck-nav" aria-label="Site bölümleri">${SAYFALAR.map(link).join('')}</nav>
+      <div class="ck-mgm"><span>Meteoroloji Genel Müdürlüğü</span>${MGM_BAG.map(([h, t]) => `<a href="${h}" target="_blank" rel="noopener">${t}</a>`).join('')}</div>
       <div class="ck-tema"><span>Tema</span><div class="seg" id="segTema">${THEMES.map(t => `<button type="button" data-t="${t}">${TNAME[t]}</button>`).join('')}</div></div>
+      <button class="btn ck-ayar" type="button" id="ckAyar">Birim ayarları</button>
     </aside>`;
   document.body.appendChild(ck);
+  // Ayarlar: birimler ve tema; birim değişince sayfa yeni birimlerle yeniden açılır
+  const dl = document.createElement('dialog');
+  dl.className = 'ayar'; dl.setAttribute('aria-labelledby', 'ayar-h');
+  const SATIR = [['sic', 'Sıcaklık', ['c', 'f']], ['ruz', 'Rüzgar', ['kmh', 'ms', 'kn']], ['bas', 'Basınç', ['hpa', 'mmhg', 'inhg']]];
+  const segB = (k, L, ad, sec) => `<div class="seg" data-k="${k}">${L.map(v => `<button type="button" data-v="${v}" aria-pressed="${sec === v}">${ad(v)}</button>`).join('')}</div>`;
+  dl.innerHTML = `<form method="dialog"><div class="ayar-bas"><h2 id="ayar-h">Ayarlar</h2><button class="ic-btn" value="kapat" aria-label="Kapat">✕</button></div>
+    ${SATIR.map(([k, ad, L]) => `<div class="ayar-s"><span>${ad}</span>${segB(k, L, v => BIRIM_AD[v], BIRIM[k])}</div>`).join('')}
+    <div class="ayar-s"><span>Tema</span>${segB('tema', THEMES, t => TNAME[t], theme)}</div>
+    <p class="muted">Seçimler yalnızca bu cihazda saklanır. Denizcilik sayfasının kendi knot ve km/sa seçimi ayrıca çalışır.</p>
+    <div class="ayar-mgm"><b>Meteoroloji Genel Müdürlüğü</b>${MGM_BAG.map(([h, t]) => `<a href="${h}" target="_blank" rel="noopener">${t}</a>`).join('')}</div></form>`;
+  document.body.appendChild(dl);
+  dl.addEventListener('click', e => {
+    if (e.target === dl) { dl.close(); return; }
+    const b = e.target.closest('.seg[data-k] button[data-v]'); if (!b) return;
+    const k = b.parentElement.dataset.k;
+    b.parentElement.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    if (k === 'tema') { theme = b.dataset.v; store.set('hava.tema', theme); applyTheme(); segCiz(); return; }
+    if (BIRIM[k] === b.dataset.v) return;
+    BIRIM[k] = b.dataset.v; store.set('hava.birim', BIRIM);
+    setTimeout(() => location.reload(), 150);
+  });
+  const ayarAc = () => { if (!ck.hidden) ac(false); dl.showModal(); };
+  $('ayarB').addEventListener('click', ayarAc);
+  $('ckAyar').addEventListener('click', ayarAc);
   const ac = v => {
     if (v) { ck.hidden = false; requestAnimationFrame(() => ck.classList.add('acik')); }
     else { ck.classList.remove('acik'); setTimeout(() => { ck.hidden = true; }, 320); }
@@ -276,6 +316,9 @@ function kurUst() {
   setScene(sc ? sc[0] : 0, sc ? sc[1] : 1, (sc && sc[2]) || {});
   canlandir();
 }
+
+// MGM'nin resmi uyarı, radyo ve yıldırım sayfaları (yalnızca bağlantı; oradan veri alınmaz)
+const MGM_BAG = [['https://www.mgm.gov.tr/meteouyari/turkiye.aspx', 'Resmi uyarılar (MeteoUYARI)'], ['https://radyo.mgm.gov.tr/', 'Meteorolojinin Sesi Radyosu'], ['https://www.mgm.gov.tr/sondurum/yildirim-takip.aspx', 'Yıldırım takibi']];
 
 // ---------- Animasyonlar: görünür olunca kayarak gelme, sayı sayma, slaytlar ----------
 const hareketYok = matchMedia('(prefers-reduced-motion: reduce)').matches;

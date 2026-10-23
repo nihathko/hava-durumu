@@ -855,3 +855,20 @@ table.guv td, table.kat td { white-space: nowrap; }
   table.kaynak td:nth-child(3), table.kaynak td:nth-child(4) { color: var(--muted); font-size: 13px; }
   table.kaynak td:nth-child(4)::before { content: "Kullanıldığı yer: "; }
 }
+
+/* Ayarlar penceresi ve MGM bağlantıları */
+dialog.ayar { border: 0; border-radius: 22px; padding: 0; width: min(460px, calc(100vw - 32px)); background: var(--panel-solid); color: var(--fg); box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .55); }
+dialog.ayar::backdrop { background: rgba(3, 8, 18, .5); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+dialog.ayar form { padding: 18px 20px 20px; display: grid; gap: 14px; }
+.ayar-bas { display: flex; align-items: center; justify-content: space-between; }
+.ayar-bas h2 { margin: 0; font-size: 21px; }
+.ayar-s { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-weight: 600; }
+dialog.ayar .muted { margin: 0; color: var(--muted); font-size: 13px; }
+.ayar-mgm, .ck-mgm { display: grid; gap: 4px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 14px; }
+.ayar-mgm b, .ck-mgm span { font-size: 13px; color: var(--muted); font-weight: 600; }
+.ayar-mgm a, .ck-mgm a { color: var(--brand); text-decoration: none; padding: 4px 0; }
+.ayar-mgm a:hover, .ck-mgm a:hover { text-decoration: underline; }
+.ck-mgm { margin-top: auto; padding: 14px 4px 0; }
+.ck-mgm + .ck-tema { margin-top: 12px; }
+.ck-ayar { margin-top: 12px; width: 100%; }
+@media (max-width: 420px) { .ust-ar #theme { display: none; } }

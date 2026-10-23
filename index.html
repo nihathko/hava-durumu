@@ -242,8 +242,8 @@
         <td>${pct(H.relative_humidity_2m[e])}</td>
         <td>${pr >= 10 ? '%' + pr : '–'}</td>
         <td>${wind(H.wind_direction_10m[e])}</td>
-        <td>${n0(H.wind_speed_10m[e])}</td>
-        <td>${n0(maxOf(per.map(i => H.wind_gusts_10m[i])))}</td>
+        <td>${rz(H.wind_speed_10m[e])}</td>
+        <td>${rz(maxOf(per.map(i => H.wind_gusts_10m[i])))}</td>
       </tr>`;
     }
     return out;
@@ -268,7 +268,7 @@
         <td>${pct(D.relative_humidity_2m_min[i])}</td>
         <td>${pct(D.relative_humidity_2m_max[i])}</td>
         <td>${wind(D.wind_direction_10m_dominant[i])}</td>
-        <td>${n0(D.wind_speed_10m_mean[i])}</td>
+        <td>${rz(D.wind_speed_10m_mean[i])}</td>
         <td>${pr >= 10 ? '%' + pr : '–'}</td>
         ${past}
       </tr>`;
@@ -297,7 +297,7 @@
         : `${at(j)} civarı yağmur bekleniyor, şemsiyeni yanına al.`);
     }
     const gust = maxOf(H.wind_gusts_10m.slice(i0, end + 1));
-    if (gust >= 50) out.push(`Rüzgar kuvvetli; hamleler ${n0(gust)} km/sa hıza ulaşabilir.`);
+    if (gust >= 50) out.push(`Rüzgar kuvvetli; hamleler ${rz(gust)} ${RZ()} hıza ulaşabilir.`);
     if (C.is_day && D.uv_index_max[0] >= 6 && +C.time.slice(11, 13) < 16) out.push(`UV endeksi yüksek (${n0(D.uv_index_max[0])}), öğle saatlerinde güneşten korun.`);
     if (D.time.length > 1) {
       const dt = D.temperature_2m_max[1] - D.temperature_2m_max[0];
@@ -329,7 +329,7 @@
       }
       if (t != null) path += `${path ? 'L' : 'M'}${x(k)} ${ty(t).toFixed(1)}`;
       if (k % 3 === 0) {
-        if (t != null) txt += `<text class="tv" x="${x(k)}" y="${(ty(t) - 9).toFixed(1)}" text-anchor="middle">${n0(t)}°</text>`;
+        if (t != null) txt += `<text class="tv" x="${x(k)}" y="${(ty(t) - 9).toFixed(1)}" text-anchor="middle">${deg(t)}</text>`;
         txt += `<text x="${x(k)}" y="${h - 6}" text-anchor="middle">${H.time[i].slice(11, 13)}</text>`;
         if (pr >= 10) txt += `<text x="${x(k)}" y="${(by + bh - pr / 100 * bh - 5).toFixed(1)}" text-anchor="middle">%${pr}</text>`;
       }
@@ -528,7 +528,7 @@
   async function share() {
     const p = current, d = lastData;
     if (!p || !d) return;
-    const url = linkOf(p), text = `${p.name}: ${n0(d.current.temperature_2m)}°, ${lower(cond(d.current.weather_code)[0])}. ${summary(d)[0]}`;
+    const url = linkOf(p), text = `${p.name}: ${deg(d.current.temperature_2m)}, ${lower(cond(d.current.weather_code)[0])}. ${summary(d)[0]}`;
     if (navigator.share) { try { await navigator.share({ title: `${p.name} hava durumu`, text, url }); } catch (e) {} return; }
     let copied = false;
     try { await navigator.clipboard.writeText(`${text} ${url}`); copied = true; } catch (e) {}
@@ -600,7 +600,7 @@
         </div>
         ${staleAt ? `<p class="stale" role="status">İnternet bağlantısı yok. ${esc(new Date(staleAt).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))} tarihinde alınan son veri gösteriliyor.</p>` : ''}
         <div class="main">
-          <div class="temp" id="sicaklik" aria-label="Sıcaklık ${n0(C.temperature_2m)} derece"><span class="sayi">${n0(C.temperature_2m)}</span><sup>°C</sup></div>
+          <div class="temp" id="sicaklik" aria-label="Sıcaklık ${deg(C.temperature_2m)}"><span class="sayi">${n0(sicV(C.temperature_2m))}</span><sup>${BIRIM_AD[BIRIM.sic]}</sup></div>
           <div class="cond">
             <div class="ci">${icon(C.weather_code, C.is_day)}<span class="t">${esc(cond(C.weather_code)[0])}</span></div>
             <span class="f">Hissedilen <b>${deg(C.apparent_temperature)}</b></span>
@@ -611,14 +611,14 @@
         <p class="sum">${esc(summary(d).join(' '))}</p>
         <dl class="stats">
           <div><dt>Nem</dt><dd>%${n0(C.relative_humidity_2m)}</dd></div>
-          <div><dt>Rüzgar</dt><dd>${wind(C.wind_direction_10m, C.wind_speed_10m)} <small>km/sa, hamle ${n0(C.wind_gusts_10m)}</small></dd></div>
+          <div><dt>Rüzgar</dt><dd>${wind(C.wind_direction_10m, C.wind_speed_10m)} <small>${RZ()}, hamle ${rz(C.wind_gusts_10m)}</small></dd></div>
           <div><dt>Yağış, son 1 saat</dt><dd>${(C.precipitation ?? 0).toFixed(1).replace('.', ',')} <small>mm</small></dd></div>
           <div><dt>Bugün yağış ihtimali</dt><dd>%${n0(D.precipitation_probability_max[0])}</dd></div>
           <div><dt>UV endeksi</dt><dd>${n0(D.uv_index_max[0])}</dd></div>
-          <div><dt>Aktüel basınç</dt><dd>${n0(C.surface_pressure)} <small>hPa</small></dd></div>
+          <div><dt>Aktüel basınç</dt><dd>${bs(C.surface_pressure)} <small>${BS()}</small></dd></div>
         </dl>
         <p class="upd">Veri saati ${hhmm(C.time)}, sayfaya ${fetchedAt} alındı; 15 dakikada bir yenilenir. <button type="button" class="link" id="refresh">Şimdi yenile</button><br>
-          Rakım ${n0(d.elevation)} m, ${coord(+p.lat, 'K', 'G')}, ${coord(+p.lon, 'D', 'B')}. Deniz seviyesi basıncı ${n0(C.pressure_msl)} hPa.</p>
+          Rakım ${n0(d.elevation)} m, ${coord(+p.lat, 'K', 'G')}, ${coord(+p.lon, 'D', 'B')}. Deniz seviyesi basıncı ${bs(C.pressure_msl)} ${BS()}.</p>
       </section>`;
     details.innerHTML = `
       ${slaytlar(d)}
@@ -642,7 +642,7 @@
         <h2 id="h-saat">Saatlik tahmin</h2>
         <p class="note">3 saatlik dilimler. Beklenen hadise, o 3 saatteki hâkim hava durumudur; hamle, bu sürede beklenen en yüksek rüzgar hızıdır. Sıcaklık, nem ve rüzgar, dilimin bittiği saatte beklenen değerlerdir.</p>
         <div class="tbl-wrap"><table>
-          <thead><tr><th class="l">Saat</th><th class="l">Beklenen hadise</th><th>Sıcaklık</th><th>Hissedilen</th><th>Nem</th><th>Yağış<small>ihtimali</small></th><th>Rüzgar<small>yönü</small></th><th>Ort. rüzgar<small>km/sa</small></th><th>Maks. rüzgar<small>hamle, km/sa</small></th></tr></thead>
+          <thead><tr><th class="l">Saat</th><th class="l">Beklenen hadise</th><th>Sıcaklık</th><th>Hissedilen</th><th>Nem</th><th>Yağış<small>ihtimali</small></th><th>Rüzgar<small>yönü</small></th><th>Ort. rüzgar<small>${RZ()}</small></th><th>Maks. rüzgar<small>hamle, ${RZ()}</small></th></tr></thead>
           <tbody>${hourlyRows(d)}</tbody>
         </table></div>
       </section>
@@ -650,7 +650,7 @@
         <h2 id="h-gun">${dayCount(d)} günlük tahmin</h2>
         <p class="note">Gri sütunlar 1991–2020 arasında aynı tarihi gösterir: uç değerler (ve yaşandığı yıl) ile o tarihin ortalama en düşük ve en yüksek sıcaklığı.<span id="far"${allDays ? '' : ' hidden'}> 7. günden sonraki tahminler daha belirsizdir; eğilim olarak değerlendir.</span></p>
         <div class="tbl-wrap"><table>
-          <thead><tr class="grp"><th class="l" rowspan="2">Tarih</th><th class="l" rowspan="2">Beklenen hadise</th><th colspan="2">Sıcaklık</th><th colspan="2">Nem</th><th colspan="2">Rüzgar</th><th rowspan="2">Yağış<small>ihtimali</small></th><th colspan="2" class="pg">Uç sıcaklık<small>1991–2020</small></th><th colspan="2" class="pg">Ortalama sıcaklık<small>1991–2020</small></th></tr><tr><th>En düşük</th><th>En yüksek</th><th>En düşük</th><th>En yüksek</th><th>Yön</th><th>Hız<small>ort. km/sa</small></th><th class="pg">En düşük</th><th class="pg">En yüksek</th><th class="pg">En düşük</th><th class="pg">En yüksek</th></tr></thead>
+          <thead><tr class="grp"><th class="l" rowspan="2">Tarih</th><th class="l" rowspan="2">Beklenen hadise</th><th colspan="2">Sıcaklık</th><th colspan="2">Nem</th><th colspan="2">Rüzgar</th><th rowspan="2">Yağış<small>ihtimali</small></th><th colspan="2" class="pg">Uç sıcaklık<small>1991–2020</small></th><th colspan="2" class="pg">Ortalama sıcaklık<small>1991–2020</small></th></tr><tr><th>En düşük</th><th>En yüksek</th><th>En düşük</th><th>En yüksek</th><th>Yön</th><th>Hız<small>ort. ${RZ()}</small></th><th class="pg">En düşük</th><th class="pg">En yüksek</th><th class="pg">En düşük</th><th class="pg">En yüksek</th></tr></thead>
           <tbody id="days">${dailyRows(d, clim)}</tbody>
         </table></div>
         ${maxDays > 5 ? `<button class="btn more" id="more" type="button">${allDays ? '5 güne dön' : `${maxDays} güne kadar göster`}</button>` : ''}
@@ -678,9 +678,9 @@
     bindChart(d, ch.geo);
     updStar();
     setScene(C.weather_code, C.is_day, { gd: hhmm(D.sunrise[0]), gb: hhmm(D.sunset[0]), saat: hhmm(C.time), ruzgar: C.wind_speed_10m, yon: C.wind_direction_10m });
-    sayiSay($('sicaklik'), C.temperature_2m);
+    sayiSay($('sicaklik'), sicV(C.temperature_2m));
     document.querySelectorAll('.slayt').forEach(slaytKur);
-    document.title = `${n0(C.temperature_2m)}° ${p.name} · Hava Durumu`;
+    document.title = `${deg(C.temperature_2m)} ${p.name} · Hava Durumu`;
   }
 
   async function load(p) {

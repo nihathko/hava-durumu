@@ -43,7 +43,7 @@ function dunBuSaat(e, d) {
   t.setUTCDate(t.getUTCDate() - 1);
   const i = e.hourly.time.indexOf(t.toISOString().slice(0, 13) + ':00'), v = i >= 0 ? e.hourly.temperature_2m[i] : null;
   if (v == null) return '';
-  const f = Math.round(d.current.temperature_2m) - Math.round(v);
+  const f = Math.round(sicV(d.current.temperature_2m)) - Math.round(sicV(v));
   return `Dün bu saatte <b>${deg(v)}</b>${f ? `, bugün ${Math.abs(f)}° daha ${f > 0 ? 'sıcak' : 'serin'}` : ', bugünle aynı'}`;
 }
 
@@ -95,11 +95,11 @@ function saglikListesi(d, air) {
   };
   const dpMetin = `${dp > 0 ? 'Basınç 24 saatte ' + dec(dp) + ' hPa yükseliyor' : 'Basınç 24 saatte ' + dec(-dp) + ' hPa düşüyor'}.`;
   return [
-    yap('Migren', [[Math.abs(dp) >= 8, 2, dpMetin], [Math.abs(dp) >= 4 && Math.abs(dp) < 8, 1, dpMetin], [fark >= 12, 1, `Gece ile gündüz arasında ${n0(fark)}° fark var.`], [w.his >= 32, 1, 'Hava çok sıcak hissettiriyor.'], [w.h >= 50, 1, 'Kuvvetli rüzgar bekleniyor.']]),
+    yap('Migren', [[Math.abs(dp) >= 8, 2, dpMetin], [Math.abs(dp) >= 4 && Math.abs(dp) < 8, 1, dpMetin], [fark >= 12, 1, `Gece ile gündüz arasında ${n0(sicFark(fark))}° fark var.`], [w.his >= 32, 1, 'Hava çok sıcak hissettiriyor.'], [w.h >= 50, 1, 'Kuvvetli rüzgar bekleniyor.']]),
     yap('Eklem ağrısı', [[dp <= -8, 2, dpMetin], [dp <= -4 && dp > -8, 1, dpMetin], [w.nem >= 80, 1, `Nem yüksek (%${n0(w.nem)}).`], [w.tmin <= 5, 1, 'Hava soğuk.'], [w.pr >= 60, 1, 'Yağış bekleniyor.']]),
     yap('Astım ve solunum', [[aqi >= 60, 2, 'Hava kalitesi kötü.'], [aqi >= 40 && aqi < 60, 1, 'Hava kalitesi orta.'], [polen >= 50, 1, 'Polen yüksek.'], [w.tmin <= 0, 1, 'Soğuk ve kuru hava solunum yollarını zorlar.'], [w.his >= 30 && w.nem >= 70, 1, 'Sıcak ve nemli hava nefes almayı zorlaştırabilir.']]),
-    yap('Soğuk algınlığı ve grip', [[w.tmin <= 0, 2, 'Sıcaklık sıfırın altına iniyor.'], [w.tmin > 0 && w.tmin <= 6, 1, `Sıcaklık ${deg(w.tmin)} kadar düşüyor.`], [fark >= 12, 1, `Gece ile gündüz arasında ${n0(fark)}° fark var.`], [w.nem >= 85 && w.t < 12, 1, 'Serin ve nemli hava.']]),
-    yap('Sinüs ve alerji', [[Math.abs(dp) >= 6, 1, dpMetin], [nemFark >= 40, 1, 'Gün içinde nem çok değişiyor.'], [polen >= 15, 1, 'Havada polen var.'], [Math.abs(ertesi) >= 5, 1, `Yarın sıcaklık ${n0(Math.abs(ertesi))}° ${ertesi > 0 ? 'yükseliyor' : 'düşüyor'}.`]]),
+    yap('Soğuk algınlığı ve grip', [[w.tmin <= 0, 2, 'Sıcaklık sıfırın altına iniyor.'], [w.tmin > 0 && w.tmin <= 6, 1, `Sıcaklık ${deg(w.tmin)} kadar düşüyor.`], [fark >= 12, 1, `Gece ile gündüz arasında ${n0(sicFark(fark))}° fark var.`], [w.nem >= 85 && w.t < 12, 1, 'Serin ve nemli hava.']]),
+    yap('Sinüs ve alerji', [[Math.abs(dp) >= 6, 1, dpMetin], [nemFark >= 40, 1, 'Gün içinde nem çok değişiyor.'], [polen >= 15, 1, 'Havada polen var.'], [Math.abs(ertesi) >= 5, 1, `Yarın sıcaklık ${n0(sicFark(Math.abs(ertesi)))}° ${ertesi > 0 ? 'yükseliyor' : 'düşüyor'}.`]]),
     yap('Sıcak çarpması', [[w.his >= 38, 3, `Hissedilen sıcaklık ${deg(w.his)}.`], [w.his >= 32 && w.his < 38, 2, `Hissedilen sıcaklık ${deg(w.his)}.`], [w.his >= 27 && w.his < 32, 1, `Hissedilen sıcaklık ${deg(w.his)}.`], [w.uv >= 8 && w.his >= 27, 1, `UV endeksi çok yüksek (${n0(w.uv)}).`]])
   ];
 }
@@ -129,11 +129,11 @@ function etkinlikListesi(d, air) {
     puanla('Koşu', 10 - yagis(15) - konfor(w.t, 8, 20) - (w.r > 30 ? 2 : 0) - (aqi >= 60 ? 2 : 0) - (w.uv >= 8 ? 1 : 0),
       ilk([w.firtina, 'Gök gürültülü sağanak bekleniyor.'], [yag, yag], [aqi >= 60, 'Hava kalitesi kötü.'], [w.t > 24, 'Sıcak; serin saatleri seç.'], [w.t < 3, 'Soğuk; sıkı giyin.'], [1, 'Koşu için uygun hava.'])),
     puanla('Bisiklet', 10 - yagis(13) - konfor(w.t, 10, 24) - (w.r > 35 ? 4 : w.r > 20 ? 2 : 0) - (w.kar ? 4 : 0),
-      ilk([w.firtina, 'Gök gürültülü sağanak bekleniyor.'], [w.r > 20, `Rüzgar ${n0(w.r)} km/sa'ye çıkıyor.`], [yag, yag], [1, 'Bisiklet için uygun hava.'])),
+      ilk([w.firtina, 'Gök gürültülü sağanak bekleniyor.'], [w.r > 20, `Rüzgar ${rz(w.r)} ${RZ()} hıza çıkıyor.`], [yag, yag], [1, 'Bisiklet için uygun hava.'])),
     puanla('Doğa yürüyüşü', 10 - yagis(12) - konfor(w.t, 10, 24) - (w.h > 50 ? 3 : 0) - (w.gor != null && w.gor < 2000 ? 2 : 0) - (w.kar ? 2 : 0),
-      ilk([w.firtina, 'Gök gürültülü sağanak bekleniyor.'], [w.h > 50, `Hamleler ${n0(w.h)} km/sa.`], [w.gor != null && w.gor < 2000, 'Görüş düşük, sis olabilir.'], [yag, yag], [1, 'Yürüyüş için uygun.'])),
+      ilk([w.firtina, 'Gök gürültülü sağanak bekleniyor.'], [w.h > 50, `Hamleler ${rz(w.h)} ${RZ()}.`], [w.gor != null && w.gor < 2000, 'Görüş düşük, sis olabilir.'], [yag, yag], [1, 'Yürüyüş için uygun.'])),
     puanla('Balık tutma', 10 - yagis(20) - (w.r > 25 ? 3 : w.r > 15 ? 1 : 0) - (Math.abs(dp) >= 6 ? 2 : 0) - konfor(w.t, 5, 28, 0.3),
-      ilk([w.firtina, 'Gök gürültülü sağanak bekleniyor; açık alanda durma.'], [w.r > 25, `Rüzgar ${n0(w.r)} km/sa, su dalgalı olur.`], [Math.abs(dp) >= 6, 'Basınç hızlı değişiyor.'], [yag, yag], [1, 'Sakin hava, balık için uygun.'])),
+      ilk([w.firtina, 'Gök gürültülü sağanak bekleniyor; açık alanda durma.'], [w.r > 25, `Rüzgar ${rz(w.r)} ${RZ()}, su dalgalı olur.`], [Math.abs(dp) >= 6, 'Basınç hızlı değişiyor.'], [yag, yag], [1, 'Sakin hava, balık için uygun.'])),
     puanla('Plaj ve deniz', 10 - yagis(10) - (w.tmax < 26 ? (26 - w.tmax) * 0.9 : 0) - (w.tmax > 36 ? 2 : 0) - ((w.bulut ?? 0) > 60 ? 2 : 0) - (w.r > 25 ? 3 : 0),
       ilk([w.tmax < 22, `En yüksek ${deg(w.tmax)}; deniz için serin.`], [w.firtina, 'Gök gürültülü sağanak bekleniyor.'], [w.r > 25, 'Rüzgar kuvvetli, dalga olabilir.'], [w.uv >= 8, `UV ${n0(w.uv)}; 11–16 arası güneşten korun.`], [1, 'Plaj için güzel bir gün.'])),
     puanla('Piknik ve mangal', 10 - yagis(10) - konfor(w.t, 15, 28) - (w.r > 25 ? 3 : 0),
@@ -224,7 +224,7 @@ function atmosferKart(d, e) {
     if (j >= 0) {
       const don = E.freezing_level_height[j];
       kv.push(['Donma seviyesi', don == null ? '–' : `${n0(don)} m`]);
-      const sat = (ad, y, tt, r, ry) => `<tr><td class="l">${ad}</td><td>${y}</td><td>${deg(tt)}</td><td>${wind(ry, r)} <small>km/sa</small></td></tr>`;
+      const sat = (ad, y, tt, r, ry) => `<tr><td class="l">${ad}</td><td>${y}</td><td>${deg(tt)}</td><td>${wind(ry, r)} <small>${RZ()}</small></td></tr>`;
       kat = `<div class="tbl-wrap"><table class="kat"><thead><tr><th class="l">Katman</th><th>Yükseklik</th><th>Sıcaklık</th><th>Rüzgar</th></tr></thead><tbody>
         ${sat('Yer (2 m)', n0(d.elevation) + ' m', C.temperature_2m, C.wind_speed_10m, C.wind_direction_10m)}
         ${[850, 700, 500].map(p => sat(`${p} hPa`, `${n0(E[`geopotential_height_${p}hPa`][j])} m`, E[`temperature_${p}hPa`][j], E[`wind_speed_${p}hPa`][j], E[`wind_direction_${p}hPa`][j])).join('')}
