@@ -46,32 +46,25 @@ function icon(code, day) {
 // Rüzgarın estiği yönü gösteren ok (yön, rüzgarın geldiği taraftır)
 const arrow = d => `<svg viewBox="0 0 16 16" aria-hidden="true" style="transform:rotate(${(d + 180) % 360}deg)"><path d="M8 1.5v12M8 1.5 4 6M8 1.5l4 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-// ---------- Gökyüzü sahnesi ----------
-const SKY = {
-  'clear-1': ['#5BA4E6', '#9CCBF2', '#DCEEFB'], 'clear-0': ['#0B1430', '#18284F', '#2D3E66'],
-  'partly-1': ['#6AA6DC', '#A8CDEB', '#E2EEF8'], 'partly-0': ['#0E1733', '#1C2A4D', '#33405F'],
-  'cloud-1': ['#8A9BAD', '#B5C2CF', '#DCE3EA'], 'cloud-0': ['#141A24', '#222B38', '#38414F'],
-  'fog-1': ['#A9B4BF', '#CBD3DB', '#E6EAEE'], 'fog-0': ['#1B2028', '#2B313B', '#454C57'],
-  'drizzle-1': ['#7D8E9F', '#A6B4C2', '#CDD6DF'], 'drizzle-0': ['#11171F', '#1F2732', '#353E4B'],
-  'rain-1': ['#56657A', '#7F8EA0', '#A9B5C2'], 'rain-0': ['#0B1017', '#171E28', '#2A333F'],
-  'snow-1': ['#A4B4C6', '#CDD8E4', '#EEF3F8'], 'snow-0': ['#1A2230', '#2A3546', '#46536A'],
-  'thunder-1': ['#3C4250', '#5B6271', '#7E8595'], 'thunder-0': ['#07090E', '#141821', '#272C38']
-};
-function setScene(code, day) {
-  const k = cond(code)[1], d = day ? 1 : 0, sc = $('scene');
-  const [a, b, c] = SKY[`${k}-${d}`];
-  sc.dataset.k = k; sc.dataset.d = d;
-  sc.style.setProperty('--s1', a); sc.style.setProperty('--s2', b); sc.style.setProperty('--s3', c);
-  document.body.style.background = b;
-  // Gökyüzüne yazılan yazılar: açık renk gökte koyu, gece ve koyu bulutlu/yağışlı gökte beyaz
-  const dark = d && ['clear', 'partly', 'cloud', 'fog', 'drizzle', 'snow'].includes(k), st = document.documentElement.style;
-  st.setProperty('--on', dark ? '#0E2233' : '#FFFFFF');
-  st.setProperty('--on-muted', dark ? 'rgba(14, 34, 51, .76)' : 'rgba(255, 255, 255, .8)');
-  st.setProperty('--on-line', dark ? 'rgba(14, 34, 51, .2)' : 'rgba(255, 255, 255, .26)');
-  st.setProperty('--on-shadow', dark ? 'none' : '0 1px 14px rgba(0, 0, 0, .28)');
+// ---------- Gökyüzü sahnesi (assets/gokyuzu.js çizer) ----------
+// ek: { gd: gün doğumu 'SS:DD', gb: gün batımı, saat: yerel saat, ruzgar: km/sa, yon: derece }
+const dakika = s => s ? +s.slice(0, 2) * 60 + +s.slice(3, 5) : null;
+function setScene(code, day, ek = {}) {
+  const k = cond(code)[1], d = day ? 1 : 0;
+  const gd = dakika(ek.gd) ?? 390, gb = dakika(ek.gb) ?? 1110, sa = dakika(ek.saat) ?? (new Date().getHours() * 60 + new Date().getMinutes());
+  const gunes = Math.min(1, Math.max(0, (sa - gd) / Math.max(1, gb - gd)));
+  const ay = ((((Date.now() / 864e5 + 2440587.5 - 2451550.1) / 29.530588853) % 1) + 1) % 1;
+  if (typeof GOK !== 'undefined') GOK.ayarla({ tur: k, gunduz: d, gunes, ay, ruzgar: ek.ruzgar, yon: ek.yon, siddet: [65, 67, 75, 82, 86, 99].includes(code) ? 'kuvvetli' : '' });
+  // Gökyüzüne yazılan yazılar: açık renkli sisli ve karlı gündüz göğünde koyu, diğerlerinde beyaz
+  const koyu = d && ['fog', 'snow'].includes(k), st = document.documentElement.style;
+  st.setProperty('--on', koyu ? '#0E2233' : '#FFFFFF');
+  st.setProperty('--on-muted', koyu ? 'rgba(14, 34, 51, .74)' : 'rgba(255, 255, 255, .82)');
+  st.setProperty('--on-line', koyu ? 'rgba(14, 34, 51, .2)' : 'rgba(255, 255, 255, .24)');
+  st.setProperty('--on-shadow', koyu ? 'none' : '0 1px 2px rgba(0, 0, 0, .25), 0 2px 18px rgba(0, 0, 0, .25)');
+  document.documentElement.dataset.gok = d ? (koyu ? 'acik' : 'gun') : 'gece';
   const tc = document.querySelector('meta[name=theme-color]');
-  if (tc) tc.content = a;
-  store.set('hava.sahne', [code, d]); // diğer sayfalar da aynı gökyüzüyle açılsın
+  if (tc) tc.content = d ? (k === 'rain' || k === 'thunder' ? '#3A4553' : koyu ? '#A9B3BC' : '#1F6FD0') : '#050A18';
+  store.set('hava.sahne', [code, d, ek]); // diğer sayfalar da aynı gökyüzüyle açılsın
 }
 
 // ---------- Biçimlendirme ----------
@@ -216,38 +209,107 @@ const knot = v => v == null ? null : v / 1.852;
 const lejant = (stops, birim, baslik) => `<div class="lejant" aria-label="${esc(baslik)} ölçeği"><span class="lj-b">${esc(baslik)}</span><span class="lj-s" style="background:linear-gradient(90deg,${stops.map((s, i) => `${s[1]} ${(i / (stops.length - 1) * 100).toFixed(0)}%`).join(',')})"></span><span class="lj-v">${stops.map(s => `<i>${dec(s[0], 0)}</i>`).join('')}</span><span class="lj-u">${esc(birim)}</span></div>`;
 
 // ---------- Siteye ait sayfalar ve üst menü ----------
+const IKON = {
+  index: '<path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h13V9.5"/>', harita: '<path d="M9 4 3 6.5v13.5L9 17.5l6 2.5 6-2.5V4l-6 2.5L9 4zM9 4v13.5M15 6.5V20"/>',
+  uyari: '<path d="M12 3 2 20h20L12 3zM12 10v4.5M12 17.5v.5"/>', radar: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 18 6"/>',
+  grafik: '<path d="M3 20h18M5 16l4-5 4 3 6-8"/>', iklim: '<path d="M10 14.5V5a2 2 0 1 1 4 0v9.5a4 4 0 1 1-4 0z"/>',
+  analiz: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>', deniz: '<path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 20c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M12 3v8M8 7l4-4 4 4"/>',
+  ziraat: '<path d="M12 21V9M12 9c0-4 3-6 7-6 0 4-3 6-7 6zM12 13c0-3-2.5-5-6-5 0 3 2.5 5 6 5z"/>', ozel: '<path d="m12 3 2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+  bilgi: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/>', hakkinda: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17v.5"/>'
+};
 const SAYFALAR = [
-  ['index.html', 'Hava durumu'], ['harita.html', 'Türkiye haritası'], ['uyari.html', 'Dikkat'], ['radar.html', 'Radar ve uydu'], ['grafik.html', 'Grafik ve modeller'],
+  ['index.html', 'Hava durumu'], ['harita.html', 'Harita'], ['uyari.html', 'Dikkat'], ['radar.html', 'Radar ve uydu'], ['grafik.html', 'Grafik ve modeller'],
   ['iklim.html', 'İklim'], ['analiz.html', 'Analizler'], ['deniz.html', 'Denizcilik'], ['ziraat.html', 'Ziraat'], ['ozel.html', 'Özel tahminler'],
   ['bilgi.html', 'Bilgi'], ['hakkinda.html', 'Hakkında']
 ];
+const ik = (h, cls = 'nik') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IKON[h.replace('.html', '')] || ''}</svg>`;
 const SITE_IC = `<svg class="site-ic" viewBox="0 0 64 64" aria-hidden="true"><circle cx="24" cy="24" r="12" fill="#F2B227"/><g fill="#F2B227"><rect x="22.5" y="2" width="3" height="7" rx="1.5"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-45 24 24)"/><rect x="22.5" y="2" width="3" height="7" rx="1.5" transform="rotate(-90 24 24)"/></g><path d="M22 52h28a10 10 0 0 0 0-20 14 14 0 0 0-27-3A11 11 0 0 0 22 52z" fill="#fff" stroke="#8FA2B6" stroke-width="1.5"/></svg>`;
-const ustHtml = () => `<header class="bar">
-    <a class="site" href="index.html" aria-label="Hava Durumu, ana sayfa">${SITE_IC}<span class="site-t"><b>Hava Durumu</b><small>Türkiye'nin 81 ili ve 973 ilçesi, dünya geneli</small></span></a>
-    <div class="tools"><button class="ic-btn" id="theme" type="button" aria-label="Tema: Sistem"></button>
-      <div class="brand" aria-label="HKO Software"><span class="mark" aria-hidden="true"><b>&lt;</b>hko<b>/&gt;</b></span><span class="name">HKO SOFTWARE</span></div></div>
-  </header>`;
 function kurUst() {
-  const u = $('ust');
-  if (u) u.innerHTML = ustHtml();
-  const nav = $('nav');
-  if (nav) {
-    const cur = location.pathname.split('/').pop() || 'index.html';
-    nav.innerHTML = SAYFALAR.map(([h, t]) => `<a href="${h}"${h === cur ? ' aria-current="page"' : ''}>${t}</a>`).join('');
-    const a = nav.querySelector('[aria-current]');
-    if (a) nav.scrollLeft = a.offsetLeft - nav.clientWidth / 2 + a.offsetWidth / 2;
-  }
-  const b = $('theme');
-  if (b) {
-    b.addEventListener('click', () => {
-      theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
-      store.set('hava.tema', theme); applyTheme(); toast(`Tema: ${TNAME[theme]}`);
-    });
-    applyTheme();
-  }
+  const cur = location.pathname.split('/').pop() || 'index.html';
+  const link = ([h, t]) => `<a href="${h}"${h === cur ? ' aria-current="page"' : ''}>${ik(h)}<span>${t}</span></a>`;
+  const ana = SAYFALAR.slice(0, 6), diger = SAYFALAR.slice(6);
+  const ust = document.createElement('header');
+  ust.className = 'ust'; ust.id = 'ustbar';
+  ust.innerHTML = `<div class="ust-in">
+      <a class="logo" href="index.html" aria-label="Hava Durumu, ana sayfa">${SITE_IC}<span class="logo-t"><b>Hava Durumu</b><small>Türkiye ve dünya</small></span></a>
+      <nav class="ana-nav" aria-label="Site bölümleri">${ana.map(link).join('')}
+        <div class="daha"><button type="button" class="daha-b" aria-expanded="false" aria-haspopup="true"${diger.some(([h]) => h === cur) ? ' data-aktif="1"' : ''}>Daha fazla <svg viewBox="0 0 12 8" aria-hidden="true"><path d="M1 1.5 6 6.5 11 1.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></button>
+          <div class="daha-m" hidden>${diger.map(link).join('')}</div></div></nav>
+      <div class="ust-ar">
+        <button class="ic-btn" id="theme" type="button" aria-label="Tema: Sistem"></button>
+        <span class="hko" aria-label="HKO Software"><span class="mark" aria-hidden="true"><b>&lt;</b>hko<b>/&gt;</b></span><span class="name">HKO SOFTWARE</span></span>
+        <button class="ic-btn menu-b" id="menuB" type="button" aria-label="Menüyü aç" aria-expanded="false" aria-controls="cekmece"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      </div></div>`;
+  document.body.prepend(ust);
+  // Telefonda yandan açılan menü
+  const ck = document.createElement('div');
+  ck.className = 'cekmece'; ck.id = 'cekmece'; ck.hidden = true;
+  ck.innerHTML = `<div class="ck-arka" data-kapat></div><aside class="ck-panel" role="dialog" aria-modal="true" aria-label="Site menüsü">
+      <div class="ck-bas"><a class="logo" href="index.html">${SITE_IC}<span class="logo-t"><b>Hava Durumu</b><small>HKO Software</small></span></a><button class="ic-btn" type="button" data-kapat aria-label="Menüyü kapat">✕</button></div>
+      <nav class="ck-nav" aria-label="Site bölümleri">${SAYFALAR.map(link).join('')}</nav>
+      <div class="ck-tema"><span>Tema</span><div class="seg" id="segTema">${THEMES.map(t => `<button type="button" data-t="${t}">${TNAME[t]}</button>`).join('')}</div></div>
+    </aside>`;
+  document.body.appendChild(ck);
+  const ac = v => {
+    if (v) { ck.hidden = false; requestAnimationFrame(() => ck.classList.add('acik')); }
+    else { ck.classList.remove('acik'); setTimeout(() => { ck.hidden = true; }, 320); }
+    $('menuB').setAttribute('aria-expanded', String(v)); document.documentElement.classList.toggle('kilit', v);
+  };
+  $('menuB').addEventListener('click', () => ac(true));
+  ck.addEventListener('click', e => { if (e.target.closest('[data-kapat]')) ac(false); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') { if (!ck.hidden) ac(false); dahaKapat(); } });
+  // Masaüstünde "Daha fazla" açılır menüsü
+  const db = ust.querySelector('.daha-b'), dm = ust.querySelector('.daha-m');
+  const dahaKapat = () => { dm.hidden = true; db.setAttribute('aria-expanded', 'false'); };
+  db.addEventListener('click', e => { e.stopPropagation(); const a = dm.hidden; dm.hidden = !a; db.setAttribute('aria-expanded', String(a)); });
+  document.addEventListener('click', e => { if (!e.target.closest('.daha')) dahaKapat(); });
+  // Kaydırınca üst çubuk koyulaşır
+  const kay = () => ust.classList.toggle('dolu', scrollY > 12);
+  addEventListener('scroll', kay, { passive: true }); kay();
+  // Tema
+  const segCiz = () => document.querySelectorAll('#segTema button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.t === theme)));
+  $('segTema').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if (!b) return; theme = b.dataset.t; store.set('hava.tema', theme); applyTheme(); segCiz(); });
+  $('theme').addEventListener('click', () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length]; store.set('hava.tema', theme); applyTheme(); segCiz(); toast(`Tema: ${TNAME[theme]}`); });
+  applyTheme(); segCiz();
   // Alt sayfalar son bakılan yerin gökyüzüyle açılır (ana sayfa kendi verisiyle günceller)
   const sc = store.get('hava.sahne', null);
-  setScene(sc ? sc[0] : 0, sc ? sc[1] : 1);
+  setScene(sc ? sc[0] : 0, sc ? sc[1] : 1, (sc && sc[2]) || {});
+  canlandir();
+}
+
+// ---------- Animasyonlar: görünür olunca kayarak gelme, sayı sayma, slaytlar ----------
+const hareketYok = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function canlandir() {
+  if (hareketYok || !('IntersectionObserver' in window)) return;
+  document.documentElement.classList.add('anim');
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('gor'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
+  const tara = () => document.querySelectorAll('.sec:not(.izle), .card:not(.izle), .sayfa:not(.izle), .now:not(.izle), .notes:not(.izle), .slayt-k:not(.izle)').forEach((el, i) => { el.classList.add('izle'); el.style.setProperty('--gec', `${Math.min(i % 6, 5) * 60}ms`); io.observe(el); });
+  tara();
+  let bekle = 0;
+  new MutationObserver(() => { clearTimeout(bekle); bekle = setTimeout(tara, 30); }).observe(document.body, { childList: true, subtree: true });
+}
+// Sayıyı 0'dan hedefe doğru sayarak göster
+function sayiSay(el, hedef, sure = 900) {
+  if (!el || hedef == null || hareketYok) return;
+  const bas = performance.now(), ilk = Math.round(hedef) === 0 ? 0 : Math.round(hedef * 0.4);
+  const yaz = v => { const s = el.querySelector('.sayi'); if (s) s.textContent = v; };
+  const adim = t => { const p = Math.min(1, (t - bas) / sure), e = 1 - Math.pow(1 - p, 3); yaz(Math.round(ilk + (hedef - ilk) * e)); if (p < 1) requestAnimationFrame(adim); };
+  requestAnimationFrame(adim);
+}
+// Yatay kaydırmalı slayt: ok düğmeleri ve fareyle sürükleme
+function slaytKur(kap) {
+  const iz = kap.querySelector('.slayt-iz');
+  if (!iz) return;
+  const git = y => iz.scrollBy({ left: y * iz.clientWidth * 0.8, behavior: hareketYok ? 'auto' : 'smooth' });
+  kap.querySelector('.sl-geri')?.addEventListener('click', () => git(-1));
+  kap.querySelector('.sl-ileri')?.addEventListener('click', () => git(1));
+  const durum = () => { kap.querySelector('.sl-geri')?.toggleAttribute('disabled', iz.scrollLeft < 8); kap.querySelector('.sl-ileri')?.toggleAttribute('disabled', iz.scrollLeft + iz.clientWidth > iz.scrollWidth - 8); };
+  iz.addEventListener('scroll', durum, { passive: true }); durum();
+  let x0 = null, s0 = 0, oynadi = false;
+  iz.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') return; x0 = e.clientX; s0 = iz.scrollLeft; oynadi = false; iz.classList.add('surukle'); });
+  addEventListener('pointermove', e => { if (x0 == null) return; const dx = e.clientX - x0; if (Math.abs(dx) > 4) oynadi = true; iz.scrollLeft = s0 - dx; });
+  addEventListener('pointerup', () => { x0 = null; iz.classList.remove('surukle'); });
+  iz.addEventListener('click', e => { if (oynadi) { e.preventDefault(); e.stopPropagation(); oynadi = false; } }, true);
 }
 
 // ---------- Yer: bağlantıdan, son bakılandan ya da varsayılan ----------

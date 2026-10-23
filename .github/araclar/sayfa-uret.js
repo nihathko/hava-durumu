@@ -24,17 +24,9 @@ const sayfa = s => `<!doctype html>
 ${s.basEk || ''}<link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
-<div class="scene" id="scene" data-k="clear" data-d="1" aria-hidden="true">
-  <div class="stars"></div><div class="sun"></div><div class="moon"></div>
-  <div class="clouds c2"></div><div class="clouds c1"></div>
-  <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
-</div>
-
 <main>
   <div class="skyarea"><div class="wrap">
     <div class="top">
-      <div id="ust"></div>
-      <nav class="nav" id="nav" aria-label="Site bölümleri"></nav>
       ${s.yer ? '<div class="yerkutu" id="yer"></div>' : ''}
     </div>
     <section class="sayfa" aria-labelledby="h-sayfa">
@@ -56,6 +48,7 @@ ${(s.notlar || []).map(n => `        <li>${n}</li>`).join('\n')}
   </div></div>
 </main>
 
+<script src="assets/gokyuzu.js"></script>
 <script src="assets/ililce.js"></script>
 ${s.harita ? '<script src="assets/turkiye.js"></script>\n' : ''}${s.sonEk || ''}<script src="assets/ortak.js"></script>
 <script src="assets/${s.js}.js"></script>
