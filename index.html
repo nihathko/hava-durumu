@@ -35,79 +35,56 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
-  font-family: 'IBM Plex Mono';
+  font-family: 'Bricolage Grotesque';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
   font-display: swap;
-  src: url(fonts/ibm-plex-mono-400-latin-ext.woff2) format('woff2');
+  src: url(fonts/bricolage-grotesque-latin-ext.woff2) format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 @font-face {
-  font-family: 'IBM Plex Mono';
+  font-family: 'Bricolage Grotesque';
   font-style: normal;
-  font-weight: 400;
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
   font-display: swap;
-  src: url(fonts/ibm-plex-mono-400-latin.woff2) format('woff2');
+  src: url(fonts/bricolage-grotesque-latin.woff2) format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url(fonts/ibm-plex-mono-500-latin-ext.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: 'IBM Plex Mono';
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-  src: url(fonts/ibm-plex-mono-500-latin.woff2) format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* Düzen: arka planda havaya göre değişen gökyüzü sahnesi; önünde yarı saydam paneller:
-   konum seçimi, anlık durum + yer bilgisi, MGM resmi tahmini, 3 saatlik tablo, 5 günlük tablo (geçmiş yıllarla). */
+
+/* Düzen: sayfanın üstü havaya göre değişen gökyüzü sahnesidir. Yer adı, sıcaklık ve özet kutusuz,
+   doğrudan gökyüzüne yazılır; yazı rengi gökyüzüne göre koyu ya da beyaz olur (--on, JS ayarlar).
+   Ayrıntılar altta, gökyüzünün üstüne çıkan tek parça bir yüzeydedir ("sayfa");
+   bölümler kutularla değil boşluk ve ince çizgilerle ayrılır. */
 :root {
-  --panel: rgba(250, 252, 254, .84);
-  --panel-solid: #F7F9FB;
-  --fg: #132029;
-  --muted: #566573;
-  --line: rgba(20, 40, 60, .12);
-  --head: rgba(20, 40, 60, .045);
-  --brand: #2F6BFF;
-  --warm: #C77F00;
-  --cold: #2F78C8;
-  --shadow: 0 1px 0 rgba(255, 255, 255, .5) inset, 0 18px 40px -24px rgba(10, 25, 40, .55);
+  --paper: #F3F6F9; --panel-solid: #FFFFFF; --fg: #13212C; --muted: #5A6976; --line: #D8E0E7; --head: #E8EEF3;
+  --brand: #2F6BFF; --warm: #B86F00; --cold: #2563B8;
+  --field: rgba(255, 255, 255, .9); --field-line: rgba(10, 30, 50, .14);
+  --on: #0E2233; --on-muted: rgba(14, 34, 51, .74); --on-line: rgba(14, 34, 51, .2); --on-shadow: none;
   --font-ui: "Figtree", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --font-num: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --font-display: "Bricolage Grotesque", "Figtree", "Segoe UI", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --panel: rgba(16, 22, 30, .8); --panel-solid: #141B23; --fg: #E9EEF3; --muted: #93A1AF;
-    --line: rgba(255, 255, 255, .09); --head: rgba(255, 255, 255, .04);
-    --brand: #6E9BFF; --warm: #F4B13A; --cold: #74AEEF;
-    --shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 20px 44px -24px rgba(0, 0, 0, .9);
+    --paper: #0F151C; --panel-solid: #18212B; --fg: #E6ECF1; --muted: #8E9DAB; --line: #243241; --head: #1B2531;
+    --brand: #7AA3FF; --warm: #F2B13C; --cold: #72AEF0; --field: rgba(16, 23, 31, .8); --field-line: rgba(255, 255, 255, .14);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --panel: rgba(16, 22, 30, .8); --panel-solid: #141B23; --fg: #E9EEF3; --muted: #93A1AF;
-  --line: rgba(255, 255, 255, .09); --head: rgba(255, 255, 255, .04);
-  --brand: #6E9BFF; --warm: #F4B13A; --cold: #74AEEF;
-  --shadow: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 20px 44px -24px rgba(0, 0, 0, .9);
+  --paper: #0F151C; --panel-solid: #18212B; --fg: #E6ECF1; --muted: #8E9DAB; --line: #243241; --head: #1B2531;
+  --brand: #7AA3FF; --warm: #F2B13C; --cold: #72AEF0; --field: rgba(16, 23, 31, .8); --field-line: rgba(255, 255, 255, .14);
   color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { min-height: 100%; }
-body {
-  margin: 0; color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.45; background: #9CC3E6;
-  padding: 22px max(16px, env(safe-area-inset-right, 0px)) 32px max(16px, env(safe-area-inset-left, 0px));
-}
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; color: var(--fg); font-family: var(--font-ui); font-size: 15.5px; line-height: 1.5; background: #9CC3E6; font-variant-numeric: tabular-nums; }
 button, select, input { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
 
 /* ---------- Gökyüzü sahnesi (arka plan) ---------- */
 .scene { position: fixed; inset: 0; z-index: -1; overflow: hidden; background: linear-gradient(180deg, var(--s1, #5BA4E6), var(--s2, #9CCBF2) 62%, var(--s3, #DCEEFB)); }
@@ -158,113 +135,187 @@ button, select, input { font: inherit; color: inherit; }
   .scene[data-k="thunder"] .flash { opacity: 0; }
 }
 
-/* ---------- Sayfa ---------- */
-.shell { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
-.panel { background: var(--panel); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
-  border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); }
 
-/* Arama listesi alttaki panellerin üstünde kalsın (bulanıklık efekti her paneli ayrı katman yapar) */
-.top { display: flex; flex-direction: column; gap: 12px; padding: 14px; position: relative; z-index: 20; }
-/* Sitenin adı ve logosu */
-.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px 12px; border-bottom: 1px solid var(--line); }
-.site { display: flex; align-items: center; gap: 12px; color: inherit; text-decoration: none; min-width: 0; }
-.site-ic { width: 46px; height: 46px; flex: none; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, .18)); }
-.site-t { display: flex; flex-direction: column; min-width: 0; }
-.site-t b { font-size: 26px; font-weight: 700; letter-spacing: -.02em; line-height: 1.1; white-space: nowrap; }
-.site-t small { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.pick { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; align-items: flex-end; }
-.field { position: relative; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.field label { font-size: 12px; color: var(--muted); padding-left: 4px; }
-select, .search input { height: 42px; border-radius: 11px; border: 1px solid var(--line); background: var(--panel-solid); padding: 0 12px; outline: none; min-width: 0; }
-select { padding-right: 30px; appearance: none; cursor: pointer;
+/* ---------- Gökyüzü bölümü: başlık, seçim, anlık durum ---------- */
+.skyarea { color: var(--on); padding-top: 18px; }
+.top { position: relative; z-index: 20; }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.site { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; min-width: 0; }
+.site-ic { width: 42px; height: 42px; flex: none; filter: drop-shadow(0 3px 8px rgba(0, 0, 0, .16)); }
+.site-t { min-width: 0; }
+.site-t b { display: block; font-family: var(--font-display); font-size: 23px; font-weight: 650; letter-spacing: -.015em; line-height: 1.1; white-space: nowrap; }
+.site-t small { display: block; font-size: 12.5px; color: var(--on-muted); }
+.tools { display: flex; align-items: center; gap: 14px; flex: none; }
+.brand { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1; user-select: none; }
+.brand .mark { font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.brand .mark b { opacity: .62; }
+.brand .name { font-size: 9px; font-weight: 700; letter-spacing: .3em; margin-right: -.3em; color: var(--on-muted); }
+
+.pick { display: grid; grid-template-columns: 190px 210px minmax(0, 1fr); gap: 10px; margin-top: 20px; }
+.field { position: relative; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--on-muted); padding-left: 2px; }
+select, .search input { width: 100%; height: 46px; border-radius: 12px; border: 1px solid var(--field-line); background-color: var(--field); color: var(--fg); padding: 0 14px; outline: none; min-width: 0;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+select { padding-right: 32px; appearance: none; cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23778899' stroke-width='1.8'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 11px center; }
-#il { width: 170px; } #ilce { width: 190px; }
-.search { flex: 1; min-width: 190px; }
-.search input { width: 100%; padding-right: 42px; }
+  background-repeat: no-repeat; background-position: right 12px center; }
+.search input { padding-right: 46px; }
+.search input::placeholder { color: var(--muted); }
 select:focus, .search input:focus { border-color: var(--brand); }
-.locate { position: absolute; right: 4px; bottom: 3px; width: 36px; height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.locate { position: absolute; right: 5px; bottom: 5px; width: 36px; height: 36px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
 .locate:hover { color: var(--fg); background: var(--head); }
+.locate:disabled { opacity: .5; cursor: progress; }
 .locate svg { width: 19px; height: 19px; }
-.results { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 10; list-style: none; margin: 0; padding: 6px;
-  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px -18px rgba(0, 0, 0, .5); }
+.results { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 10; list-style: none; margin: 0; padding: 6px; color: var(--fg);
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .45); }
 .results button { width: 100%; text-align: left; border: 0; background: transparent; padding: 9px 12px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; }
 .results button:hover, .results button.on { background: var(--head); }
 .results .s { color: var(--muted); font-size: 13px; }
 .results .empty { padding: 9px 12px; color: var(--muted); }
 
-.brand { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; line-height: 1; user-select: none; padding: 0 6px; }
-.brand .mark { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
-.brand .mark b { color: var(--brand); }
-.brand .name { font-size: 9.5px; font-weight: 700; letter-spacing: .32em; margin-right: -.32em; color: var(--muted); }
+.favs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; }
+.favs .lbl { font-size: 12.5px; font-weight: 600; color: var(--on-muted); padding-right: 4px; }
+.chip { display: inline-flex; align-items: center; border: 1px solid var(--field-line); background: var(--field); color: var(--fg); border-radius: 999px; overflow: hidden; }
+.chip button { border: 0; background: transparent; cursor: pointer; padding: 6px 4px 6px 13px; font-size: 13.5px; font-weight: 600; }
+.chip button.x { padding: 6px 11px 6px 6px; color: var(--muted); font-weight: 400; }
+.chip button.x:hover { color: var(--fg); }
+.chip.on { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); }
 
-/* Anlık durum + yer bilgisi */
-.hero { display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; }
-.now { padding: 22px 24px; display: flex; flex-direction: column; gap: 16px; }
-.now h1 { margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -.01em; line-height: 1.15; text-wrap: balance; }
-.now .sub { margin: 3px 0 0; color: var(--muted); font-size: 14px; }
-.now .upd { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; }
-.link { border: 0; background: none; padding: 0; color: var(--brand); font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-.locate:disabled { opacity: .5; cursor: progress; }
-.now .row { display: flex; align-items: center; gap: 18px; }
-.now .temp { font-family: var(--font-num); font-size: clamp(64px, 12vw, 96px); line-height: .9; letter-spacing: -.05em; }
-.now .temp sup { font-size: .36em; vertical-align: top; position: relative; top: .3em; margin-left: 2px; letter-spacing: 0; }
-.now .cond { display: flex; flex-direction: column; gap: 2px; }
-.now .cond svg { width: 62px; height: 62px; }
-.now .cond .t { font-size: 19px; font-weight: 600; }
-.now .cond .f { color: var(--muted); }
-.place { padding: 20px 22px; }
-.kv { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 18px; margin: 0; }
+.ic-btn { width: 40px; height: 40px; flex: none; border: 1px solid var(--field-line); border-radius: 50%; background: var(--field); color: var(--fg); display: grid; place-items: center; cursor: pointer;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.ic-btn:hover { border-color: var(--brand); }
+.ic-btn svg { width: 19px; height: 19px; }
+.ic-btn[aria-pressed="true"] { color: #D99A00; }
+.ic-btn[aria-pressed="true"] svg path { fill: currentColor; }
+
+/* Anlık durum: sayfanın en önemli yeri; büyük sıcaklık ve tek cümlelik özet */
+.now { padding: 40px 0 44px; text-shadow: var(--on-shadow); }
+.now .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.now .acts { display: flex; gap: 8px; text-shadow: none; }
+.now h1 { margin: 0; font-family: var(--font-display); font-size: clamp(32px, 5vw, 46px); font-weight: 650; letter-spacing: -.025em; line-height: 1.04; text-wrap: balance; }
+.now .sub { margin: 6px 0 0; color: var(--on-muted); font-size: 15px; }
+.now .main { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 30px; margin-top: 22px; }
+.now .temp { font-family: var(--font-display); font-weight: 300; font-size: clamp(112px, 19vw, 184px); font-variation-settings: "opsz" 96; font-stretch: 86%; line-height: .8; letter-spacing: -.06em; margin-left: -.05em; }
+.now .temp sup { font-size: .3em; font-weight: 400; vertical-align: top; position: relative; top: .22em; margin-left: .08em; letter-spacing: 0; }
+.now .cond { display: flex; flex-direction: column; gap: 3px; flex: 1 1 170px; min-width: 0; }
+.now .cond .ci { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.now .cond svg { width: 58px; height: 58px; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .15)); }
+.now .cond .t { font-family: var(--font-display); font-size: 27px; font-weight: 600; letter-spacing: -.015em; line-height: 1.1; }
+.now .cond .f { color: var(--on-muted); font-size: 15px; }
+.now .cond .f b { color: var(--on); font-weight: 700; }
+.sum { margin: 28px 0 0; max-width: 34em; font-family: var(--font-display); font-size: clamp(20px, 2.5vw, 25px); font-weight: 500; line-height: 1.32; letter-spacing: -.01em; text-wrap: pretty; }
+.stats { display: flex; flex-wrap: wrap; gap: 14px 36px; margin: 28px 0 0; padding-top: 18px; border-top: 1px solid var(--on-line); }
+.stats dt { font-size: 13px; color: var(--on-muted); }
+.stats dd { margin: 2px 0 0; font-size: 19px; font-weight: 650; white-space: nowrap; }
+.stats dd small { font-size: 13px; font-weight: 500; color: var(--on-muted); }
+.stats .wd svg { color: currentColor; width: 16px; height: 16px; }
+.now .upd { margin: 18px 0 0; font-size: 13px; line-height: 1.6; color: var(--on-muted); }
+.link { border: 0; background: none; padding: 0; color: inherit; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.stale { display: inline-block; margin: 18px 0 0; padding: 8px 12px; border-radius: 10px; background: #FFD36B; color: #2A1C00; font-size: 14px; text-shadow: none; }
+.now.state { padding: 70px 0; font-size: 18px; }
+.now.state p { margin: 0 0 14px; }
+
+/* ---------- Ayrıntılar: gökyüzünün üstüne çıkan tek parça yüzey ---------- */
+.sheet { position: relative; z-index: 1; background: var(--paper); border-radius: 28px 28px 0 0; box-shadow: 0 -24px 60px -36px rgba(0, 0, 0, .45); min-height: 40vh; }
+.sheet > .wrap { padding-top: 6px; padding-bottom: 36px; }
+.sec { padding: 38px 0; border-top: 1px solid var(--line); }
+#details > .sec:first-child { border-top: 0; }
+.sec h2, .card h2 { margin: 0; font-family: var(--font-display); font-size: 25px; font-weight: 650; letter-spacing: -.02em; line-height: 1.15; }
+.sec .note { margin: 6px 0 18px; color: var(--muted); font-size: 14px; max-width: 74ch; }
+
+/* Hava kalitesi | polen | güneş ve ay: ince çizgilerle ayrılmış üç sütun */
+.band { display: grid; grid-template-columns: 1fr 1fr 1.3fr; }
+.card { display: flex; flex-direction: column; gap: 12px; padding: 0 28px; border-left: 1px solid var(--line); min-width: 0; }
+.card:first-child { padding-left: 0; border-left: 0; }
+.card:last-child { padding-right: 0; }
+.card h2 { font-size: 21px; }
+.card .src { margin: auto 0 0; padding-top: 4px; color: var(--muted); font-size: 12.5px; }
+.card .muted { color: var(--muted); font-size: 14px; margin: 0; }
+.aqi { display: flex; align-items: center; gap: 16px; }
+.aqi .n { font-family: var(--font-display); font-size: 54px; font-weight: 400; line-height: .9; letter-spacing: -.03em; min-width: 62px; }
+.aqi .lv { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 7px; }
+.aqi .lv i, .pol i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+.aqi p { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); line-height: 1.4; }
+.meter { height: 6px; border-radius: 99px; background: linear-gradient(90deg, #50C878 0 16.67%, #B5D33D 16.67% 33.33%, #F0C419 33.33% 50%, #F08A24 50% 66.67%, #E0453A 66.67% 83.33%, #8E3AA8 83.33%); position: relative; margin: 4px 0; }
+.meter b { position: absolute; top: -5px; width: 4px; height: 16px; border-radius: 2px; background: var(--fg); box-shadow: 0 0 0 2px var(--paper); transform: translateX(-2px); }
+.kv { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin: 0; }
 .kv dt { color: var(--muted); font-size: 13px; }
-.kv dd { margin: 1px 0 0; font-family: var(--font-num); font-size: 16px; font-weight: 500; white-space: nowrap; }
-.kv dd small { font-family: var(--font-ui); font-size: 13px; color: var(--muted); font-weight: 400; }
-.kv .wide { grid-column: 1 / -1; padding-top: 12px; border-top: 1px solid var(--line); }
-.c-lo { color: var(--cold); } .c-hi { color: var(--warm); }
+.kv dd { margin: 1px 0 0; font-size: 17px; font-weight: 650; white-space: nowrap; }
+.kv dd small { font-size: 13px; color: var(--muted); font-weight: 400; }
+.pol { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.pol li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14.5px; padding: 6px 0; border-top: 1px solid var(--line); }
+.pol li:first-child { border-top: 0; }
+.pol li span:last-child { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13.5px; }
+.sky { display: grid; grid-template-columns: auto 1fr; gap: 14px 18px; align-items: center; }
+.sky svg { display: block; }
+.sky dl { margin: 0; display: grid; gap: 5px; }
+.sky dl div { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.sky dt { color: var(--muted); white-space: nowrap; }
+.sky dd { margin: 0; font-weight: 650; white-space: nowrap; text-align: right; }
+.arc-bg { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 4 4; }
+.arc-done { fill: none; stroke: #F2B227; stroke-width: 2.5; stroke-linecap: round; }
+.hz { stroke: var(--muted); stroke-opacity: .5; }
 
 /* MGM resmi görselleri */
-.mgm { padding: 16px 18px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
-.mgm .txt { flex: 1 1 220px; }
-.mgm h2 { margin: 0; font-size: 17px; }
-.mgm p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
-.mgm .imgs { display: flex; gap: 10px; flex-wrap: wrap; background: #fff; padding: 8px; border-radius: 12px; }
+.mgm { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 28px; }
+.mgm .txt { flex: 1 1 240px; }
+.mgm p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+.mgm .imgs { display: flex; gap: 10px; flex-wrap: wrap; background: #fff; padding: 8px; border-radius: 12px; border: 1px solid var(--line); }
 .mgm img { display: block; max-width: 100%; height: auto; }
 
+/* 48 saatlik grafik */
+.chart-wrap { overflow-x: auto; position: relative; margin: 0 -4px; padding: 0 4px; }
+.chart { display: block; }
+.chart text { font-family: var(--font-ui); font-size: 11.5px; fill: var(--muted); }
+.chart .tv { fill: var(--fg); font-size: 12.5px; font-weight: 600; }
+.chart .dl { font-family: var(--font-display); font-weight: 650; font-size: 13px; fill: var(--fg); }
+.chart .grid { stroke: var(--line); }
+.chart .tl { fill: none; stroke: var(--warm); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .bar { fill: var(--cold); }
+.chart .hit { fill: transparent; }
+.chart .hl { stroke: var(--fg); stroke-opacity: .3; }
+.chart .dot { fill: var(--warm); stroke: var(--paper); stroke-width: 2; }
+.tip { position: absolute; pointer-events: none; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 10px; padding: 8px 11px; font-size: 13px; line-height: 1.5; box-shadow: 0 12px 30px -14px rgba(0, 0, 0, .5); white-space: nowrap; z-index: 2; }
+.tip b { display: block; }
+.tip span { font-weight: 650; }
+
 /* Tablolar */
-.sect { padding: 16px 16px 12px; }
-.sect h2 { margin: 0 4px 2px; font-size: 17px; font-weight: 700; }
-.sect .note { margin: 0 4px 12px; color: var(--muted); font-size: 13px; }
-.tbl-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); }
+.tbl-wrap { overflow-x: auto; margin: 0 -4px; padding: 0 4px; }
 table { width: 100%; border-collapse: collapse; min-width: 760px; }
 #h-gun ~ .tbl-wrap table { min-width: 960px; }
 #h-gun ~ .tbl-wrap th, #h-gun ~ .tbl-wrap td { padding-left: 7px; padding-right: 7px; }
-tr.grp th { border-bottom: 1px solid var(--line); }
-th.pg { background: color-mix(in srgb, var(--fg) 8%, transparent); }
-th, td { padding: 9px 10px; text-align: center; white-space: nowrap; }
-th { font-size: 12.5px; font-weight: 600; color: var(--muted); background: var(--head); border-bottom: 1px solid var(--line); vertical-align: bottom; line-height: 1.25; }
+th, td { padding: 11px 10px; text-align: center; white-space: nowrap; }
+th { font-size: 12.5px; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--line); vertical-align: bottom; line-height: 1.25; }
 th small { display: block; font-weight: 400; }
-td { border-top: 1px solid var(--line); font-family: var(--font-num); font-size: 14.5px; }
+tr.grp th { border-bottom: 1px solid var(--line); }
+td { border-top: 1px solid var(--line); font-size: 15px; }
 tbody tr:first-child td { border-top: 0; }
 td.l, th.l { text-align: left; }
-td.ev { font-family: var(--font-ui); font-size: 14px; }
+td.ev { font-size: 14.5px; }
 td.ev span { display: inline-flex; align-items: center; gap: 8px; }
 td.ev svg { width: 30px; height: 30px; flex: none; }
-td.past { background: var(--head); font-size: 13.5px; }
-tr.dayrow td { font-family: var(--font-ui); font-weight: 700; font-size: 13.5px; background: var(--head); padding: 7px 10px; }
-tr.cur td { background: color-mix(in srgb, var(--brand) 9%, transparent); }
+th.pg, td.past { background: color-mix(in srgb, var(--fg) 4.5%, transparent); }
+td.past { font-size: 14px; }
 td.past em { font-style: normal; color: var(--muted); font-size: 12px; margin-left: 5px; }
+tr.dayrow td { font-family: var(--font-display); font-weight: 650; font-size: 15px; padding: 20px 10px 8px; }
+tr.cur td { background: color-mix(in srgb, var(--brand) 8%, transparent); }
+tr.cur td:first-child { box-shadow: inset 3px 0 0 var(--brand); }
 .wd { display: inline-flex; align-items: center; gap: 5px; }
 .wd svg { width: 15px; height: 15px; color: var(--muted); }
-.day1 { font-family: var(--font-ui); font-weight: 600; }
+.day1 { font-weight: 600; }
 .day1 small { display: block; font-weight: 400; color: var(--muted); font-size: 12.5px; }
+.c-lo { color: var(--cold); } .c-hi { color: var(--warm); }
+.more { margin-top: 16px; }
+.btn { border: 1px solid var(--line); background: var(--panel-solid); color: var(--fg); border-radius: 999px; padding: 9px 18px; font-weight: 600; cursor: pointer; }
+.btn:hover { border-color: var(--brand); }
 
-.notes { padding: 14px 18px; color: var(--muted); font-size: 13px; }
+.notes { padding: 26px 0 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .notes ul { margin: 0; padding-left: 18px; }
-.notes li { margin: 3px 0; }
+.notes li { margin: 4px 0; max-width: 90ch; }
 .notes a { color: inherit; }
 
-.state { padding: 36px 20px; text-align: center; }
-.state p { margin: 0 0 12px; }
-.btn { border: 1px solid var(--line); background: var(--panel-solid); border-radius: 10px; padding: 9px 16px; font-weight: 600; cursor: pointer; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--panel-solid); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; box-shadow: 0 16px 40px -14px rgba(0, 0, 0, .55); z-index: 50; font-size: 14px; display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px); }
+.toast a { color: var(--brand); font-weight: 600; }
 
 /* Hava ikonları */
 .wi .sun { fill: #F2B227; }
@@ -275,25 +326,6 @@ td.past em { font-style: normal; color: var(--muted); font-size: 12px; margin-le
 .wi .flake { fill: #7FB2EE; }
 .wi .bolt { fill: #F2B227; }
 .wi .fog { stroke: #9AA8B8; stroke-width: 2.2; stroke-linecap: round; }
-
-@media (max-width: 820px) { .hero { grid-template-columns: 1fr; } }
-@media (max-width: 600px) {
-  body { padding-top: 12px; }
-  .top { padding: 10px; }
-  .brand .mark { font-size: 19px; }
-  .brand .name { font-size: 8px; }
-  .site-ic { width: 38px; height: 38px; }
-  .site-t b { font-size: 20px; }
-  .site-t small { font-size: 11.5px; }
-  .pick { flex-basis: 100%; }
-  .field.f-il, .field.f-ilce { flex: 1 1 40%; }
-  #il, #ilce { width: 100%; }
-  .search { flex-basis: 100%; }
-  .now { padding: 18px; }
-  .now h1 { font-size: 23px; }
-  .now .cond svg { width: 50px; height: 50px; }
-  .sect { padding: 12px 10px 10px; }
-}
 
 /* Gizlilik ve kullanım penceresi */
 .legal-btn { border: 0; background: none; padding: 0; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
@@ -311,84 +343,38 @@ dialog.legal a { color: var(--brand, var(--accent)); }
 dialog.legal .close { position: sticky; top: 0; float: right; margin: -6px -8px 0 0; width: 36px; height: 36px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; }
 dialog.legal .close:hover { color: var(--fg); background: color-mix(in srgb, var(--fg) 8%, transparent); }
 
-/* Küçük simge düğmeleri: tema, favori, paylaş */
-.tools { display: flex; align-items: center; gap: 10px; flex: none; }
-.ic-btn { width: 38px; height: 38px; flex: none; border: 1px solid var(--line); border-radius: 11px; background: var(--panel-solid); color: var(--muted); display: grid; place-items: center; cursor: pointer; }
-.ic-btn:hover { color: var(--fg); }
-.ic-btn svg { width: 19px; height: 19px; }
-.ic-btn[aria-pressed="true"] { color: #E0A100; }
-.ic-btn[aria-pressed="true"] svg path { fill: currentColor; }
-
-/* Favoriler */
-.favs { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.favs .lbl { font-size: 12px; color: var(--muted); padding: 0 4px; }
-.chip { display: inline-flex; align-items: center; border: 1px solid var(--line); background: var(--panel-solid); border-radius: 999px; overflow: hidden; }
-.chip button { border: 0; background: transparent; cursor: pointer; padding: 6px 4px 6px 12px; font-size: 13.5px; font-weight: 600; }
-.chip button.x { padding: 6px 10px 6px 6px; color: var(--muted); font-weight: 400; }
-.chip button.x:hover { color: var(--fg); }
-.chip.on { border-color: var(--brand); }
-
-/* Anlık durum başlığı ve özet cümle */
-.ttl { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-.ttl .acts { display: flex; gap: 6px; }
-.sum { margin: 0; padding: 11px 13px; border-radius: 12px; background: var(--head); font-size: 15px; line-height: 1.5; }
-.stale { margin: 0; padding: 9px 12px; border-radius: 10px; background: color-mix(in srgb, var(--warm) 16%, transparent); font-size: 13.5px; }
-
-/* 48 saatlik grafik */
-.chart-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--line); position: relative; }
-.chart { display: block; }
-.chart text { font-family: var(--font-num); font-size: 11px; fill: var(--muted); }
-.chart .tv { fill: var(--fg); font-size: 11.5px; }
-.chart .dl { font-family: var(--font-ui); font-weight: 700; font-size: 12px; fill: var(--fg); }
-.chart .grid { stroke: var(--line); }
-.chart .tl { fill: none; stroke: var(--warm); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.chart .bar { fill: var(--cold); }
-.chart .nowl { stroke: var(--brand); stroke-width: 1.5; stroke-dasharray: 3 3; }
-.chart .hit { fill: transparent; }
-.chart .hl { stroke: var(--fg); stroke-opacity: .35; }
-.chart .dot { fill: var(--warm); stroke: var(--panel-solid); stroke-width: 2; }
-.tip { position: absolute; pointer-events: none; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; font-size: 13px; line-height: 1.45; box-shadow: 0 10px 30px -12px rgba(0, 0, 0, .5); white-space: nowrap; z-index: 2; }
-.tip b { display: block; }
-.tip span { font-family: var(--font-num); }
-
-/* Hava kalitesi, polen, güneş ve ay kartları */
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
-.card { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
-.card h2 { margin: 0; font-size: 17px; }
-.card .src { margin: auto 0 0; color: var(--muted); font-size: 12px; }
-.card .muted { color: var(--muted); font-size: 13.5px; margin: 0; }
-.aqi { display: flex; align-items: center; gap: 14px; }
-.aqi .n { font-family: var(--font-num); font-size: 40px; line-height: 1; min-width: 64px; }
-.aqi .lv { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 7px; }
-.aqi .lv i, .pol i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; flex: none; }
-.aqi p { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); }
-.meter { height: 8px; border-radius: 99px; background: linear-gradient(90deg, #50C878 0 16.67%, #B5D33D 16.67% 33.33%, #F0C419 33.33% 50%, #F08A24 50% 66.67%, #E0453A 66.67% 83.33%, #8E3AA8 83.33%); position: relative; }
-.meter b { position: absolute; top: -4px; width: 4px; height: 16px; border-radius: 2px; background: var(--fg); border: 1px solid var(--panel-solid); transform: translateX(-2px); }
-.pol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 7px 14px; }
-.pol li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; }
-.pol li span:last-child { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
-.sky { display: grid; grid-template-columns: auto 1fr; gap: 12px 14px; align-items: center; }
-.sky svg { display: block; }
-.sky dl { margin: 0; display: grid; gap: 4px; }
-.sky dl div { display: flex; justify-content: space-between; gap: 10px; font-size: 13.5px; }
-.sky dt { color: var(--muted); }
-.sky dd { margin: 0; font-weight: 600; white-space: nowrap; text-align: right; }
-.sky dt { white-space: nowrap; }
-.arc-bg { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 4 4; }
-.arc-done { fill: none; stroke: #F2B227; stroke-width: 2.5; stroke-linecap: round; }
-.hz { stroke: var(--muted); stroke-opacity: .5; }
-
-.more { margin: 10px 4px 2px; }
-
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--panel-solid); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; box-shadow: 0 16px 40px -14px rgba(0, 0, 0, .55); z-index: 50; font-size: 14px; display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px); }
-.toast a { color: var(--brand); font-weight: 600; }
-
-@media (max-width: 600px) {
-  .tools { gap: 6px; }
-  .ic-btn { width: 34px; height: 34px; }
-  .sky { grid-template-columns: 1fr; }
-  .pol { grid-template-columns: 1fr; }
+@media (max-width: 900px) {
+  .band { grid-template-columns: 1fr; }
+  .card { padding: 26px 0; border-left: 0; border-top: 1px solid var(--line); }
+  .card:first-child { padding-top: 0; border-top: 0; }
+  .card:last-child { padding-bottom: 0; }
 }
+@media (max-width: 640px) {
+  body { font-size: 15px; }
+  .skyarea { padding-top: 12px; }
+  .site-ic { width: 36px; height: 36px; }
+  .site-t b { font-size: 20px; }
+  .site-t small { display: none; }
+  .tools { gap: 8px; }
+  .ic-btn { width: 36px; height: 36px; }
+  .brand .mark { font-size: 18px; }
+  .brand .name { font-size: 7.5px; }
+  .pick { grid-template-columns: 1fr 1fr; margin-top: 16px; }
+  .search { grid-column: 1 / -1; }
+  .now { padding: 30px 0 34px; }
+  .now .main { flex-wrap: nowrap; gap: 18px; }
+  .now .temp { font-size: clamp(92px, 27vw, 120px); }
+  .now .cond svg { width: 44px; height: 44px; }
+  .now .cond .f { font-size: 14px; }
+  .now .cond .t { font-size: 21px; }
+  .stats { gap: 12px 20px; }
+  .stats > div { flex: 1 1 40%; }
+  .sheet { border-radius: 22px 22px 0 0; }
+  .sec { padding: 30px 0; }
+  .sec h2 { font-size: 22px; }
+  .sky { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 <body>
@@ -398,9 +384,10 @@ dialog.legal .close:hover { color: var(--fg); background: color-mix(in srgb, var
   <div class="fog"></div><div class="rain"></div><div class="snow"></div><div class="flash"></div>
 </div>
 
-<main class="shell">
-  <div class="panel top">
-    <header class="topbar">
+<main>
+  <div class="skyarea"><div class="wrap">
+    <div class="top">
+      <header class="bar">
       <a class="site" href="./" aria-label="Hava Durumu, ana sayfa">
         <svg class="site-ic" viewBox="0 0 64 64" aria-hidden="true">
           <circle cx="24" cy="24" r="12" fill="#F2B227"/>
@@ -429,12 +416,13 @@ dialog.legal .close:hover { color: var(--fg); background: color-mix(in srgb, var
         <ul class="results" id="results" hidden></ul>
       </div>
     </div>
-    <div class="favs" id="favs" hidden aria-label="Favori yerler"></div>
-  </div>
-
-  <div id="view"></div>
-
-  <div class="panel notes">
+      <div class="favs" id="favs" hidden aria-label="Favori yerler"></div>
+    </div>
+    <div id="hero"></div>
+  </div></div>
+  <div class="sheet"><div class="wrap">
+    <div id="details"></div>
+    <footer class="notes">
     <ul>
       <li>Saatlik tabloda her satır 3 saatlik bir dilimdir. Hamle, kısa süreli en yüksek rüzgar hızıdır. Konum düğmesi, konumuna en yakın ilçeyi seçer; MGM görselleri il merkezine aittir.</li>
       <li>Hissedilen sıcaklık; sıcaklık, nem ve rüzgara göre hesaplanır, kişiden kişiye değişebilir.</li>
@@ -443,7 +431,8 @@ dialog.legal .close:hover { color: var(--fg); background: color-mix(in srgb, var
       <li>Tahmin verileri: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (CC BY 4.0). Resmi tahmin görselleri: <a href="https://www.mgm.gov.tr/" target="_blank" rel="noopener">Meteoroloji Genel Müdürlüğü</a>.</li>
       <li><button type="button" class="legal-btn" data-legal>Gizlilik ve kullanım</button></li>
     </ul>
-  </div>
+    </footer>
+  </div></div>
 </main>
 
 <dialog class="legal" id="legal" aria-labelledby="legal-h">
@@ -478,7 +467,7 @@ dialog.legal .close:hover { color: var(--fg); background: color-mix(in srgb, var
     <li>Ay evresi, ay doğuşu ve batışı tarayıcıda gök mekaniği formülleriyle hesaplanır; birkaç dakikalık fark olabilir.</li>
     <li>Yer adları ve koordinatlar: Open-Meteo Geocoding, GeoNames (CC BY 4.0).</li>
     <li>Resmi tahmin görselleri: Meteoroloji Genel Müdürlüğü; değiştirilmeden gösterilir.</li>
-    <li>Kaynak kodu MIT lisanslıdır. Yazı tipleri (Figtree, IBM Plex Mono) SIL Open Font License 1.1 ile kullanılır.</li>
+    <li>Kaynak kodu MIT lisanslıdır. Yazı tipleri (Figtree, Bricolage Grotesque) SIL Open Font License 1.1 ile kullanılır.</li>
   </ul>
   <p>Soru, hata bildirimi veya silme talepleri için: <a href="https://github.com/nihathko/hava-durumu/issues" target="_blank" rel="noopener">GitHub üzerinden bize yazın</a>.</p>
   </div>
@@ -560,6 +549,14 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
     sc.dataset.k = k; sc.dataset.d = d;
     sc.style.setProperty('--s1', a); sc.style.setProperty('--s2', b); sc.style.setProperty('--s3', c);
     document.body.style.background = b;
+    // Gökyüzüne yazılan yazılar: açık renk gökte koyu, gece ve koyu bulutlu/yağışlı gökte beyaz
+    const dark = d && ['clear', 'partly', 'cloud', 'fog', 'drizzle', 'snow'].includes(k), st = document.documentElement.style;
+    st.setProperty('--on', dark ? '#0E2233' : '#FFFFFF');
+    st.setProperty('--on-muted', dark ? 'rgba(14, 34, 51, .76)' : 'rgba(255, 255, 255, .8)');
+    st.setProperty('--on-line', dark ? 'rgba(14, 34, 51, .2)' : 'rgba(255, 255, 255, .26)');
+    st.setProperty('--on-shadow', dark ? 'none' : '0 1px 14px rgba(0, 0, 0, .28)');
+    const tc = document.querySelector('meta[name=theme-color]');
+    if (tc) tc.content = a;
   }
 
   // ---------- Biçimlendirme ----------
@@ -583,7 +580,7 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
   // ---------- İl / ilçe ----------
   const IL = ILILCE.slice().sort((a, b) => trSort(a.ad, b.ad));
   const ilSel = $('il'), ilceSel = $('ilce');
-  ilSel.innerHTML = IL.map((x, i) => `<option value="${i}">${esc(x.ad)}</option>`).join('');
+  ilSel.innerHTML = '<option value="" hidden>Seçilmedi</option>' + IL.map((x, i) => `<option value="${i}">${esc(x.ad)}</option>`).join('');
   // 51 ilde "Merkez" adında gerçek bir ilçe var; o illerde ayrıca "İl merkezi" seçeneği eklenmez (iki kez görünmesin).
   // Büyükşehirlerde merkez ilçe olmadığı için listenin başına "İl merkezi" eklenir.
   const merkezOf = il => il.ilceler.findIndex(x => x[0] === 'Merkez');
@@ -701,11 +698,12 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
   }
 
   // ---------- Çizim ----------
-  const view = $('view');
+  const view = $('hero'), details = $('details');
   let current = store.get('hava.yer', null), lastData = null, loadSeq = 0, fetchedAt = '';
 
   function showState(msg, retry) {
-    view.innerHTML = `<div class="panel state"><p>${esc(msg)}</p>${retry ? '<button class="btn" type="button" id="retry">Tekrar dene</button>' : ''}</div>`;
+    details.innerHTML = '';
+    view.innerHTML = `<div class="now state"><p>${esc(msg)}</p>${retry ? '<button class="btn" type="button" id="retry">Tekrar dene</button>' : ''}</div>`;
     if (retry) $('retry').onclick = () => load(current);
   }
 
@@ -843,6 +841,8 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
       }
       if (pr >= 1) bars += `<path class="bar" d="${bar(x(k), Math.max(1, pr / 100 * bh))}"/>`;
     }
+    const anyP = H.precipitation_probability.slice(i0, i0 + n).some(v => (v ?? 0) >= 1);
+    if (!anyP) g += `<text x="${L}" y="${by + bh - 10}">Önümüzdeki 48 saatte yağış beklenmiyor</text>`;
     g += `<text x="${L}" y="${by - 6}">Yağış ihtimali</text><line class="grid" x1="${L}" y1="${by + bh}" x2="${w - L}" y2="${by + bh}"/>`;
     const svg = `<svg class="chart" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Önümüzdeki 48 saatin sıcaklık ve yağış ihtimali grafiği. Aynı değerler aşağıdaki saatlik tabloda da var.">
       ${g}${bars}<path class="tl" d="${path}"/>
@@ -916,8 +916,8 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
       <path class="arc-bg" d="M10 82A70 70 0 0 1 150 82"/>${up && t > 0.01 ? `<path class="arc-done" d="M10 82A70 70 0 0 1 ${sx} ${sy}"/>` : ''}
       <line class="hz" x1="2" y1="82" x2="158" y2="82"/>
       <circle cx="${sx}" cy="${sy}" r="8" fill="#F2B227"${up ? '' : ' opacity=".35"'}/>
-      <text x="4" y="97" font-size="14" fill="currentColor" opacity=".7" font-family="var(--font-num)">${hhmm(D.sunrise[0])}</text>
-      <text x="156" y="97" font-size="14" fill="currentColor" opacity=".7" text-anchor="end" font-family="var(--font-num)">${hhmm(D.sunset[0])}</text>
+      <text x="4" y="97" font-size="14" fill="currentColor" opacity=".7" style="font-family: var(--font-ui)">${hhmm(D.sunrise[0])}</text>
+      <text x="156" y="97" font-size="14" fill="currentColor" opacity=".7" text-anchor="end" style="font-family: var(--font-ui)">${hhmm(D.sunset[0])}</text>
     </svg>`;
   }
   // Ay konumu: SunCalc kütüphanesindeki düşük hassasiyetli formüller (birkaç dakikalık hata)
@@ -963,7 +963,7 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
   function skyCard(d, p) {
     const D = d.daily, dl = D.daylight_duration || [], ph = moonPhase(Date.now()), [mr, ms] = moonTimes(d, +p.lat, +p.lon);
     const diff = dl.length > 1 ? Math.round((dl[1] - dl[0]) / 60) : null;
-    return `<section class="panel card" aria-labelledby="h-gok">
+    return `<section class="card" aria-labelledby="h-gok">
       <h2 id="h-gok">Güneş ve ay</h2>
       <div class="sky">
         ${sunArc(d)}
@@ -1080,7 +1080,7 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
   function mgmBox(p) {
     if (!p.il) return '';
     const m = encodeURIComponent(mgmCode(p.il));
-    return `<section class="panel mgm" id="mgm" aria-labelledby="h-mgm">
+    return `<section class="sec mgm" id="mgm" aria-labelledby="h-mgm">
       <div class="txt"><h2 id="h-mgm">MGM resmi tahmini</h2><p>${esc(p.il)} için Meteoroloji Genel Müdürlüğü'nün yayınladığı son durum ve 5 günlük tahmin.</p></div>
       <div class="imgs">
         <img src="https://www.mgm.gov.tr/sunum/sondurum-show-2.aspx?m=${m}&rC=111&rZ=fff" width="140" height="100" alt="${esc(p.il)} son durum (MGM)">
@@ -1095,50 +1095,48 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
   function render(d, p, clim) {
     const C = d.current, D = d.daily, ch = chartSvg(d), maxDays = Math.min(14, D.time.length - 1);
     view.innerHTML = `
-      <div class="hero">
-        <section class="panel now" aria-label="Şu anki hava durumu">
-          <div><div class="ttl"><h1>${esc(p.name)}</h1><div class="acts">
-              <button class="ic-btn" id="fav" type="button" aria-pressed="false">${STAR}</button>
-              <button class="ic-btn" id="share" type="button" title="Paylaş" aria-label="Paylaş">${SHARE}</button></div></div>
-            <p class="sub">${p.sub ? esc(p.sub) + '. ' : ''}${esc(longDate(ymd(C.time)))}</p>
-            <p class="upd">Veri saati ${hhmm(C.time)}, sayfaya ${fetchedAt} alındı. Veriler 15 dakikada bir yenilenir. <button type="button" class="link" id="refresh">Şimdi yenile</button></p></div>
-          ${staleAt ? `<p class="stale" role="status">İnternet bağlantısı yok. ${esc(new Date(staleAt).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))} tarihinde alınan son veri gösteriliyor.</p>` : ''}
-          <div class="row">
-            <div class="temp" aria-label="Sıcaklık ${n0(C.temperature_2m)} derece">${n0(C.temperature_2m)}<sup>°C</sup></div>
-            <div class="cond">${icon(C.weather_code, C.is_day)}<span class="t">${esc(cond(C.weather_code)[0])}</span><span class="f">Hissedilen ${deg(C.apparent_temperature)}</span></div>
+      <section class="now" aria-label="Şu anki hava durumu">
+        <div class="head">
+          <div><h1>${esc(p.name)}</h1><p class="sub">${p.sub ? esc(p.sub) + '. ' : ''}${esc(longDate(ymd(C.time)))}</p></div>
+          <div class="acts">
+            <button class="ic-btn" id="fav" type="button" aria-pressed="false">${STAR}</button>
+            <button class="ic-btn" id="share" type="button" title="Paylaş" aria-label="Paylaş">${SHARE}</button>
           </div>
-          <p class="sum">${esc(summary(d).join(' '))}</p>
-          <dl class="kv">
-            <div><dt>Nem</dt><dd>%${n0(C.relative_humidity_2m)}</dd></div>
-            <div><dt>Rüzgar</dt><dd>${wind(C.wind_direction_10m, C.wind_speed_10m)} <small>km/sa, hamle ${n0(C.wind_gusts_10m)}</small></dd></div>
-            <div><dt>Yağış, son 1 saat</dt><dd>${(C.precipitation ?? 0).toFixed(1).replace('.', ',')} <small>mm</small></dd></div>
-            <div><dt>Bugün yağış ihtimali</dt><dd>%${n0(D.precipitation_probability_max[0])}</dd></div>
-          </dl>
-        </section>
-        <section class="panel place" aria-label="Yer bilgileri">
-          <dl class="kv">
-            <div><dt>Gün doğumu</dt><dd>${hhmm(D.sunrise[0])}</dd></div>
-            <div><dt>Gün batımı</dt><dd>${hhmm(D.sunset[0])}</dd></div>
-            <div><dt>Aktüel basınç</dt><dd>${n0(C.surface_pressure)} <small>hPa</small></dd></div>
-            <div><dt>Deniz seviyesi basıncı</dt><dd>${n0(C.pressure_msl)} <small>hPa</small></dd></div>
-            <div><dt>Bugün en düşük / en yüksek</dt><dd><span class="c-lo">${deg(D.temperature_2m_min[0])}</span> / <span class="c-hi">${deg(D.temperature_2m_max[0])}</span></dd></div>
-            <div><dt>UV endeksi</dt><dd>${n0(D.uv_index_max[0])}</dd></div>
-            <div class="wide"><dt>Rakım, enlem, boylam</dt><dd>${n0(d.elevation)} <small>m</small> &nbsp; ${coord(+p.lat, 'K', 'G')} &nbsp; ${coord(+p.lon, 'D', 'B')}</dd></div>
-          </dl>
-        </section>
-      </div>
-      ${mgmBox(p)}
-      <section class="panel sect" aria-labelledby="h-graf">
-        <h2 id="h-graf">48 saatlik sıcaklık ve yağış</h2>
-        <p class="note">Üstte sıcaklık, altta yağış ihtimali. Bir saatin üzerine gel ya da dokun; o saatin değerleri ve yağış miktarı görünür. Grafik yana kaydırılabilir.</p>
+        </div>
+        ${staleAt ? `<p class="stale" role="status">İnternet bağlantısı yok. ${esc(new Date(staleAt).toLocaleString('tr-TR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))} tarihinde alınan son veri gösteriliyor.</p>` : ''}
+        <div class="main">
+          <div class="temp" aria-label="Sıcaklık ${n0(C.temperature_2m)} derece">${n0(C.temperature_2m)}<sup>°C</sup></div>
+          <div class="cond">
+            <div class="ci">${icon(C.weather_code, C.is_day)}<span class="t">${esc(cond(C.weather_code)[0])}</span></div>
+            <span class="f">Hissedilen <b>${deg(C.apparent_temperature)}</b></span>
+            <span class="f">Bugün en düşük <b>${deg(D.temperature_2m_min[0])}</b>, en yüksek <b>${deg(D.temperature_2m_max[0])}</b></span>
+          </div>
+        </div>
+        <p class="sum">${esc(summary(d).join(' '))}</p>
+        <dl class="stats">
+          <div><dt>Nem</dt><dd>%${n0(C.relative_humidity_2m)}</dd></div>
+          <div><dt>Rüzgar</dt><dd>${wind(C.wind_direction_10m, C.wind_speed_10m)} <small>km/sa, hamle ${n0(C.wind_gusts_10m)}</small></dd></div>
+          <div><dt>Yağış, son 1 saat</dt><dd>${(C.precipitation ?? 0).toFixed(1).replace('.', ',')} <small>mm</small></dd></div>
+          <div><dt>Bugün yağış ihtimali</dt><dd>%${n0(D.precipitation_probability_max[0])}</dd></div>
+          <div><dt>UV endeksi</dt><dd>${n0(D.uv_index_max[0])}</dd></div>
+          <div><dt>Aktüel basınç</dt><dd>${n0(C.surface_pressure)} <small>hPa</small></dd></div>
+        </dl>
+        <p class="upd">Veri saati ${hhmm(C.time)}, sayfaya ${fetchedAt} alındı; 15 dakikada bir yenilenir. <button type="button" class="link" id="refresh">Şimdi yenile</button><br>
+          Rakım ${n0(d.elevation)} m, ${coord(+p.lat, 'K', 'G')}, ${coord(+p.lon, 'D', 'B')}. Deniz seviyesi basıncı ${n0(C.pressure_msl)} hPa.</p>
+      </section>`;
+    details.innerHTML = `
+      <section class="sec" aria-labelledby="h-graf">
+        <h2 id="h-graf">Önümüzdeki 48 saat</h2>
+        <p class="note">Üstte sıcaklık, altta yağış ihtimali. Bir saatin üzerine gel ya da dokun; o saatin ayrıntısı ve yağış miktarı görünür. Grafik yana kaydırılabilir.</p>
         <div class="chart-wrap" id="chart">${ch.svg}<div class="tip" id="tip" hidden></div></div>
       </section>
-      <div class="cards">
-        <section class="panel card" id="aq" aria-labelledby="h-aq"><h2 id="h-aq">Hava kalitesi</h2><p class="muted">Yükleniyor…</p></section>
-        <section class="panel card" id="pol" aria-labelledby="h-pol"><h2 id="h-pol">Polen</h2><p class="muted">Yükleniyor…</p></section>
+      <div class="sec band">
+        <section class="card" id="aq" aria-labelledby="h-aq"><h2 id="h-aq">Hava kalitesi</h2><p class="muted">Yükleniyor…</p></section>
+        <section class="card" id="pol" aria-labelledby="h-pol"><h2 id="h-pol">Polen</h2><p class="muted">Yükleniyor…</p></section>
         ${skyCard(d, p)}
       </div>
-      <section class="panel sect" aria-labelledby="h-saat">
+      ${mgmBox(p)}
+      <section class="sec" aria-labelledby="h-saat">
         <h2 id="h-saat">Saatlik tahmin</h2>
         <p class="note">3 saatlik dilimler. Beklenen hadise, o 3 saatteki hâkim hava durumudur; hamle, bu sürede beklenen en yüksek rüzgar hızıdır. Sıcaklık, nem ve rüzgar, dilimin bittiği saatte beklenen değerlerdir.</p>
         <div class="tbl-wrap"><table>
@@ -1146,7 +1144,7 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
           <tbody>${hourlyRows(d)}</tbody>
         </table></div>
       </section>
-      <section class="panel sect" aria-labelledby="h-gun">
+      <section class="sec" aria-labelledby="h-gun">
         <h2 id="h-gun">${dayCount(d)} günlük tahmin</h2>
         <p class="note">Gri sütunlar 1991–2020 arasında aynı tarihi gösterir: uç değerler (ve yaşandığı yıl) ile o tarihin ortalama en düşük ve en yüksek sıcaklığı.<span id="far"${allDays ? '' : ' hidden'}> 7. günden sonraki tahminler daha belirsizdir; eğilim olarak değerlendir.</span></p>
         <div class="tbl-wrap"><table>
@@ -1192,7 +1190,8 @@ const ILILCE = [{"ad":"Adana","lat":36.9862,"lon":35.3253,"ilceler":[["Aladağ",
     fetchedAt = new Date().toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
     // Bağlantı yokken dakikada bir yeniden dene, varken 15 dakikada bir yenile
     lastLoad = stale ? Date.now() - 14 * 60 * 1000 : Date.now();
-    if (p.il) syncSelects(p);
+    // Türkiye dışındaki bir yer açıldıysa il/ilçe menüleri eski ili göstermesin
+    if (p.il) syncSelects(p); else { ilSel.value = ''; ilceSel.innerHTML = '<option value="">—</option>'; }
     try { history.replaceState(null, '', linkOf(p)); } catch (e) {}
     render(d, p, null);
     drawFavs();

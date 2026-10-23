@@ -2,12 +2,11 @@
 // böylece site uygulama olarak yüklenebilir ve internet yokken de açılır.
 // Önce ağdan alınır (her zaman en yeni sürüm), ağ yoksa önbellekten verilir.
 // Hava verisi (Open-Meteo) ve MGM görselleri başka sitelerden geldiği için hiç önbelleğe alınmaz.
-const CACHE = 'hava-v1';
+const CACHE = 'hava-v2';
 const FILES = [
   './', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png',
   'fonts/figtree-400-700-latin.woff2', 'fonts/figtree-400-700-latin-ext.woff2',
-  'fonts/ibm-plex-mono-400-latin.woff2', 'fonts/ibm-plex-mono-400-latin-ext.woff2',
-  'fonts/ibm-plex-mono-500-latin.woff2', 'fonts/ibm-plex-mono-500-latin-ext.woff2'
+  'fonts/bricolage-grotesque-latin.woff2', 'fonts/bricolage-grotesque-latin-ext.woff2'
 ];
 
 self.addEventListener('install', e => {
