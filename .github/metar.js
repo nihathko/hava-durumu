@@ -46,7 +46,7 @@ const s = metar.filter(x => /^LT/.test(x.icaoId) && x.lat && x.lon).map(x => ({
 // Türkiye uçuş bölgeleri (Ankara LTAA, İstanbul LTBB) için geçerli SIGMET uyarıları
 const TEHLIKE = { TS: 'Gök gürültülü fırtına', TURB: 'Türbülans', ICE: 'Buzlanma', MTW: 'Dağ dalgası', VA: 'Volkanik kül', TC: 'Tropik siklon', DS: 'Toz fırtınası', SS: 'Kum fırtınası', RDOACT: 'Radyoaktif bulut', CONVECTIVE: 'Konvektif hava' };
 const sig = sigmet.filter(x => /^(LTAA|LTBB)/.test(x.firId || '')).map(x => ({
-  fir: x.firId === 'LTBB' ? 'İstanbul' : 'Ankara', tehlike: TEHLIKE[x.hazard] || x.hazard, nitelik: x.qualifier || '', alt: x.base ?? null, ust: x.top ?? null,
+  fir: x.firId === 'LTBB' ? 'İstanbul' : 'Ankara', tehlike: TEHLIKE[x.hazard] || x.hazard, nitelik: x.qualifier || '', alt: Number.isFinite(+x.base) ? +x.base : null, ust: Number.isFinite(+x.top) ? +x.top : null,
   bas: x.validTimeFrom ? new Date(x.validTimeFrom * 1000).toISOString() : null, bit: x.validTimeTo ? new Date(x.validTimeTo * 1000).toISOString() : null,
   ham: x.rawSigmet || '', alan: (x.coords || []).map(c => [c.lat, c.lon])
 }));
