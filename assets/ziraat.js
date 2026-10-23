@@ -24,17 +24,6 @@
 
   // ---------- Seçili yer ----------
   const nemYorum = v => v == null ? '–' : v < 0.1 ? ['Kuru', 'e-yuksek'] : v < 0.2 ? ['Az nemli', 'e-orta'] : v < 0.35 ? ['Nemli', 'e-az'] : ['Islak', 'e-orta'];
-  // ---------- Yardımcılar: en yakın il ve aylık normallerin güne yayılması (NASA POWER, 1991–2020) ----------
-  const enYakinIl = p => IL.reduce((b, I) => Math.hypot(I.lat - p.lat, (I.lon - p.lon) * 0.77) < Math.hypot(b.lat - p.lat, (b.lon - p.lon) * 0.77) ? I : b, IL[0]);
-  const ORTA = [15, 45, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349]; // ayların ortasının yılın kaçıncı günü olduğu
-  const yilGunu = d => Math.floor((Date.parse(d + 'T12:00:00Z') - Date.parse(d.slice(0, 4) + '-01-01T12:00:00Z')) / 864e5);
-  function gunlukNormal(dizi, d) {
-    const g = yilGunu(d);
-    let i = ORTA.findIndex(x => x > g); if (i < 0) i = 12;
-    const a = (i + 11) % 12, b = i % 12, ga = i === 0 ? ORTA[11] - 365 : ORTA[a], gb = i === 12 ? ORTA[0] + 365 : ORTA[b];
-    return dizi[a] + (dizi[b] - dizi[a]) * (g - ga) / (gb - ga);
-  }
-
   // ---------- Sıcaklık-nem indeksi (hayvancılık, sığırda sıcak stresi) ----------
   async function sinep(p, s) {
     const el = $('thi');

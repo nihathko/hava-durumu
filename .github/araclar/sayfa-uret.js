@@ -172,7 +172,7 @@ const SAYFALAR = {
       'Topluluk tahmini: DWD ICON-EPS ve ECMWF ENS, Open-Meteo Ensemble API.']
   },
   iklim: {
-    baslik: 'İklim', js: 'iklim', yer: true,
+    baslik: 'İklim', js: 'iklim', yer: true, sonEk: '<script src="assets/normal-81.js"></script>\n',
     aciklama: '1991–2020 aylık iklim değerleri ve rekorlar, son 30 günün normalden farkı, son 3 ayın yağışı ve 2050\'ye kadar iklim projeksiyonu.',
     h1: 'İklim',
     giris: 'Seçtiğin yerin 30 yıllık iklimi: aylık ortalamalar, rekor sıcaklıklar, yağış. Ayrıca son günlerin normalden ne kadar farklı olduğu ve iklim modellerine göre 2050\'ye kadar beklenen değişim.',

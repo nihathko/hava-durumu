@@ -43,7 +43,27 @@
     return out;
   }
 
+  // Arşiv alınamazsa: en yakın il merkezinin NASA POWER normalleri (rekorlar ve yağışlı gün sayısı bu kaynakta yok)
+  function yedekNormal(p) {
+    const I = enYakinIl(p), n = NORMAL81[I.ad], r1 = v => Math.round(v * 10) / 10;
+    if (Math.hypot(I.lat - p.lat, (I.lon - p.lon) * 0.77) > 1.5) return null; // Türkiye dışında anlamsız
+    const gun = {};
+    for (let i = 0; i < 365; i++) { const d = gunEkle('2021-01-01', i); gun[d.slice(5)] = [r1(gunlukNormal(n.t, d)), Math.round(gunlukNormal(n.y.map((v, m) => v / [31, 28.25, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m]), d) * 100) / 100]; }
+    gun['02-29'] = gun['02-28'];
+    return { yedek: I.ad, yilMin: n.yilMin, gun, ay: n.t.map((t, m) => ({ me: t, mx: n.mx[m], mi: n.mn[m], y: n.y[m], rmx: null, rmi: null, ryg: null, yg: null, gunes: null })) };
+  }
+
   function aylikTablo(N) {
+    if (N.yedek) {
+      const A = N.ay, yil = { me: avgOf(A.map(a => a.me)), mx: avgOf(A.map(a => a.mx)), mi: avgOf(A.map(a => a.mi)), y: sumOf(A.map(a => a.y)) };
+      const satir = (b, f, bu = '') => `<tr><td class="l day1">${b}${bu ? `<small>${bu}</small>` : ''}</td>${A.map(a => `<td>${f(a)}</td>`).join('')}<td class="pg">${f(yil)}</td></tr>`;
+      ayEl.innerHTML = `<p class="kutu-not" style="margin:0 0 12px">Bu yerin 30 yıllık arşiv verisi şu an alınamadı; bunun yerine en yakın il merkezi <b>${esc(N.yedek)}</b> için NASA POWER 1991–2020 normalleri gösteriliyor. Rekorlar ve yağışlı gün sayısı bu kaynakta olmadığı için yok. Birkaç dakika sonra sayfayı yenilersen ayrıntılı veri gelir.</p>
+        <div class="tbl-wrap"><table class="iklim"><thead><tr><th class="l"></th>${AY_K.map(a => `<th>${a}</th>`).join('')}<th class="pg">Yıl</th></tr></thead><tbody>
+        ${satir('Ortalama sıcaklık', a => sicakYaz(a.me))}${satir('Ortalama en yüksek', a => `<span class="c-hi">${sicakYaz(a.mx)}</span>`)}${satir('Ortalama en düşük', a => `<span class="c-lo">${sicakYaz(a.mi)}</span>`)}${satir('Ortalama toplam yağış', a => mm(a.y), 'mm')}
+        </tbody></table></div>`;
+      const sicakAy = A.reduce((b, a, i) => a.mx > A[b].mx ? i : b, 0), soguk = A.reduce((b, a, i) => a.mi < A[b].mi ? i : b, 0), yagisli = A.reduce((b, a, i) => a.y > A[b].y ? i : b, 0);
+      return { yil, sicakAy, soguk, yagisli };
+    }
     const A = N.ay, yil = {
       mx: avgOf(A.map(a => a.mx)), mi: avgOf(A.map(a => a.mi)), me: avgOf(A.map(a => a.me)), y: sumOf(A.map(a => a.y)), yg: sumOf(A.map(a => a.yg)), gunes: avgOf(A.map(a => a.gunes)),
       rmx: Math.max(...A.map(a => a.rmx)), rmi: Math.min(...A.map(a => a.rmi)), ryg: Math.max(...A.map(a => a.ryg))
@@ -191,7 +211,11 @@
       try { N = await normaller(p); break; }
       catch (e) {
         if (s !== seq) return;
-        if (deneme >= 2) { ayEl.innerHTML = hataMsg('30 yıllık veri şu an alınamadı. Bu veri büyük olduğu için servis kısa süreli bekletiyor olabilir; bir dakika sonra sayfayı yenile.'); return; }
+        if (deneme >= 2) {
+          N = yedekNormal(p);
+          if (!N) { ayEl.innerHTML = hataMsg('30 yıllık veri şu an alınamadı. Bu veri büyük olduğu için servis kısa süreli bekletiyor olabilir; bir dakika sonra sayfayı yenile.'); return; }
+          break;
+        }
         ayEl.innerHTML = yukleniyor('Veri servisi yoğun, birkaç saniye içinde yeniden deneniyor…');
         await new Promise(r => setTimeout(r, deneme ? 30000 : 8000));
       }

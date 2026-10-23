@@ -398,6 +398,18 @@ async function havalimanlari() {
   return m;
 }
 
+// ---------- En yakın il ve aylık normallerin güne yayılması (NORMAL81, NASA POWER 1991–2020) ----------
+const enYakinIl = p => IL.reduce((b, I) => Math.hypot(I.lat - p.lat, (I.lon - p.lon) * 0.77) < Math.hypot(b.lat - p.lat, (b.lon - p.lon) * 0.77) ? I : b, IL[0]);
+const ORTA = [15, 45, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349]; // ayların ortasının yılın kaçıncı günü olduğu
+const yilGunu = d => Math.floor((Date.parse(d + 'T12:00:00Z') - Date.parse(d.slice(0, 4) + '-01-01T12:00:00Z')) / 864e5);
+// Aylık bir dizi değeri, ayların ortası arasında doğrusal geçişle istenen güne yayar
+function gunlukNormal(dizi, d) {
+  const g = yilGunu(d);
+  let i = ORTA.findIndex(x => x > g); if (i < 0) i = 12;
+  const a = (i + 11) % 12, b = i % 12, ga = i === 0 ? ORTA[11] - 365 : ORTA[a], gb = i === 12 ? ORTA[0] + 365 : ORTA[b];
+  return dizi[a] + (dizi[b] - dizi[a]) * (g - ga) / (gb - ga);
+}
+
 // ---------- İklim sınıflandırmaları (İklim ve Analizler sayfaları) ----------
 // Köppen-Geiger: aylık ortalama sıcaklık (t) ve yağıştan (y)
 function koppen(t, y) {
