@@ -1,11 +1,13 @@
       <section class="sec" id="kaynaklar" aria-labelledby="h-k">
         <h2 id="h-k">Veri kaynakları</h2>
-        <p class="note">Sitenin kendi sunucusu yoktur. Veriler, tarayıcınız tarafından doğrudan aşağıdaki ücretsiz ve açık servislerden alınır.</p>
+        <p class="note">Sitenin kendi sunucusu yoktur. Veriler, tarayıcınız tarafından doğrudan aşağıdaki ücretsiz ve açık servislerden alınır. Havalimanı verileri ve aylık analizler GitHub Actions ile hazırlanıp siteyle birlikte yayınlanır.</p>
         <div class="tbl-wrap"><table class="kaynak">
           <thead><tr><th class="l">Veri</th><th class="l">Kaynak</th><th class="l">Lisans, şart</th><th class="l">Kullanıldığı yer</th></tr></thead>
           <tbody>
             <tr><td class="l">Anlık durum, saatlik ve 16 güne kadar tahmin</td><td class="l"><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (ECMWF, DWD, NOAA, Météo-France, Met Office ve diğer ulusal servislerin modelleri)</td><td class="l">CC BY 4.0</td><td class="l">Tüm sayfalar</td></tr>
-            <tr><td class="l">Model karşılaştırması</td><td class="l">ECMWF IFS, DWD ICON, NOAA GFS, Météo-France ARPEGE, UKMO; Open-Meteo üzerinden</td><td class="l">CC BY 4.0</td><td class="l">Grafik ve modeller</td></tr>
+            <tr><td class="l">Dün bu saatte, yukarı katmanlar (850, 700, 500 hPa), donma seviyesi, gök gürültüsü potansiyeli (CAPE), görüş, çiy noktası, güneşlenme süresi</td><td class="l"><a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> Forecast API</td><td class="l">CC BY 4.0</td><td class="l">Ana sayfa, Grafik ve modeller</td></tr>
+            <tr><td class="l">Model karşılaştırması, tahmin güveni ve yağış aralığı</td><td class="l">ECMWF IFS, DWD ICON, NOAA GFS, Météo-France ARPEGE, UKMO; Open-Meteo üzerinden</td><td class="l">CC BY 4.0</td><td class="l">Ana sayfa, Grafik ve modeller</td></tr>
+            <tr><td class="l">Yakındaki yerler, 81 il haritası ve rüzgar akışı</td><td class="l">Open-Meteo (çok noktalı istek), il ve ilçe merkezleri OpenStreetMap'ten</td><td class="l">CC BY 4.0, ODbL 1.0</td><td class="l">Ana sayfa, Türkiye haritası</td></tr>
             <tr><td class="l">Bağımsız ikinci tahmin</td><td class="l"><a href="https://api.met.no/" target="_blank" rel="noopener">MET Norway</a> (Norveç Meteoroloji Enstitüsü, Yr)</td><td class="l">CC BY 4.0, NLOD</td><td class="l">Grafik ve modeller</td></tr>
             <tr><td class="l">Topluluk tahmini (belirsizlik)</td><td class="l">DWD ICON-EPS, Open-Meteo Ensemble API</td><td class="l">CC BY 4.0</td><td class="l">Grafik ve modeller</td></tr>
             <tr><td class="l">1991–2020 iklim değerleri</td><td class="l">ECMWF ERA5 yeniden analiz, Open-Meteo Archive</td><td class="l">CC BY 4.0</td><td class="l">Ana sayfa, İklim</td></tr>
@@ -24,6 +26,9 @@
             <tr><td class="l">Yer arama</td><td class="l">Open-Meteo Geocoding, GeoNames</td><td class="l">CC BY 4.0</td><td class="l">Tüm sayfalar</td></tr>
             <tr><td class="l">Harita altlığı, il sınırları</td><td class="l">© OpenStreetMap katkıcıları; geoBoundaries</td><td class="l">ODbL 1.0</td><td class="l">Haritalar</td></tr>
             <tr><td class="l">Resmi tahmin görselleri</td><td class="l"><a href="https://www.mgm.gov.tr/site/link-vermek-icin.aspx" target="_blank" rel="noopener">Meteoroloji Genel Müdürlüğü</a></td><td class="l">MGM'ye aittir, değiştirilmeden gösterilir</td><td class="l">Ana sayfa</td></tr>
+            <tr><td class="l">Sağlık ve etkinlik endeksleri, sivrisinek riski, haftanın özeti, Dikkat sayfası</td><td class="l">Sitenin kendi hesabı: yukarıdaki tahmin, hava kalitesi ve polen verisinden basit kurallarla</td><td class="l">Tıbbi ya da resmi değerlendirme değildir</td><td class="l">Ana sayfa, Dikkat</td></tr>
+            <tr><td class="l">Güneşin ve ayın konumu, ay evresi, ay doğuşu ve batışı</td><td class="l">Sitenin kendi hesabı (SunCalc formülleri); gün doğumu ve batımı Open-Meteo</td><td class="l">BSD-2 (SunCalc)</td><td class="l">Ana sayfa, canlı gökyüzü</td></tr>
+            <tr><td class="l">Sesli dinle</td><td class="l">Tarayıcının kendi Türkçe sesi (Web Speech)</td><td class="l">Hiçbir yere veri gönderilmez</td><td class="l">Ana sayfa</td></tr>
           </tbody>
         </table></div>
       </section>
@@ -63,6 +68,9 @@
           <details><summary>Radarda yağış görünmüyor ama yağmur yağıyor, neden?</summary><p>Radar kapsamı her bölgede aynı değildir; dağlık bölgelerde ve radarlardan uzak yerlerde hafif yağışlar görünmeyebilir. Radar görüntüleri yaklaşık 10 dakika gecikmeli gelir.</p></details>
           <details><summary>"Hissedilen sıcaklık" nedir?</summary><p>Sıcaklık, nem ve rüzgarın birlikte insan vücudunda yarattığı etkidir. Rüzgarlı soğuk havada daha düşük, nemli sıcak havada daha yüksek hissedilir.</p></details>
           <details><summary>Deprem bilgisi neden burada?</summary><p>MGM'nin sitesinde de deprem bölgesi hava tahmini yer alır. Burada son 7 günün 2,5 ve üstü depremleri Avrupa-Akdeniz Sismoloji Merkezi'nden alınır. Resmi bilgi kaynağı AFAD ve Kandilli Rasathanesi'dir.</p></details>
+          <details><summary>Sağlık ve etkinlik puanları nasıl hesaplanıyor?</summary><p>Önümüzdeki saatlerin sıcaklık, hissedilen sıcaklık, nem, basınç değişimi, yağış ihtimali, rüzgar, görüş ve bulut tahmininden; astım için hava kalitesi ve polenden basit kurallarla hesaplanır. Örneğin 24 saatte 8 hPa'dan fazla basınç değişimi migren riskini yükseltir. Genel bir yol göstericidir, tıbbi tavsiye değildir.</p></details>
+          <details><summary>"Tahmin güveni" ne demek?</summary><p>Üç büyük hava modeli (ECMWF, ICON, GFS) aynı gün için ne kadar benzer sıcaklık ve yağış bekliyorsa güven o kadar yüksektir. Modeller birbirinden çok farklıysa tahmin değişebilir; o günü birkaç gün sonra tekrar kontrol edin.</p></details>
+          <details><summary>Haritadaki akan çizgiler ne?</summary><p>"Rüzgar" katmanındaki çizgiler rüzgarın estiği yöne akar, hızları rüzgarın kuvvetini gösterir. 81 il merkezinin rüzgarı aradaki yerlere yayılarak hesaplanır; dağlık bölgelerde gerçek rüzgar yerel olarak farklı olabilir.</p></details>
           <details><summary>Veriler ne sıklıkla güncellenir?</summary><p>Tahminler sayfayı her açtığınızda ve sayfa açık kaldıkça 15 dakikada bir yenilenir. Radar 10 dakikada bir, havalimanı ölçümleri yarım saatte bir, uydu görüntüsü günde bir kez yenilenir.</p></details>
         </div>
       </section>
